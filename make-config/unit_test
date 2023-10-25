@@ -1,0 +1,20 @@
+#! env make
+
+# This script define some debug macros to control the unit tests.
+# tranform to upper case for macro convention 
+CXXFLAGS += $(patsubst %, -Ddebug_%, $(TEST_TARGET))
+
+test_dir:
+	@ mkdir -p $(PROJECT_ROOT)/test_dir
+
+TEST_SRC = src/*/*.*
+
+test_dir/test: $(TEST_SRC) test_dir
+	@echo "Building unit test ..."
+	@$(CXX) $(CXXFLAGS) -ggdb $(PROJECT_ROOT)/src/unit_test/test.cpp -o $(PROJECT_ROOT)/test_dir/test\
+		-fsanitize=undefined -fsanitize=leak -fsanitize=address
+
+test_dir/mpi_test: $(TEST_SRC) test_dir
+	@echo "Building mpi unit test ..."
+	@$(CXX) -DMPI_TEST $(CXXFLAGS) -ggdb $(PROJECT_ROOT)/src/unit_test/test.cpp -o \
+		$(PROJECT_ROOT)/test_dir/mpi_test -fsanitize=undefined -fsanitize=leak -fsanitize=address

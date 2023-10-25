@@ -1,0 +1,19 @@
+#! env make
+
+define_a_print = 1
+
+ifeq ($(mode),release)
+    CXXFLAGS += -std=c++11 -O3 -Wall -Wextra
+else ifeq ($(mode),debug)
+    CXXFLAGS += -std=c++11 -O3 -ggdb -Wall -Wextra -Werror
+else
+    error "unknown build mode:" $(mode)
+endif
+
+ifeq ($(type), header-only)
+	CXXFLAGS += -Dheader_only
+endif
+
+ifeq ($(define_a_print), 1)
+	CXXFLAGS += -Ddefine_a_print
+endif
