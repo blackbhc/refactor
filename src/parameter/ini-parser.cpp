@@ -138,7 +138,8 @@ ini::Line ini_parser::line_parser( const char* str ) const
             this->trim( raw_content.substr( 0, raw_content.find_first_of( key_value_sep ) ) );
         std::string val =
             this->trim( raw_content.substr( raw_content.find_first_of( key_value_sep ) + 1 ) );
-        if ( val.size() == 0 || key.size() == 0 )
+        if ( val.size() == 0 || key.size() == 0
+             || key.find_first_of( value_sep ) != std::string::npos )
         {
             ERROR( "Get an invalid line in ini file:\n%s", str );
         }
@@ -310,6 +311,7 @@ int ini_parser::test_lineparser( void )
     char bad_key_value1[]    = " = \n";
     char bad_key_value2[]    = "1 = \n";
     char bad_key_value3[]    = " = 12\n";
+    char bad_key_value4[]    = "key1 key2 = 12\n";
 
     auto empty_line_res      = line_parser( empty_line );
     auto blank_line_res      = line_parser( blank_line );
@@ -349,6 +351,7 @@ int ini_parser::test_lineparser( void )
     compact_try_catch( auto bad_key_value1_res = line_parser( bad_key_value1 ) );
     compact_try_catch( auto bad_key_value2_res = line_parser( bad_key_value2 ) );
     compact_try_catch( auto bad_key_value3_res = line_parser( bad_key_value3 ) );
+    compact_try_catch( auto bad_key_value3_res = line_parser( bad_key_value4 ) );
 
     bool success = check_line_equal( empty_line_res, expected_empty_line_res )
                    && check_line_equal( blank_line_res, expected_blank_line_res )
