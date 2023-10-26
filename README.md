@@ -75,6 +75,14 @@ First, you need to check the following dependencies
 
 ### Complete illustrations
 
+##### INI parameter file
+
+Note: the section name is case sensitive, but the key/value name is case insensitive.
+
+- available boolean: case insensitive `true` and `false`, `1` and `0`, `on` and `off`, `enable` and `disable`, `yes` and `no`.
+- available value type: number (doesn't distinguish integer and float), string, boolean.
+- comment prefix: `#` and `;`.
+
 ---
 
 ## Design scheme <a href="#contents"><font size=4>(contents)</font></a> <a id="scheme"></a>

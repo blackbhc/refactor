@@ -113,3 +113,21 @@ into more functions with possible conditional compiling by macros.
     the message in the root process if the program is running in MPI mode.
   - `WARN`: print a warning message, based on the `println` macro.
   - `ERROR`: print a error message, based on the `println` macro.
+
+##### `src/parameter`
+
+Note: the section name is case sensitive, but the key/value name is case insensitive.
+The `ini_parser` class will parse the ini parameter file into a nested hash table:
+
+- First level: the section name, and the pointer to the second level hash table.
+- Second level: the key-value pairs.
+- `ini-parser`: a simple ini parameter file parser, which is used to parse the parameter file.
+
+  - available boolean: case insensitive `true` and `false`, `1` and `0`, `on` and `off`, `enable` and `disable`, `yes` and `no`.
+  - available value type: number (doesn't distinguish integer and float), string, boolean.
+  - comment prefix: `#` and `;`.
+
+- most important methods:
+  - `trim`: remove the white spaces and comments after the main content of a line.
+  - `line_parser`: get the type of a line, namely a section header or a key-value pair, based on `trim`.
+  - `read`: the main interface used to read the parameter file, based on `line_parser`.
