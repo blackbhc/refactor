@@ -151,6 +151,7 @@ ini::Line ini_parser::line_parser( const char* str ) const
              || val == "no" || val == "disable" || val == "off" )
         {
             line.value_type = ini::ValueType::boolean;
+            line.content    = key + "=" + "true";
             return line;
         }
         else
@@ -162,11 +163,21 @@ ini::Line ini_parser::line_parser( const char* str ) const
                 {
                     std::stod( v );
                 }
-                line.value_type = ini::ValueType::number;
+                if ( values.size() == 1 )
+                {
+                    line.value_type = ini::ValueType::number;
+                }
+                else
+                    line.value_type = ini::ValueType::numbers;
             }
             catch ( ... )
             {
-                line.value_type = ini::ValueType::string;
+                if ( values.size() == 1 )
+                {
+                    line.value_type = ini::ValueType::string;
+                }
+                else
+                    line.value_type = ini::ValueType::strings;
             }
             return line;
         }
@@ -210,8 +221,79 @@ inline std::vector< std::string > ini_parser::split( std::string str ) const
     return vals;
 }
 
+bool ini_parser::get_bool( std::string section, std::string key ) const
+{
+    std::replace( section.begin(), section.end(), ' ', '_' );
+    std::transform( key.begin(), key.end(), key.begin(), ::tolower );
+    std::string hash_key_name = section + "_" + key;
+    if ( this->ini_table[ hash_key_name ].type != ini::ValueType::boolean )
+        ERROR( "[%s] -> [%s] is not boolean type!", section.c_str(), key.c_str() );
+    return this->ini_table[ hash_key_name ].content == "true";
+}
+
+double ini_parser::get_double( std::string section, std::string key ) const
+{
+    std::replace( section.begin(), section.end(), ' ', '_' );
+    std::transform( key.begin(), key.end(), key.begin(), ::tolower );
+    std::string hash_key_name = section + "_" + key;
+    if ( this->ini_table[ hash_key_name ].type != ini::ValueType::number )
+        ERROR( "[%s] -> [%s] is not number type!", section.c_str(), key.c_str() );
+    return std::stod( this->ini_table[ hash_key_name ].content );
+}
+
+std::vector< double > ini_parser::get_doubles( std::string section, std::string key ) const
+{
+    std::replace( section.begin(), section.end(), ' ', '_' );
+    std::transform( key.begin(), key.end(), key.begin(), ::tolower );
+    std::string hash_key_name = section + "_" + key;
+    if ( this->ini_table[ hash_key_name ].type != ini::ValueType::numbers )
+        ERROR( "[%s] -> [%s] is not numbers type!", section.c_str(), key.c_str() );
+    auto                  vals = this->split( this->ini_table[ hash_key_name ].content );
+    std::vector< double > res( vals.size() );
+    for ( size_t i = 0; i < vals.size(); ++i )
+    {
+        res[ i ] = std::stod( vals[ i ] );
+    }
+    return res;
+}
+
+std::string ini_parser::get_str( std::string section, std::string key ) const
+{
+    std::replace( section.begin(), section.end(), ' ', '_' );
+    std::transform( key.begin(), key.end(), key.begin(), ::tolower );
+    std::string hash_key_name = section + "_" + key;
+    if ( this->ini_table[ hash_key_name ].type != ini::ValueType::string )
+        ERROR( "[%s] -> [%s] is not string type!", section.c_str(), key.c_str() );
+    return this->ini_table[ hash_key_name ].content;
+}
+
+std::vector< std::string > ini_parser::get_strs( std::string section, std::string key ) const
+{
+    std::replace( section.begin(), section.end(), ' ', '_' );
+    std::transform( key.begin(), key.end(), key.begin(), ::tolower );
+    std::string hash_key_name = section + "_" + key;
+    if ( this->ini_table[ hash_key_name ].type != ini::ValueType::strings )
+        ERROR( "[%s] -> [%s] is not strings type!", section.c_str(), key.c_str() );
+    return this->split( this->ini_table[ hash_key_name ].content );
+}
+
 #ifdef debug_parameter
-int ini_parser::test_checksize()
+// macro for check the result of unit test, to make the code more compact
+#define ASSERT( sentence )                                                       \
+    {                                                                            \
+        if ( !( sentence ) )                                                     \
+        {                                                                        \
+            WARN( "The test failed at %d line in file %s", __LINE__, __FILE__ ); \
+            return 1;                                                            \
+        }                                                                        \
+        else                                                                     \
+        {                                                                        \
+            println( "The test passed." );                                       \
+            return 0;                                                            \
+        }                                                                        \
+    }
+
+int ini_parser::test_checksize() const
 {
     println( "Testing ini_parser::check_filesize() ..." );
     try
@@ -270,7 +352,7 @@ int ini_parser::test_checksize()
     }
 }
 
-bool ini_parser::check_line_equal( ini::Line a, ini::Line b )
+bool ini_parser::check_line_equal( ini::Line a, ini::Line b ) const
 {
     return ( a.content == b.content ) && ( a.type == b.type ) && ( a.value_type == b.value_type );
 }
@@ -293,7 +375,7 @@ bool ini_parser::check_line_equal( ini::Line a, ini::Line b )
         }                                                                    \
     }
 
-int ini_parser::test_lineparser( void )
+int ini_parser::test_lineparser( void ) const
 {
     println( "Testing ini_parser::line_parser(const char* str) ..." );
 
@@ -333,18 +415,18 @@ int ini_parser::test_lineparser( void )
     expected_comment_line_res.content       = "";
     expected_comment_line_res.type          = ini::LineType::empty;
     expected_comment_line_res.value_type    = ini::ValueType::none;
-    expected_section_line_res.content       = "This is a section";
+    expected_section_line_res.content       = "This_is_a_section";
     expected_section_line_res.type          = ini::LineType::section;
     expected_section_line_res.value_type    = ini::ValueType::none;
     expected_key_number_line_res.content    = "key_char=1.0 12";
     expected_key_number_line_res.type       = ini::LineType::key_value;
-    expected_key_number_line_res.value_type = ini::ValueType::number;
+    expected_key_number_line_res.value_type = ini::ValueType::numbers;
     expected_key_bool_line_res.content      = "key_bool=true";
     expected_key_bool_line_res.type         = ini::LineType::key_value;
     expected_key_bool_line_res.value_type   = ini::ValueType::boolean;
     expected_key_str_line_res.content       = "key_str=1 true";
     expected_key_str_line_res.type          = ini::LineType::key_value;
-    expected_key_str_line_res.value_type    = ini::ValueType::string;
+    expected_key_str_line_res.value_type    = ini::ValueType::strings;
 
     compact_try_catch( auto bad_section_line1_res = line_parser( bad_section_line1 ) );
     compact_try_catch( auto bad_section_line2_res = line_parser( bad_section_line2 ) );
@@ -361,19 +443,10 @@ int ini_parser::test_lineparser( void )
                    && check_line_equal( key_bool_line_res, expected_key_bool_line_res )
                    && check_line_equal( key_str_line_res, expected_key_str_line_res );
 
-    if ( success )
-    {
-        println( "It passed the test." );
-        return 0;
-    }
-    else
-    {
-        WARN( "It failed the test." );
-        return 1;
-    }
+    ASSERT( success );
 }
 
-int ini_parser::test_trim( void )
+int ini_parser::test_trim( void ) const
 {
     println( "Testing ini_parser::trim(std::string str) ..." );
 
@@ -393,20 +466,10 @@ int ini_parser::test_trim( void )
 
     bool success = res1 && res2 && res3 && res4 && res5 && res6;
 
-    if ( success )
-    {
-        println( "It passed the test." );
-        return 0;
-    }
-    else
-    {
-        WARN( "It failed the test." );
-        return 1;
-    }
+    ASSERT( success );
 }
 
-#include <assert.h>
-int ini_parser::test_split( void )
+int ini_parser::test_split( void ) const
 {
     println( "Testing ini_parser::split(std::string str) ..." );
 
@@ -427,23 +490,16 @@ int ini_parser::test_split( void )
 
     bool success = ( res1 == target1 ) && ( res2 == target1 ) && ( res3 == target1 )
                    && ( res4 == target1 ) && ( res5 == target2 );
-    if ( success )
-    {
-        println( "It passed the test." );
-        return 0;
-    }
-    else
-    {
-        WARN( "It failed the test." );
-        return 1;
-    }
+    ASSERT( success );
 }
 
 int ini_parser::test_read( void )
 {
+    println( "Testing ini_parser::read(const char* filename) ..." );
     try
     {
         this->read( this->filename.c_str() );
+        println( "It passed the test." );
         return 0;
     }
     catch ( std::exception& e )
@@ -453,6 +509,46 @@ int ini_parser::test_read( void )
     }
 }
 
-#endif
+int ini_parser::test_get( void ) const
+{
+    println( "Testing ini_parser::get<T> ..." );
 
+    // insert some test data to the hash table
+    ini::Value number, numbers, string, strings, boolean;
+    number.content  = "3.1415926";
+    number.type     = ini::ValueType::number;
+    numbers.content = "1,2,3,4";
+    numbers.type    = ini::ValueType::numbers;
+    string.content  = "This_is_a_string";
+    string.type     = ini::ValueType::string;
+    strings.content = "1,2,3,4";
+    strings.type    = ini::ValueType::strings;
+    boolean.content = "true";
+    boolean.type    = ini::ValueType::boolean;
+
+    ini_table[ "TestSec_number" ]  = number;
+    ini_table[ "TestSec_numbers" ] = numbers;
+    ini_table[ "TestSec_string" ]  = string;
+    ini_table[ "TestSec_strings" ] = strings;
+    ini_table[ "TestSec_boolean" ] = boolean;
+
+    // test the get function
+    bool   target1 = true;
+    double target2 = 3.1415926;
+    auto   target3 = std::vector< double >{ 1, 2, 3, 4 };
+    auto   target4 = std::vector< std::string >{ "1", "2", "3", "4" };
+    auto   target5 = "This_is_a_string";
+
+    auto res1 = get_bool( "TestSec", "boolean" );
+    auto res2 = get_double( "TestSec", "number" );
+    auto res3 = get_doubles( "TestSec", "numbers" );
+    auto res4 = get_strs( "TestSec", "strings" );
+    auto res5 = get_str( "TestSec", "string" );
+
+    bool success = ( res1 == target1 ) && ( res2 == target2 ) && ( res3 == target3 )
+                   && ( res4 == target4 ) && ( res5 == target5 );
+    ASSERT( success );
+    return 0;
+}
+#endif
 }  // namespace galotfa

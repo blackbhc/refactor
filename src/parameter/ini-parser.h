@@ -8,7 +8,7 @@
 #include <vector>
 namespace galotfa {
 namespace ini {
-    enum class ValueType { number, string, boolean, none };
+    enum class ValueType { number, numbers, string, strings, boolean, none };
     enum class LineType { section, key_value, empty };
     struct Line
     {
@@ -40,14 +40,19 @@ public:  // public members
 public:  // public methods
     ini_parser( const char* filename );
     ~ini_parser() = default;
+    bool                       get_bool( std::string section, std::string key ) const;
+    double                     get_double( std::string section, std::string key ) const;
+    std::vector< double >      get_doubles( std::string section, std::string key ) const;
+    std::string                get_str( std::string section, std::string key ) const;
+    std::vector< std::string > get_strs( std::string section, std::string key ) const;
 #ifdef debug_parameter
-    int  test_checksize();
-    int  test_trim();
-    int  test_split();
-    int  test_lineparser();
+    int  test_checksize() const;
+    int  test_trim() const;
+    int  test_split() const;
+    int  test_lineparser() const;
     int  test_read();
-    bool check_line_equal( ini::Line a, ini::Line b );
-    int  test_hash_insert();
+    bool check_line_equal( ini::Line a, ini::Line b ) const;
+    int  test_get( void ) const;
 #endif
 
 private:  // private methods
