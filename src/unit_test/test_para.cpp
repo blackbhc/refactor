@@ -6,6 +6,23 @@
 #include "test_info.hpp"
 #include <stdio.h>
 
+// a macro to call a test wrapper and update the test results.
+#define check( x )              \
+    {                           \
+        int status = x;         \
+        if ( status == 0 )      \
+        {                       \
+            success++;          \
+        }                       \
+        else if ( status == 1 ) \
+        {                       \
+            fail++;             \
+        }                       \
+        else                    \
+        {                       \
+            unknown++;          \
+        }                       \
+    }
 // include the head file of the parameter part.
 void test_parameter( void )
 {
@@ -16,20 +33,10 @@ void test_parameter( void )
     int                 fail    = 0;
     int                 unknown = 0;
     galotfa::ini_parser ini( "./galotfa.ini" );
-    int                 status = ini.test_check_size_works();
 
-    if ( status == 0 )
-    {
-        success++;
-    }
-    else if ( status == 1 )
-    {
-        fail++;
-    }
-    else
-    {
-        unknown++;
-    }
+    check( ini.test_checksize() );
+    check( ini.test_trim() );
+    check( ini.test_lineparser() );
 
     println( "\033[0mThe test results of \033[4;34mparameter\033[0m part is:\033[0;32m %d success, "
              "\033[0;31m%d fail, "
@@ -40,4 +47,5 @@ void test_parameter( void )
         println( "All tests of \033[4;34mparameter\033[0m part passed!\033[0m" );
     }
 }
+
 #endif
