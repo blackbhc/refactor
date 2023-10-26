@@ -129,7 +129,10 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
   - `trim`: remove the white spaces and comments after the main content of a line.
   - `split`: split the values into a vector of sub-strings.
   - `line_parser`: get the type of a line, namely a section header or a key-value pair, based on `trim` and `split`.
+    If the line is in boolean type, its content will set as "true" for better consistence of internal usage.
   - `read`: the main interface used to read the parameter file, based on `line_parser`.
-  - insert*to_table: insert the parsed key-value pair into the hash table. The hash table is defined with
+  - `insert_to_table`: insert the parsed key-value pair into the hash table. The hash table is defined with
     string key and a structure value (`galotfa::ini::Value`) pair. The key of the hash table = section name +
-    "*" + key name of parameter in the ini file, where the space in the section name will be replaced by `_`.
+    "\*" + key name of parameter in the ini file, where the space in the section name will be replaced by `_`.
+  - `get_xxx`: the function to extract the value of a key in the parameter file. Support to get boolean, number, string,
+    and vector of number and string.
