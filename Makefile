@@ -21,6 +21,7 @@ all: build
 clean:
 	@echo "Cleaning..."
 	@rm -rf $(BUILD_DIR) $(PROJECT_ROOT)/build
+	@rm -rf $(PROJECT_ROOT)/test_dir/test $(PROJECT_ROOT)/test_dir/mpi_test
 	@echo "Done!"
 
 
