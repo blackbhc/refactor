@@ -82,6 +82,7 @@ Note: the section name is case sensitive, but the key/value name is case insensi
 - available boolean: case insensitive `true` and `false`, `1` and `0`, `on` and `off`, `enable` and `disable`, `yes` and `no`.
 - available value type: number (doesn't distinguish integer and float), string, boolean.
 - comment prefix: `#` and `;`.
+- supported value separator: white space, `,`, `;`, `-`, `+`, `:` and `&`.
 
 ---
 

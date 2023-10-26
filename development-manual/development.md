@@ -129,5 +129,6 @@ The `ini_parser` class will parse the ini parameter file into a nested hash tabl
 
 - most important methods:
   - `trim`: remove the white spaces and comments after the main content of a line.
-  - `line_parser`: get the type of a line, namely a section header or a key-value pair, based on `trim`.
+  - `split`: split the values into a vector of sub-strings.
+  - `line_parser`: get the type of a line, namely a section header or a key-value pair, based on `trim` and `split`.
   - `read`: the main interface used to read the parameter file, based on `line_parser`.
