@@ -31,9 +31,22 @@
     }
 
 // throw a error with a message
+#ifndef MPI_INCLUDED
 #define ERROR( ... )                                                         \
     {                                                                        \
-        println( "\033[0;1;31m [ERROR]: \033[0m" __VA_ARGS__ );              \
+        fprintf( stderr, "\033[0;1;31m [ERROR]: \033[0m" __VA_ARGS__ );      \
         throw std::runtime_error( "Invalid file or parameter during run." ); \
     }
+#else
+#define ERROR( ... )                                                             \
+    {                                                                            \
+        int rank;                                                                \
+        MPI_Comm_rank( MPI_COMM_WORLD, &rank );                                  \
+        if ( rank == 0 )                                                         \
+        {                                                                        \
+            fprintf( stderr, "\033[0;1;31m [ERROR]: \033[0m" __VA_ARGS__ );      \
+            throw std::runtime_error( "Invalid file or parameter during run." ); \
+        }                                                                        \
+    }
+#endif
 #endif
