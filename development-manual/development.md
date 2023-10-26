@@ -117,18 +117,19 @@ into more functions with possible conditional compiling by macros.
 ##### `src/parameter`
 
 Note: the section name is case sensitive, but the key/value name is case insensitive.
-The `ini_parser` class will parse the ini parameter file into a nested hash table:
+The `ini_parser` class will parse the ini parameter file into a hash table.
 
-- First level: the section name, and the pointer to the second level hash table.
-- Second level: the key-value pairs.
 - `ini-parser`: a simple ini parameter file parser, which is used to parse the parameter file.
 
-  - available boolean: case insensitive `true` and `false`, `1` and `0`, `on` and `off`, `enable` and `disable`, `yes` and `no`.
+  - allowed boolean value in the ini file: case insensitive `true` and `false`, `on` and `off`, `enable` and `disable`, `yes` and `no`.
   - available value type: number (doesn't distinguish integer and float), string, boolean.
-  - comment prefix: `#` and `;`.
+  - comment prefix: `#` and `;`, string after the prefix will be treated as comments.
 
 - most important methods:
   - `trim`: remove the white spaces and comments after the main content of a line.
   - `split`: split the values into a vector of sub-strings.
   - `line_parser`: get the type of a line, namely a section header or a key-value pair, based on `trim` and `split`.
   - `read`: the main interface used to read the parameter file, based on `line_parser`.
+  - insert*to_table: insert the parsed key-value pair into the hash table. The hash table is defined with
+    string key and a structure value (`galotfa::ini::Value`) pair. The key of the hash table = section name +
+    "*" + key name of parameter in the ini file, where the space in the section name will be replaced by `_`.
