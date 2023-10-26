@@ -79,10 +79,12 @@ First, you need to check the following dependencies
 
 Note: the section name is case sensitive, but the key/value name is case insensitive.
 
-- available boolean: case insensitive `true` and `false`, `1` and `0`, `on` and `off`, `enable` and `disable`, `yes` and `no`.
+- available boolean: case insensitive `true` and `false`, `on` and `off`, `enable` and `disable`, `yes` and `no`.
 - available value type: number (doesn't distinguish integer and float), string, boolean.
 - comment prefix: `#` and `;`.
 - supported value separator: white space, `,`, `-`, `+`, `:` and `&`.
+- unexpected additional value for a key will be illegal, e.g. `<a key for boolean> = true yes` will make the parser to detect
+  the value of the key as `true yes`, which is in string type and may cause error in the following parsing.
 
 ---
 
