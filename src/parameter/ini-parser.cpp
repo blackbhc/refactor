@@ -545,6 +545,13 @@ int ini_parser::test_get( void ) const
     auto res4 = get_strs( "TestSec", "strings" );
     auto res5 = get_str( "TestSec", "string" );
 
+    // erase the test data
+    ini_table.erase( "TestSec_boolean" );
+    ini_table.erase( "TestSec_number" );
+    ini_table.erase( "TestSec_numbers" );
+    ini_table.erase( "TestSec_string" );
+    ini_table.erase( "TestSec_strings" );
+
     bool success = ( res1 == target1 ) && ( res2 == target2 ) && ( res3 == target3 )
                    && ( res4 == target4 ) && ( res5 == target5 );
     ASSERT( success );
