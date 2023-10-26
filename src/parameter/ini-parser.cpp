@@ -50,7 +50,8 @@ void ini_parser::read( const char* filename )
         }
         else
         {
-            this->lines.push_back( this->line_parser( token ) );
+            // TODO: call the function to inter the line into the hash table
+            this->insert_to_table( this->line_parser( token ), this->ini_table );
         }
         token = strsep( &p_buffer, "\n" );
     }
@@ -58,6 +59,28 @@ void ini_parser::read( const char* filename )
     fclose( fp );
     delete st;
     st = nullptr;
+}
+
+void ini_parser::insert_to_table( ini::Line                                      line,
+                                  std::unordered_map< std::string, ini::Value >& hash ) const
+// remain the second parameter for convenience of unit test
+{
+    static std::string section_name = "";
+    switch ( line.type )
+    {
+    case ini::LineType::empty:
+        break;
+    case ini::LineType::section:
+        section_name = line.content;
+        break;
+    case ini::LineType::key_value:
+        size_t     pos = line.content.find_first_of( "=" );
+        ini::Value value;
+        value.content                                              = line.content.substr( pos + 1 );
+        value.type                                                 = line.value_type;
+        hash[ section_name + "_" + line.content.substr( 0, pos ) ] = value;
+        break;
+    }
 }
 
 void ini_parser::check_filesize( long int size ) const
@@ -78,11 +101,11 @@ void ini_parser::check_filesize( long int size ) const
     }
 }
 
-ini_parser::Line ini_parser::line_parser( const char* str ) const
+ini::Line ini_parser::line_parser( const char* str ) const
 {
-    ini_parser::Line line;
-    std::string      raw_content = str;
-    raw_content                  = this->trim( raw_content );
+    ini::Line   line;
+    std::string raw_content = str;
+    raw_content             = this->trim( raw_content );
 
     // check whether it is a section
     if ( raw_content.size() == 0 )  // empty line
@@ -95,21 +118,22 @@ ini_parser::Line ini_parser::line_parser( const char* str ) const
     {
         if ( raw_content.find_first_of( section_suffix ) == raw_content.size() - 1 )
         {
-            line.type = LineType::section;
+            line.type = ini::LineType::section;
             raw_content.erase( 0, raw_content.find_first_of( section_prefix ) + 1 );
             raw_content.erase( raw_content.find_first_of( section_suffix ) );
+            std::replace( raw_content.begin(), raw_content.end(), ' ', '_' );
             line.content = raw_content;
             return line;
         }
         else
         {
-            ERROR( "Get an invalid section header in ini file:\n%s", str );
         }
+        ERROR( "Get an invalid section header in ini file:\n%s", str );
     }
     else if ( raw_content.find_first_of( key_value_sep ) != std::string::npos )
     // key-value pair
     {
-        line.type = LineType::key_value;
+        line.type = ini::LineType::key_value;
         std::string key =
             this->trim( raw_content.substr( 0, raw_content.find_first_of( key_value_sep ) ) );
         std::string val =
@@ -125,7 +149,7 @@ ini_parser::Line ini_parser::line_parser( const char* str ) const
         if ( val == "true" || val == "yes" || val == "enable" || val == "on" || val == "false"
              || val == "no" || val == "disable" || val == "off" )
         {
-            line.value_type = ValueType::boolean;
+            line.value_type = ini::ValueType::boolean;
             return line;
         }
         else
@@ -137,11 +161,11 @@ ini_parser::Line ini_parser::line_parser( const char* str ) const
                 {
                     std::stod( v );
                 }
-                line.value_type = ValueType::number;
+                line.value_type = ini::ValueType::number;
             }
             catch ( ... )
             {
-                line.value_type = ValueType::string;
+                line.value_type = ini::ValueType::string;
             }
             return line;
         }
@@ -150,6 +174,8 @@ ini_parser::Line ini_parser::line_parser( const char* str ) const
     {
         ERROR( "Get an invalid line in ini file:\n%s", str );
     }
+    WARN( "Encounter an return of empty line." );
+    return line;
 }
 
 inline std::string ini_parser::trim( std::string str ) const
@@ -170,7 +196,7 @@ inline std::vector< std::string > ini_parser::split( std::string str ) const
     str = this->trim( str );
     while ( true )
     {
-        auto pos = str.find_first_of( value_sep );
+        size_t pos = str.find_first_of( value_sep );
         vals.push_back( str.substr( 0, pos ) );
         str.erase( 0, pos );
         str.erase( 0, str.find_first_not_of( value_sep ) );
@@ -243,7 +269,7 @@ int ini_parser::test_checksize()
     }
 }
 
-bool ini_parser::check_line_equal( Line a, Line b )
+bool ini_parser::check_line_equal( ini::Line a, ini::Line b )
 {
     return ( a.content == b.content ) && ( a.type == b.type ) && ( a.value_type == b.value_type );
 }
@@ -281,9 +307,9 @@ int ini_parser::test_lineparser( void )
     // illegal lines
     char bad_section_line1[] = "[This is a bad section";
     char bad_section_line2[] = "+[This is a bad section]";
-    char bad_key_value1[]    = " = ";
-    char bad_key_value2[]    = "1 = ";
-    char bad_key_value3[]    = " = 12";
+    char bad_key_value1[]    = " = \n";
+    char bad_key_value2[]    = "1 = \n";
+    char bad_key_value3[]    = " = 12\n";
 
     auto empty_line_res      = line_parser( empty_line );
     auto blank_line_res      = line_parser( blank_line );
@@ -293,30 +319,30 @@ int ini_parser::test_lineparser( void )
     auto key_bool_line_res   = line_parser( key_bool_line );
     auto key_str_line_res    = line_parser( key_str_line );
 
-    Line expected_empty_line_res, expected_blank_line_res, expected_comment_line_res,
+    ini::Line expected_empty_line_res, expected_blank_line_res, expected_comment_line_res,
         expected_section_line_res, expected_key_number_line_res, expected_key_bool_line_res,
         expected_key_str_line_res;
     expected_empty_line_res.content         = "";
-    expected_empty_line_res.type            = LineType::empty;
-    expected_empty_line_res.value_type      = ValueType::none;
+    expected_empty_line_res.type            = ini::LineType::empty;
+    expected_empty_line_res.value_type      = ini::ValueType::none;
     expected_blank_line_res.content         = "";
-    expected_blank_line_res.type            = LineType::empty;
-    expected_blank_line_res.value_type      = ValueType::none;
+    expected_blank_line_res.type            = ini::LineType::empty;
+    expected_blank_line_res.value_type      = ini::ValueType::none;
     expected_comment_line_res.content       = "";
-    expected_comment_line_res.type          = LineType::empty;
-    expected_comment_line_res.value_type    = ValueType::none;
+    expected_comment_line_res.type          = ini::LineType::empty;
+    expected_comment_line_res.value_type    = ini::ValueType::none;
     expected_section_line_res.content       = "This is a section";
-    expected_section_line_res.type          = LineType::section;
-    expected_section_line_res.value_type    = ValueType::none;
+    expected_section_line_res.type          = ini::LineType::section;
+    expected_section_line_res.value_type    = ini::ValueType::none;
     expected_key_number_line_res.content    = "key_char=1.0 12";
-    expected_key_number_line_res.type       = LineType::key_value;
-    expected_key_number_line_res.value_type = ValueType::number;
+    expected_key_number_line_res.type       = ini::LineType::key_value;
+    expected_key_number_line_res.value_type = ini::ValueType::number;
     expected_key_bool_line_res.content      = "key_bool=true";
-    expected_key_bool_line_res.type         = LineType::key_value;
-    expected_key_bool_line_res.value_type   = ValueType::boolean;
+    expected_key_bool_line_res.type         = ini::LineType::key_value;
+    expected_key_bool_line_res.value_type   = ini::ValueType::boolean;
     expected_key_str_line_res.content       = "key_str=1 true";
-    expected_key_str_line_res.type          = LineType::key_value;
-    expected_key_str_line_res.value_type    = ValueType::string;
+    expected_key_str_line_res.type          = ini::LineType::key_value;
+    expected_key_str_line_res.value_type    = ini::ValueType::string;
 
     compact_try_catch( auto bad_section_line1_res = line_parser( bad_section_line1 ) );
     compact_try_catch( auto bad_section_line2_res = line_parser( bad_section_line2 ) );
@@ -423,6 +449,7 @@ int ini_parser::test_read( void )
         return 1;
     }
 }
+
 #endif
 
 }  // namespace galotfa
