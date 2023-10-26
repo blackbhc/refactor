@@ -16,8 +16,8 @@ const std::string ini_parser::value_sep      = " \t,-:+&";
 
 ini_parser::ini_parser( const char* file_name )
 {
-#ifndef debug_parameter  // no initialization in debug mode
     this->filename = file_name;
+#ifndef debug_parameter  // no initialization in debug mode
     this->read( this->filename.c_str() );
 #endif
 }
@@ -87,8 +87,8 @@ ini_parser::Line ini_parser::line_parser( const char* str ) const
     // check whether it is a section
     if ( raw_content.size() == 0 )  // empty line
     {
-        line.type = LineType::white;
         return line;
+        // with default types: LineType::empty and ValueType::none
     }
     else if ( raw_content.find_first_of( section_prefix ) == 0 )
     // section header
@@ -114,30 +114,36 @@ ini_parser::Line ini_parser::line_parser( const char* str ) const
             this->trim( raw_content.substr( 0, raw_content.find_first_of( key_value_sep ) ) );
         std::string val =
             this->trim( raw_content.substr( raw_content.find_first_of( key_value_sep ) + 1 ) );
-        line.content = key + "=" + val;
-        // get the value type
-        std::transform( val.begin(), val.end(), val.begin(), ::tolower );
-        if ( val == "true" || val == "yes" || val == "1" || val == "enable" || val == "on"
-             || val == "false" || val == "no" || val == "0" || val == "disable" || val == "off" )
+        if ( val.size() == 0 || key.size() == 0 )
         {
-            line.type       = LineType::key_value;
+            ERROR( "Get an invalid line in ini file:\n%s", str );
+        }
+        line.content = key + "=" + val;
+
+        // determine the value type
+        std::transform( val.begin(), val.end(), val.begin(), ::tolower );
+        if ( val == "true" || val == "yes" || val == "enable" || val == "on" || val == "false"
+             || val == "no" || val == "disable" || val == "off" )
+        {
             line.value_type = ValueType::boolean;
             return line;
         }
         else
         {
-            if ( val.find_first_of( value_sep ) == std::string::npos )
+            auto values = this->split( val );
+            try
             {
-                line.type       = LineType::key_value;
-                line.value_type = ValueType::string;
-                return line;
-            }
-            else
-            {
-                line.type       = LineType::key_value;
+                for ( auto& v : values )
+                {
+                    std::stod( v );
+                }
                 line.value_type = ValueType::number;
-                return line;
             }
+            catch ( ... )
+            {
+                line.value_type = ValueType::string;
+            }
+            return line;
         }
     }
     else
@@ -190,7 +196,7 @@ int ini_parser::test_checksize()
         }
         catch ( std::runtime_error& e )
         {
-            println( "It failed as expected, error message: %s.", e.what() );
+            println( "It failed as expected, error message: %s", e.what() );
         }
         catch ( ... )
         {
@@ -205,7 +211,7 @@ int ini_parser::test_checksize()
         }
         catch ( const std::runtime_error& e )
         {
-            println( "It failed as expected, error message: %s.", e.what() );
+            println( "It failed as expected, error message: %s", e.what() );
         }
         catch ( ... )
         {
@@ -220,7 +226,7 @@ int ini_parser::test_checksize()
         }
         catch ( const std::runtime_error& e )
         {
-            println( "It failed as expected, error message: %s.", e.what() );
+            println( "It failed as expected, error message: %s", e.what() );
         }
         catch ( ... )
         {
@@ -232,25 +238,110 @@ int ini_parser::test_checksize()
     }
     catch ( const std::exception& e )
     {
-        println( "It failed unexpectedly, error message: %s.", e.what() );
+        println( "It failed unexpectedly, error message: %s", e.what() );
         return 1;
     }
 }
+
+bool ini_parser::check_line_equal( Line a, Line b )
+{
+    return ( a.content == b.content ) && ( a.type == b.type ) && ( a.value_type == b.value_type );
+}
+
+// internal use only: the make the code more compact
+#define compact_try_catch( sentence )                                        \
+    {                                                                        \
+        try                                                                  \
+        {                                                                    \
+            sentence;                                                        \
+        }                                                                    \
+        catch ( std::runtime_error & e )                                     \
+        {                                                                    \
+            println( "It failed as expected, error message: %s", e.what() ); \
+        }                                                                    \
+        catch ( ... )                                                        \
+        {                                                                    \
+            println( "It failed unexpectedly!" );                            \
+            return 1;                                                        \
+        }                                                                    \
+    }
 
 int ini_parser::test_lineparser( void )
 {
     println( "Testing ini_parser::line_parser(const char* str) ..." );
 
-    /* char empty_line[]      = "";
+    // legal lines
+    char empty_line[]      = "";
     char blank_line[]      = "\t  \n";
     char comment_line[]    = "# this is a comment";
     char section_line[]    = "[This is a section]";
-    char key_int_line[]    = "key_int = 1";
-    char key_double_line[] = "key_char = 1.0";
+    char key_number_line[] = "key_char = 1.0 12";
     char key_bool_line[]   = "key_bool = true";
-    char key_str_line[]    = "key_str = this is a string"; */
+    char key_str_line[]    = "key_str = 1 true";
+    // illegal lines
+    char bad_section_line1[] = "[This is a bad section";
+    char bad_section_line2[] = "+[This is a bad section]";
+    char bad_key_value1[]    = " = ";
+    char bad_key_value2[]    = "1 = ";
+    char bad_key_value3[]    = " = 12";
 
-    return 0;
+    auto empty_line_res      = line_parser( empty_line );
+    auto blank_line_res      = line_parser( blank_line );
+    auto comment_line_res    = line_parser( comment_line );
+    auto section_line_res    = line_parser( section_line );
+    auto key_number_line_res = line_parser( key_number_line );
+    auto key_bool_line_res   = line_parser( key_bool_line );
+    auto key_str_line_res    = line_parser( key_str_line );
+
+    Line expected_empty_line_res, expected_blank_line_res, expected_comment_line_res,
+        expected_section_line_res, expected_key_number_line_res, expected_key_bool_line_res,
+        expected_key_str_line_res;
+    expected_empty_line_res.content         = "";
+    expected_empty_line_res.type            = LineType::empty;
+    expected_empty_line_res.value_type      = ValueType::none;
+    expected_blank_line_res.content         = "";
+    expected_blank_line_res.type            = LineType::empty;
+    expected_blank_line_res.value_type      = ValueType::none;
+    expected_comment_line_res.content       = "";
+    expected_comment_line_res.type          = LineType::empty;
+    expected_comment_line_res.value_type    = ValueType::none;
+    expected_section_line_res.content       = "This is a section";
+    expected_section_line_res.type          = LineType::section;
+    expected_section_line_res.value_type    = ValueType::none;
+    expected_key_number_line_res.content    = "key_char=1.0 12";
+    expected_key_number_line_res.type       = LineType::key_value;
+    expected_key_number_line_res.value_type = ValueType::number;
+    expected_key_bool_line_res.content      = "key_bool=true";
+    expected_key_bool_line_res.type         = LineType::key_value;
+    expected_key_bool_line_res.value_type   = ValueType::boolean;
+    expected_key_str_line_res.content       = "key_str=1 true";
+    expected_key_str_line_res.type          = LineType::key_value;
+    expected_key_str_line_res.value_type    = ValueType::string;
+
+    compact_try_catch( auto bad_section_line1_res = line_parser( bad_section_line1 ) );
+    compact_try_catch( auto bad_section_line2_res = line_parser( bad_section_line2 ) );
+    compact_try_catch( auto bad_key_value1_res = line_parser( bad_key_value1 ) );
+    compact_try_catch( auto bad_key_value2_res = line_parser( bad_key_value2 ) );
+    compact_try_catch( auto bad_key_value3_res = line_parser( bad_key_value3 ) );
+
+    bool success = check_line_equal( empty_line_res, expected_empty_line_res )
+                   && check_line_equal( blank_line_res, expected_blank_line_res )
+                   && check_line_equal( comment_line_res, expected_comment_line_res )
+                   && check_line_equal( section_line_res, expected_section_line_res )
+                   && check_line_equal( key_number_line_res, expected_key_number_line_res )
+                   && check_line_equal( key_bool_line_res, expected_key_bool_line_res )
+                   && check_line_equal( key_str_line_res, expected_key_str_line_res );
+
+    if ( success )
+    {
+        println( "It passed the test." );
+        return 0;
+    }
+    else
+    {
+        WARN( "It failed the test." );
+        return 1;
+    }
 }
 
 int ini_parser::test_trim( void )
@@ -315,6 +406,20 @@ int ini_parser::test_split( void )
     else
     {
         WARN( "It failed the test." );
+        return 1;
+    }
+}
+
+int ini_parser::test_read( void )
+{
+    try
+    {
+        this->read( this->filename.c_str() );
+        return 0;
+    }
+    catch ( std::exception& e )
+    {
+        WARN( "It failed the test, error message: %s", e.what() );
         return 1;
     }
 }

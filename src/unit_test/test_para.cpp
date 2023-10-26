@@ -37,7 +37,8 @@ void test_parameter( void )
     check( ini.test_checksize() );
     check( ini.test_trim() );
     check( ini.test_split() );
-    // check( ini.test_lineparser() );
+    check( ini.test_lineparser() );
+    check( ini.test_read() );
 
     println( "\033[0mThe test results of \033[4;34mparameter\033[0m part is:\033[0;32m %d success, "
              "\033[0;31m%d fail, "

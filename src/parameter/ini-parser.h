@@ -10,11 +10,11 @@ class ini_parser
 {
 private:  // private members
     enum class ValueType { number, string, boolean, none };
-    enum class LineType { section, key_value, white };
+    enum class LineType { section, key_value, empty };
     struct Line
     {
         std::string content    = "";
-        LineType    type       = LineType::white;
+        LineType    type       = LineType::empty;
         ValueType   value_type = ValueType::none;
     };
     // define the delimiters
@@ -33,10 +33,12 @@ public:  // public methods
     ini_parser( const char* filename );
     ~ini_parser() = default;
 #ifdef debug_parameter
-    int test_checksize();
-    int test_trim();
-    int test_split();
-    int test_lineparser();
+    int  test_checksize();
+    int  test_trim();
+    int  test_split();
+    int  test_lineparser();
+    int  test_read();
+    bool check_line_equal( Line a, Line b );
 #endif
 
 private:  // private methods
