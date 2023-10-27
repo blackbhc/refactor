@@ -100,6 +100,11 @@ First, you need to check the following dependencies
 
 ### Complete illustrations
 
+##### Use `galotfa` in simulation codes
+
+`galotfa` is based on `MPI`, and all `galotfa` APIs are designed to be used in `MPI` mode. So you need to
+call `MPI_Init` before using any `galotfa` APIs.
+
 ##### INI parameter file
 
 Note: the section name is case sensitive, but the key/value name is case insensitive.

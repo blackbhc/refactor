@@ -59,32 +59,41 @@ compile the code and run the unit test.
 By modifying the default value of the `TEST_TARGET` in the Makefile, or run `make test/mpi_test units=<unit to be tested>`
 you can specify the which unit to be tested.
 
-#### 3. Design unit test
+#### 3. Unit test convention
 
-`galotfa` is an OOP project, of which most functions are implemented as member functions of classes.
-The unit test is built into each class (some standalone public function for test), which is conditionally
-compiled that controlled by some macros ( which will be done by the command `make test/mpi_test`). To run any
-unit test, what you need to do is define such macros before compiling, and call the test functions of an
-object/namespace. .
+`galotfa` unit test convention is similar to reference to the practice in `RUST`: They
+are all implemented in corresponding modules enclosed by some macros for conditional compiling (e.g.
+`debug_parameter` to open the unit test for the parameter module). Such macro will be called "debug macro"
+in this documentation. The unit test functions should return 0 for success or 1 for failure.
+For unit test of a class, the unit test functions should be public member function `test_xxx` in such class,
+where `xxx` is the name of the test case. For unit test of other functions, the unit test functions
+should be defined in a `unit_test` namespace that enclosed by the corresponding macros.
+This convention is aimed to make the unit test more readable.
 
-So there are 5 steps to implement a new unit test for a new case:
+The macro of the unit test is defined by `make` in the `Makefile` according to the `TEST_TARGET` variable.
 
-1. define the corresponding macros, which will be done automatically by `make test/mpi_test` if you
-   add such macro into the `TEST_TARGET` in the Makefile, for example: if you set `TEST_TARGET = <somthing>`,
-   then the `debug_<somthing>` macro will be add to the `CXXFLAGS` by `-Ddebug_<somthing>`.
+#### 4. Add new unit test
 
-2. design the unit test for a new class or a new case in a existing class.
+There are 5 steps to add a new unit test:
 
-3. add a new `c++` file in the `src/test` directory, and define a function in which you call the test functions
-   defined in the previous step.
+1. consider a corresponding debug macro for a new module part, or choose a existing module and its debug macro
+   to control the conditional compilation of the new test. Such macro will be automatically defined `make`
+   when run `make test/mpi_test` if you add such macro into the `TEST_TARGET` in the Makefile,
+   for example: if you set `TEST_TARGET = <somthing>`, then the `debug_<somthing>` macro will be add
+   to `CXXFLAGS` by `-Ddebug_<somthing>`.
 
-4. In the `main` function of the `src/unit_test/test.cpp` file, include the new `c++` file create in the last step
-   and call its function defined in the last step, with possible macro for conditional compiling for the unit test.
+2. design the unit test functions, follow the unit test convention.
 
-5. run `make test` or `make mpi_test` to compile and run the test.
+3. For a new module, add a new `c++` file in the `src/test` directory, and define a wrapper function
+   in which you call the test functions defined in the previous step.
 
-Note: the `test` member function is just a wrapper of the designed unit tests, and you can split them
-into more functions with possible conditional compiling by macros.
+4. For a new module, in the `main` function of the `src/unit_test/test.cpp` file, include the new `c++`,
+   file create in the last step.
+
+5. Call the test wrapper function defined in the step 3, or the test wrapper the debug macro you choose
+   in the step 1, in the `main` function of the `src/unit_test/test.cpp` file.
+
+6. run `make test` or `make mpi_test` to compile and run the test.
 
 ### Add New Function Module <a name="add_new_module"></a><a href="#contents"><font size=4>(content)</font></a>
 
@@ -104,7 +113,7 @@ into more functions with possible conditional compiling by macros.
 
 ### Codes Structure <a name="codes_structure"></a><a href="#contents"><font size=4>(content)</font></a>
 
-##### `src/tools`
+#### `src/tools`
 
 - `prompt.h`: define some macros for prompt message.
   Note: to used the following macro in MPI mode, you need to include the `mpi.h` before `prompt.h`, otherwise CPP can not
@@ -117,7 +126,7 @@ into more functions with possible conditional compiling by macros.
   - `WARN`: print a warning message, based on the `fprintln` macro.
   - `ERROR`: print a error message, based on the `fprintln` macro.
 
-##### `src/parameter`
+#### `src/parameter`
 
 Note: the section name is case sensitive, but the key/value name is case insensitive.
 The `ini_parser` class will parse the ini parameter file into a hash table.
@@ -136,7 +145,23 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
   - `read`: the main interface used to read the parameter file, based on `line_parser`.
   - `insert_to_table`: insert the parsed key-value pair into the hash table. The hash table is defined with
     string key and a structure value (`galotfa::ini::Value`) pair. The key of the hash table = section name +
-    "\*" + key name of parameter in the ini file, where the space in the section name will be replaced by `_`.
+    "_" + key name of parameter in the ini file, where the space in the section name will be replaced by `_`.
   - `get_xxx`: the function to extract the value of a key in the parameter file. Support to get boolean, number, string,
     and vector of number and string.
   - `has`: check whether a key exist in the parameter file.
+
+#### `src/output`
+
+##### Convention of the data output
+
+- `galotfa` use `hdf5` for data output, where different analysis modules will be stored in different files.
+- For better performance, `galotfa` will store the analysis results with chunked dataset to save space.
+- `galotfa` will use a virtual stack in the main process to store the analysis results, and output the data
+  to the hdf5 file when the stack is full or the simulation is finished. This strategy is due to the
+  uncertainty of how many synchronized time steps will be analyzed during a simulation.
+  This can avoid the frequent opening and closing of the hdf5 file, which is time consuming.
+- It seems to be possible to use the `MPI` parallel hdf5 IO to improve the performance, but there is few
+  documentations about this feature, and such feature is not always activated in the hdf5 library, so
+  `galotfa` only collect the analysis results into the main process and output the data in it.
+
+##### Basic analysis results
