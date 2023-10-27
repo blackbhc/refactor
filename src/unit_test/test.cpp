@@ -1,8 +1,10 @@
+#define DO_UNIT_TEST 1
 #ifdef MPI_TEST
 #include <mpi.h>
 #endif
 #include "../tools/prompt.h"
 #include <stdio.h>
+
 
 // include the unit test header files
 #ifdef debug_parameter

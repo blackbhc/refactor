@@ -1,3 +1,5 @@
+#ifndef __GALOTFA_PROMPT_CPP__
+#define __GALOTFA_PROMPT_CPP__
 #include "prompt.h"
 #include <stdexcept>  // std::runtime_error
 #include <stdio.h>
@@ -22,4 +24,5 @@ int warn_and_error()
     return 0;
 }
 };  // namespace unit_test
+#endif
 #endif

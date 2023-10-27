@@ -52,7 +52,8 @@
         throw std::runtime_error( "Invalid file or parameter during run." ); \
     }
 
-// macro for check the result of unit test, to make the code more compact
+#ifdef DO_UNIT_TEST
+// macro for check the rusult of unit test, to make the code more compact
 #define CHECK_RETURN( status_flag )                                              \
     {                                                                            \
         if ( !( status_flag ) )                                                  \
@@ -66,4 +67,39 @@
             return 0;                                                            \
         }                                                                        \
     }
+
+// count the result of unit test
+// based on three status flag: success, fail and unknown
+#define COUNT( x )              \
+    {                           \
+        int status = x;         \
+        if ( status == 0 )      \
+        {                       \
+            success++;          \
+        }                       \
+        else if ( status == 1 ) \
+        {                       \
+            fail++;             \
+        }                       \
+        else                    \
+        {                       \
+            unknown++;          \
+        }                       \
+    }
+
+// macro function to summary the result of unit test
+// based on three status flag: success, fail and unknown
+#define SUMMARY( module_name )                                                              \
+    {                                                                                       \
+        println( "\033[0mThe test results of \033[5;34m%s\033[0m part is:\033[0;32m %d "    \
+                 "success, "                                                                \
+                 "\033[0;31m%d fail, "                                                      \
+                 "\033[0;33m%d unknown.\033[0m",                                            \
+                 module_name, success, fail, unknown );                                     \
+        if ( fail + unknown == 0 )                                                          \
+        {                                                                                   \
+            println( "All tests of \033[5;34m%s\033[0m part passed!\033[0m", module_name ); \
+        }                                                                                   \
+    }
+#endif
 #endif
