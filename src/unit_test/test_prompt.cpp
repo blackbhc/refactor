@@ -1,6 +1,5 @@
-#include "../tools/prompt.h"
 #include "../tools/prompt.cpp"
-#include "test_info.hpp"
+#include "../tools/prompt.h"
 
 void test_prompt()
 {

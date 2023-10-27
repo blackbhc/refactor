@@ -3,7 +3,7 @@
 #define _PARA_TEST_
 #include "../parameter/ini-parser.cpp"
 #include "../parameter/ini-parser.h"
-#include "test_info.hpp"
+#include "../tools/prompt.h"
 #include <stdio.h>
 
 // a macro to call a test wrapper and update the test results.
