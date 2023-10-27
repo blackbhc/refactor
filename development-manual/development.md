@@ -72,7 +72,7 @@ you can specify the which unit to be tested.
 `galotfa` unit test convention is similar to reference to the practice in `RUST`: They
 are all implemented in corresponding modules enclosed by some macros for conditional compiling (e.g.
 `debug_parameter` to open the unit test for the parameter module). Such macro will be called "debug macro"
-in this documentation. The unit test functions should return 0 for success or 1 for failure.
+in this documentation. The unit test functions should return 0 for success or 1 for failure or other for unknown.
 For unit test of a class, the unit test functions should be public member function `test_xxx` in such class,
 where `xxx` is the name of the test case. For unit test of other functions, the unit test functions
 should be defined in a `unit_test` namespace that enclosed by the corresponding macros.
