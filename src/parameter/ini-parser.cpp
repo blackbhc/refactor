@@ -290,6 +290,14 @@ std::vector< std::string > ini_parser::get_strs( std::string section, std::strin
     return this->split( this->ini_table[ hash_key_name ].content );
 }
 
+inline bool ini_parser::has( std::string section, std::string key ) const
+{
+    std::replace( section.begin(), section.end(), ' ', '_' );
+    std::transform( key.begin(), key.end(), key.begin(), ::tolower );
+    std::string hash_key_name = section + "_" + key;
+    return this->ini_table.find( hash_key_name ) != this->ini_table.end();
+}
+
 #ifdef debug_parameter
 // macro for check the result of unit test, to make the code more compact
 #define ASSERT( sentence )                                                       \

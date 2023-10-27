@@ -45,6 +45,7 @@ public:  // public methods
     std::vector< double >      get_doubles( std::string section, std::string key ) const;
     std::string                get_str( std::string section, std::string key ) const;
     std::vector< std::string > get_strs( std::string section, std::string key ) const;
+    inline bool                has( std::string section, std::string key ) const;
 #ifdef debug_parameter
     int  test_checksize() const;
     int  test_trim() const;
