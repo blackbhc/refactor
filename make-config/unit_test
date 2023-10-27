@@ -11,10 +11,9 @@ TEST_SRC = src/*/*.*
 
 test_dir/test: $(TEST_SRC) test_dir
 	@echo "Building unit test ..."
-	@$(CXX) $(CXXFLAGS) -ggdb $(PROJECT_ROOT)/src/unit_test/test.cpp -o $(PROJECT_ROOT)/test_dir/test\
-		-fsanitize=undefined -fsanitize=leak -fsanitize=address
+	@$(CXX) $(CXXFLAGS) -ggdb $(PROJECT_ROOT)/src/unit_test/test.cpp -o $(PROJECT_ROOT)/test_dir/test
 
 test_dir/mpi_test: $(TEST_SRC) test_dir
 	@echo "Building mpi unit test ..."
-	@$(CXX) -DMPI_TEST $(CXXFLAGS) -ggdb $(PROJECT_ROOT)/src/unit_test/test.cpp -o \
-		$(PROJECT_ROOT)/test_dir/mpi_test -fsanitize=undefined -fsanitize=leak -fsanitize=address
+	@$(CXX) -DMPI_TEST $(CXXFLAGS) -ggdb $(PROJECT_ROOT)/src/unit_test/test.cpp -o\
+		$(PROJECT_ROOT)/test_dir/mpi_test

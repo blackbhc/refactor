@@ -1,5 +1,5 @@
 # build type: header-only or static or shared or all
-type = header-only
+type = all
 # build mode: debug or release
 mode = release
 # install prefix
