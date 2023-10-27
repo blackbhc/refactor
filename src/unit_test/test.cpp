@@ -40,8 +40,8 @@ int main( int argc, char* argv[] )
     MPI_Init( &argc, &argv );
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
     MPI_Comm_size( MPI_COMM_WORLD, &size );
-    test_info( "--------------------------------------------------------------------\n" );
-    test_info( "\t\tRunning test on %d processors ...\n", size );
+    println( "--------------------------------------------------------------------" );
+    println( "\t\tRunning test on %d processors ...", size );
 #else
 int main()
 {

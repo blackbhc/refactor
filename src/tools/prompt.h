@@ -51,4 +51,19 @@
         fprintln( "\033[0;1;31m [ERROR]: \033[0m" __VA_ARGS__ );             \
         throw std::runtime_error( "Invalid file or parameter during run." ); \
     }
+
+// macro for check the result of unit test, to make the code more compact
+#define CHECK_RETURN( status_flag )                                              \
+    {                                                                            \
+        if ( !( status_flag ) )                                                  \
+        {                                                                        \
+            WARN( "The test failed at %d line in file %s", __LINE__, __FILE__ ); \
+            return 1;                                                            \
+        }                                                                        \
+        else                                                                     \
+        {                                                                        \
+            println( "The test passed." );                                       \
+            return 0;                                                            \
+        }                                                                        \
+    }
 #endif
