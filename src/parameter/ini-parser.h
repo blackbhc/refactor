@@ -1,8 +1,8 @@
 /// This file is a naive implementation of a parser for ini files.
 /// Only supports simple key-value pairs: characters and numbers only.
 
-#ifndef __INI_PARSER_H__
-#define __INI_PARSER_H__
+#ifndef __GALOTFA_INI_PARSER_H__
+#define __GALOTFA_INI_PARSER_H__
 #include <string>
 #include <unordered_map>
 #include <vector>

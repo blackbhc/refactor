@@ -1,5 +1,5 @@
-#ifndef _PROTOS_PROMPT_H_
-#define _PROTOS_PROMPT_H_
+#ifndef __GALOTFA_PROMPT_H__
+#define __GALOTFA_PROMPT_H__
 #include <stdexcept>
 #include <stdio.h>
 
