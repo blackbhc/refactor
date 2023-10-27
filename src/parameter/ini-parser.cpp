@@ -303,20 +303,6 @@ inline bool ini_parser::has( std::string section, std::string key ) const
 }
 
 #ifdef debug_parameter
-// macro for check the result of unit test, to make the code more compact
-#define ASSERT( sentence )                                                       \
-    {                                                                            \
-        if ( !( sentence ) )                                                     \
-        {                                                                        \
-            WARN( "The test failed at %d line in file %s", __LINE__, __FILE__ ); \
-            return 1;                                                            \
-        }                                                                        \
-        else                                                                     \
-        {                                                                        \
-            println( "The test passed." );                                       \
-            return 0;                                                            \
-        }                                                                        \
-    }
 
 int ini_parser::test_checksize() const
 {
@@ -468,7 +454,7 @@ int ini_parser::test_lineparser( void ) const
                    && check_line_equal( key_bool_line_res, expected_key_bool_line_res )
                    && check_line_equal( key_str_line_res, expected_key_str_line_res );
 
-    ASSERT( success );
+    CHECK_RETURN( success );
 }
 
 int ini_parser::test_trim( void ) const
@@ -491,7 +477,7 @@ int ini_parser::test_trim( void ) const
 
     bool success = res1 && res2 && res3 && res4 && res5 && res6;
 
-    ASSERT( success );
+    CHECK_RETURN( success );
 }
 
 int ini_parser::test_split( void ) const
@@ -515,7 +501,7 @@ int ini_parser::test_split( void ) const
 
     bool success = ( res1 == target1 ) && ( res2 == target1 ) && ( res3 == target1 )
                    && ( res4 == target1 ) && ( res5 == target2 );
-    ASSERT( success );
+    CHECK_RETURN( success );
 }
 
 int ini_parser::test_read( void )
@@ -594,7 +580,7 @@ int ini_parser::test_get( void ) const
 
     bool success = ( res1 == target1 ) && ( res2 == target2 ) && ( res3 == target3 )
                    && ( res4 == target4 ) && ( res5 == target5 );
-    ASSERT( success );
+    CHECK_RETURN( success );
     return 0;
 }
 #endif
