@@ -3,7 +3,7 @@ type = header-only
 # build mode: debug or release
 mode = release
 # install prefix
-prefix = $(HOME)/.local
+prefix = $(HOME)/test/galotfa
 
 # project root directory
 PROJECT_ROOT = ${shell env pwd}
@@ -20,7 +20,7 @@ all: build
 
 clean:
 	@echo "Cleaning..."
-	@rm -rf $(BUILD_DIR) $(PROJECT_ROOT)/build
+	@rm -rf $(BUILD_DIR)
 	@rm -rf $(PROJECT_ROOT)/test_dir/test $(PROJECT_ROOT)/test_dir/mpi_test
 	@echo "Done!"
 
@@ -43,6 +43,7 @@ mpi_test: check test_dir/mpi_test
 
 
 build: check $(TARGET)
+	@mkdir -p $(BUILD_DIR)
 ifeq ($(type), header-only)
 	@echo "Building header-only ..."
 else ifeq ($(type), static)
@@ -72,12 +73,15 @@ install: build
 	@cp -r $(BUILD_DIR)/* $(prefix)/
 	@echo "Done!"
 
+headers = $(shell (ls $(PROJECT_ROOT)/src/))
 uninstall:
 	@echo "Uninstalling ..."
-# BUG: determine the exact header file path
-	@rm -rf $(prefix)/include/$(TARGET)
+ifeq ($(findstring galotfa, $(prefix)), "") # if there is no galotfa in prefix
+	@rm -rf $(prefix)/include/$(headers)
 	@rm -rf $(prefix)/lib/libgalotfa*
+else
+	@rm -rf $(prefix)
+endif
 	@echo "Done!"
 	
-
-.PHONY: all clean test build install check
+.PHONY: all clean test install check test_make

@@ -13,24 +13,22 @@ else
 endif
 
 
-#BUG: actually the `src/**` can not track the time stamp of the codes in src/
-$(PROJECT_ROOT)/build/libgalotfa.a: src/**
+$(PROJECT_ROOT)/build/libgalotfa.a: src/*/*.*
 	@mkdir -p $(BUILD_DIR)/include $(BUILD_DIR)/lib
 	@cp -r $(PROJECT_ROOT)/src/* $(BUILD_DIR)/include/
-	$(CXX) $(CXXFLAGS) -c $(PROJECT_ROOT)/src/C_wrapper/galotfa.h -o $(BUILD_DIR)/galotfa.o
+	$(CXX) $(CXXFLAGS) -c $(PROJECT_ROOT)/src/galotfa.h -o $(BUILD_DIR)/galotfa.o
 	ar rcs $(BUILD_DIR)/lib/libgalotfa.a $(BUILD_DIR)/galotfa.o
-	@ rm $(BUILD_DIR)/galotfa.o
+	@rm $(BUILD_DIR)/galotfa.o
 	@rm $(BUILD_DIR)/include/**/*.c*; rm $(BUILD_DIR)/include/**/*.hpp
 
 
-$(PROJECT_ROOT)/build/libgalotfa.so: src/**
+$(PROJECT_ROOT)/build/libgalotfa.so: src/*/*.*
 	@mkdir -p $(BUILD_DIR)/include $(BUILD_DIR)/lib
 	@cp -r $(PROJECT_ROOT)/src/* $(BUILD_DIR)/include/
 ifeq ($(mode), debug)
-	$(CXX) $(CXXFLAGS) -shared -fPIC $(PROJECT_ROOT)/src/C_wrapper/galotfa.h -o $(BUILD_DIR)/lib/libgalotfa.so
+	$(CXX) $(CXXFLAGS) -shared -fPIC $(PROJECT_ROOT)/src/galotfa.h -o $(BUILD_DIR)/lib/libgalotfa.so
 else
-	$(CXX) $(CXXFLAGS) -shared -fsanitize=address -fsanitize=undefined -fsanitize=leak -fPIC \
-		$(PROJECT_ROOT)/src/C_wrapper/galotfa.h -o $(BUILD_DIR)/lib/libgalotfa.so
+	$(CXX) $(CXXFLAGS) -shared -fsanitize=address -fsanitize=undefined -fsanitize=leak -fPIC $(PROJECT_ROOT)/src/galotfa.h -o $(BUILD_DIR)/lib/libgalotfa.so
 endif
 	@rm $(BUILD_DIR)/include/**/*.c*; rm $(BUILD_DIR)/include/**/*.hpp
 
