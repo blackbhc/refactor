@@ -37,6 +37,7 @@ This project depends on the following tools or libraries:
   - `output`: functions for analysis results output.
   - `parameter`: parameter file reading and parsing.
   - `engine`: the main virtual analysis engine, which is a wrapper of other modules.
+  - `simcodes`: the interface with some simulation software, at now `Gadget4`, `AREPO`, `GIZMO` and `RAMSES` are supported.
 
 - `documentation`: the directory of the developers' documentation and the details of the analysis codes.
 - `test_dir`(optional): the temporary directory for the building and running unit test, which will
@@ -111,8 +112,10 @@ into more functions with possible conditional compiling by macros.
 
   - `println`: print a message with a new line, this is the most commonly used macro and will only print
     the message in the root process if the program is running in MPI mode.
-  - `WARN`: print a warning message, based on the `println` macro.
-  - `ERROR`: print a error message, based on the `println` macro.
+  - `fprintln`: similar but for `fprintf`.
+    the message in the root process if the program is running in MPI mode.
+  - `WARN`: print a warning message, based on the `fprintln` macro.
+  - `ERROR`: print a error message, based on the `fprintln` macro.
 
 ##### `src/parameter`
 
@@ -136,3 +139,4 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
     "\*" + key name of parameter in the ini file, where the space in the section name will be replaced by `_`.
   - `get_xxx`: the function to extract the value of a key in the parameter file. Support to get boolean, number, string,
     and vector of number and string.
+  - `has`: check whether a key exist in the parameter file.

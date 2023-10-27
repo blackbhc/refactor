@@ -34,7 +34,7 @@ First, you need to check the following dependencies
 - `make`: `galotfa` is organized by `make`, run `which make` to check the installation of `make` in your system.
   If you don't have `make`, please install it first.
 
-- a `c++` compiler with `c++11` support, e.g. `gcc`>4.8.5 or `clang`>3.9.1 are recommended.
+- a `c++` compiler with `c++11` support, e.g. `g++`>4.8.5 or `clang++`>3.9.1 are recommended.
 
 - dependent libraries:
   - any `MPI` library.
@@ -42,8 +42,10 @@ First, you need to check the following dependencies
 
 ##### Download and install step by step
 
-1. clone the `galotfa` repo with `git`: `git clone -b main https://github.com/blackbhc/galotfa --depth=1`
-   - if you don't have `git`, try `wget -O- https://github.com/blackbhc/galotfa/archive/main.zip | tar xz`.
+1. clone the `galotfa` repo with `git`: run `git clone -b main https://github.com/blackbhc/galotfa --depth=1`
+
+   If you don't have `git`, try `wget -O- https://github.com/blackbhc/galotfa/archive/main.zip | tar xz`.
+
 2. run `cd galotfa`
 3. run `make build mode=release type=header-only`.
 
@@ -64,8 +66,31 @@ First, you need to check the following dependencies
    - (2) if you encounter any error during the installation, please check the error message and run
      `make clean` to clean the build files, then run `make build` again.
 
-4. `make install prefix=</path/to/install>` to install the `galotfa` to the `prefix` you set in step 3.
-5. if you want to uninstall `galotfa`, run `make uninstall` in the `galotfa` directory.
+4. run `make -p <path/to/install>`:
+
+   Create the directory for the installation of `galotfa`, if it already exists, skip this step.
+
+5. run `make install prefix=</path/to/install>`:
+
+   Install the `galotfa` to the directory specified by `prefix`, which should be the same as
+   the one you specified in the last step.
+
+6. After configure the `CPATH`, `LIBRARY_PATH` and `LD_LIBRARY_PATH` environment variables,
+   you can use `galotfa` in your project.:
+
+   - (temporary) run `export CPATH=$CPATH:<prefix>/include`, `export LIBRARY_PATH=$LIBRARY_PATH:<prefix>/lib`,
+     `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<prefix>/lib` before you compile your project every time.
+   - (permanent) add the above three `export` commands into your shell configuration file:
+
+     e.g. `~/.bashrc` for `bash` or
+     `~/.zshrc` for `zsh`. You can run `echo $SHELL` to check your shell type, which will print something
+     like `/bin/bash` to your terminal. Then run `source ~/.bashrc`/`source ~/.zshrc` to make the changes take effect.
+     Then you can use `galotfa` without configure every time.
+
+7. If you want to uninstall `galotfa`, run `make uninstall` in the `galotfa` repo directory.
+
+   If the install path contain `galotfa`, then such directory will be removed completely. Otherwise, only
+   the `galotfa` library files under such directory will be removed.
 
 ---
 
