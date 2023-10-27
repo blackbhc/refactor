@@ -28,12 +28,13 @@ This project depends on the following tools or libraries:
 
 - `Makefile`: the main makefile of the project, with some sub-makefiles in the `make-config` directory.
   - Note: due to the sub-makefiles, the `make` command should always be run in the root directory of the project.
-- `src`: the source code directory.
+- `src`: the source code directory, each sub-directory is a module (just a logic unit, not the c++20 module)
+  of the project.
 
   - `C_wrapper`: the directory include the public C wrapper APIs of the project.
   - `unit_test`: the directory of unit test wrapper codes, more details in the <a href="#unit_test">Unit Test</a> section.
   - `analysis`: the directory of the core analysis codes.
-  - `tools`: define some useful tool functions and classes.
+  - `tools`: some utility functions and classes.
   - `output`: functions for analysis results output.
   - `parameter`: parameter file reading and parsing.
   - `engine`: the main virtual analysis engine, which is a wrapper of other modules.
@@ -125,6 +126,8 @@ There are 5 steps to add a new unit test:
     the message in the root process if the program is running in MPI mode.
   - `WARN`: print a warning message, based on the `fprintln` macro.
   - `ERROR`: print a error message, based on the `fprintln` macro.
+
+- `prompt.cpp`: the unit test wrapper for the prompt module.
 
 ### `src/parameter`
 
