@@ -65,6 +65,9 @@ First, you need to check the following dependencies
      library can be used without linking to the library files.
    - (2) if you encounter any error during the installation, please check the error message and run
      `make clean` to clean the build files, then run `make build` again.
+   - The header only mode is only available for `C++` compiler, and the `C` compiler will not be able to
+     compile the `galotfa` header files. Therefore, to use `galotfa` in a simulation code written in `C`,
+     the `type` option should be `static` or `shared`.
 
 4. run `make -p <path/to/install>`:
 
