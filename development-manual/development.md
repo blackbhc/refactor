@@ -167,4 +167,11 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
   documentations about this feature, and such feature is not always activated in the hdf5 library, so
   `galotfa` only collect the analysis results into the main process and output the data in it.
 
-#### Basic analysis results
+#### Convention for array
+
+To simplify the functions parameters and better performance, `galotfa` always use 1D C-style array
+to store the analysis results. When store a multi-dimensional array, the array will be stored as different
+block in such 1D array, follow the row major convention. For example, a 2D array `a[i][j]` will be stored as `a[i*N+j]`,
+where `N` is the length of the second dimension of the array. The analogy is also true for higher
+dimensional array, e.g. `i*N + j*M + k`, where the block size multiplied by the index is the size of
+the sub-space of the array.
