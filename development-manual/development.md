@@ -8,10 +8,11 @@ and the documentations.
 ## Content <a name="content"></a>
 
 1. <a href="#deps">Dependencies</a>
-2. <a href="#files">Project Frame</a>
-3. <a href="#unit_test">Unit Test</a>
-4. <a href="#add_new_module">Add New Function Module</a>
-5. <a href="#codes_structure">Codes Structure</a>
+1. <a href="#debug">Debug Mode</a>
+1. <a href="#files">Project Frame</a>
+1. <a href="#unit_test">Unit Test</a>
+1. <a href="#add_new_module">Add New Function Module</a>
+1. <a href="#codes_structure">Codes Structure</a>
 
 ## Dependencies <a name="deps"></a><a href="#contents"><font size=4>(content)</font></a>
 
@@ -23,6 +24,12 @@ This project depends on the following tools or libraries:
 - [gsl](https://www.gnu.org/software/gsl/): the GNU Scientific Library.
 - [hdf5](https://www.hdfgroup.org/solutions/hdf5/): the HDF5 library, which is used to store the analysis results.
 - a `MPI` library: `mpich`, `openmpi` or `intel mpi` etc.
+
+## Debug Mode<a name="debug"></a><a href="#contents"><font size=4>(content)</font></a>
+
+`galotfa` will enable the `-fsanitize=address,leak,undefined` check in the debug mode, which will check the address
+leak and undefined behavior of the codes. Such check will slow down the codes, and may cause some false positive.
+You can remove such flags if you want, which is located in `make-config/flags` file.
 
 ## Project Frame <a name="files"></a><a href="#contents"><font size=4>(content)</font></a>
 
@@ -126,6 +133,14 @@ There are 5 steps to add a new unit test:
     the message in the root process if the program is running in MPI mode.
   - `WARN`: print a warning message, based on the `fprintln` macro.
   - `ERROR`: print a error message, based on the `fprintln` macro.
+  - `CHECK_RETURN(status_flag)`: check the status flag of a boolean value, designed to be used in the
+    unit test functions (the true test function, not the wrappers) to check and return the test result.
+  - `COUNT(<call a unit test function>)`: the function to check the result of a unit test, then increase the int variable `success`, `fail` and
+    `unknown` correspondingly. This macro should be used in the unit test wrapper functions, where `success`,
+    `fail` and `unknown` are defined.
+  - `SUMMARY(<c str of a module name)`: should be called after all `COUNT(<somthing>)` statement, which will
+    print the summary of the unit test results with the given module name (so it should be consistent with the
+    wrapper's file name where you use this macro).
 
 - `prompt.cpp`: the unit test wrapper for the prompt module.
 
@@ -181,4 +196,5 @@ the sub-space of the array.
 - `writer.h`: the interface of the data output module, with realization in `writer.cpp`.
   - `create_h5(string)`: create a hdf5 file with the given path to file. Due to there may be a case of restart
     simulation, `create_h5` will not overwrite the existing file, but create a new file with a `-n` suffix
-    that start from 1, where `n` is the smallest integer that make the new file name not exist .
+    that start from 1, where `n` is the smallest integer that make the new file name not exist. This function
+    can only be used in the main process, due to hdf5 file lock.
