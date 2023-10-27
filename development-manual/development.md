@@ -175,3 +175,10 @@ block in such 1D array, follow the row major convention. For example, a 2D array
 where `N` is the length of the second dimension of the array. The analogy is also true for higher
 dimensional array, e.g. `i*N + j*M + k`, where the block size multiplied by the index is the size of
 the sub-space of the array.
+
+#### Files
+
+- `writer.h`: the interface of the data output module, with realization in `writer.cpp`.
+  - `create_h5(string)`: create a hdf5 file with the given path to file. Due to there may be a case of restart
+    simulation, `create_h5` will not overwrite the existing file, but create a new file with a `-n` suffix
+    that start from 1, where `n` is the smallest integer that make the new file name not exist .

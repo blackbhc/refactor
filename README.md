@@ -119,6 +119,12 @@ Note: the section name is case sensitive, but the key/value name is case insensi
 - unexpected additional value for a key will be illegal, e.g. `<a key for boolean> = true yes` will make the parser to detect
   the value of the key as `true yes`, which is in string type and may cause error in the following parsing.
 
+#### Output files
+
+Due to there may be a case of a restart simulation, `galotfa` will not overwrite any existing file,
+but create a new file with a `-n` suffix that start from 1, where `n` is the smallest integer that make the new file
+name not exist. In this way, the suffix can be served as a restart index.
+
 ---
 
 ## Design scheme <a href="#contents"><font size=4>(contents)</font></a> <a id="scheme"></a>
