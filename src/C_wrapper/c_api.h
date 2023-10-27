@@ -1,3 +1,5 @@
+#ifndef C_API_H
+#define C_API_H
 #ifdef define_a_print
 #include <stdio.h>
 #endif
@@ -17,4 +19,5 @@ void print()  // define a hello world function for test
 // include the implementation files if in header-only type
 #ifdef header_only
 #include "../parameter/ini-parser.cpp"
+#endif
 #endif
