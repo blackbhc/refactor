@@ -122,6 +122,7 @@ ini::Line ini_parser::line_parser( const char* str ) const
             raw_content.erase( 0, raw_content.find_first_of( section_prefix ) + 1 );
             raw_content.erase( raw_content.find_first_of( section_suffix ) );
             std::replace( raw_content.begin(), raw_content.end(), ' ', '_' );
+            std::replace( raw_content.begin(), raw_content.end(), '\t', '_' );
             line.content = raw_content;
             return line;
         }
@@ -228,6 +229,7 @@ inline std::vector< std::string > ini_parser::split( std::string str ) const
     std::string sec_name = section;                                                       \
     std::string key_name = key;                                                           \
     std::replace( sec_name.begin(), sec_name.end(), ' ', '_' );                           \
+    std::replace( sec_name.begin(), sec_name.end(), '\t', '_' );                          \
     std::transform( key_name.begin(), key_name.end(), key_name.begin(), ::tolower );      \
     std::string hash_key_name = sec_name + "_" + key_name;                                \
     if ( this->ini_table.find( hash_key_name ) == this->ini_table.end() )                 \
@@ -238,6 +240,7 @@ inline std::vector< std::string > ini_parser::split( std::string str ) const
     std::string sec_name = section;                                                        \
     std::string key_name = key;                                                            \
     std::replace( sec_name.begin(), sec_name.end(), ' ', '_' );                            \
+    std::replace( sec_name.begin(), sec_name.end(), '\t', '_' );                           \
     std::transform( key_name.begin(), key_name.end(), key_name.begin(), ::tolower );       \
     std::string hash_key_name = sec_name + "_" + key_name;                                 \
     if ( this->ini_table.find( hash_key_name ) == this->ini_table.end() )                  \
@@ -293,6 +296,7 @@ std::vector< std::string > ini_parser::get_strs( std::string section, std::strin
 inline bool ini_parser::has( std::string section, std::string key ) const
 {
     std::replace( section.begin(), section.end(), ' ', '_' );
+    std::replace( section.begin(), section.end(), '\t', '_' );
     std::transform( key.begin(), key.end(), key.begin(), ::tolower );
     std::string hash_key_name = section + "_" + key;
     return this->ini_table.find( hash_key_name ) != this->ini_table.end();
