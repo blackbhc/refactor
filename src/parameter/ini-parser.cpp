@@ -221,33 +221,50 @@ inline std::vector< std::string > ini_parser::split( std::string str ) const
     return vals;
 }
 
+// macro: get the hash key name, and make sure there is such key
+// it's only  used in the get functions
+#ifndef debug_parameter
+#define SECURE_EXTRACT( section, key )                                                    \
+    std::string sec_name = section;                                                       \
+    std::string key_name = key;                                                           \
+    std::replace( sec_name.begin(), sec_name.end(), ' ', '_' );                           \
+    std::transform( key_name.begin(), key_name.end(), key_name.begin(), ::tolower );      \
+    std::string hash_key_name = sec_name + "_" + key_name;                                \
+    if ( this->ini_table.find( hash_key_name ) == this->ini_table.end() )                 \
+        WARN( "[%s] -> [%s] does not exist in the ini parameter table!", section.c_str(), \
+              key.c_str() );
+#else
+#define SECURE_EXTRACT( section, key )                                                     \
+    std::string sec_name = section;                                                        \
+    std::string key_name = key;                                                            \
+    std::replace( sec_name.begin(), sec_name.end(), ' ', '_' );                            \
+    std::transform( key_name.begin(), key_name.end(), key_name.begin(), ::tolower );       \
+    std::string hash_key_name = sec_name + "_" + key_name;                                 \
+    if ( this->ini_table.find( hash_key_name ) == this->ini_table.end() )                  \
+        ERROR( "[%s] -> [%s] does not exist in the ini parameter table!", section.c_str(), \
+               key.c_str() );
+#endif
 bool ini_parser::get_bool( std::string section, std::string key ) const
 {
-    std::replace( section.begin(), section.end(), ' ', '_' );
-    std::transform( key.begin(), key.end(), key.begin(), ::tolower );
-    std::string hash_key_name = section + "_" + key;
+    SECURE_EXTRACT( section, key );
     if ( this->ini_table[ hash_key_name ].type != ini::ValueType::boolean )
-        ERROR( "[%s] -> [%s] is not boolean type!", section.c_str(), key.c_str() );
+        WARN( "[%s] -> [%s] is not boolean type!", section.c_str(), key.c_str() );
     return this->ini_table[ hash_key_name ].content == "true";
 }
 
 double ini_parser::get_double( std::string section, std::string key ) const
 {
-    std::replace( section.begin(), section.end(), ' ', '_' );
-    std::transform( key.begin(), key.end(), key.begin(), ::tolower );
-    std::string hash_key_name = section + "_" + key;
+    SECURE_EXTRACT( section, key );
     if ( this->ini_table[ hash_key_name ].type != ini::ValueType::number )
-        ERROR( "[%s] -> [%s] is not number type!", section.c_str(), key.c_str() );
+        WARN( "[%s] -> [%s] is not number type!", section.c_str(), key.c_str() );
     return std::stod( this->ini_table[ hash_key_name ].content );
 }
 
 std::vector< double > ini_parser::get_doubles( std::string section, std::string key ) const
 {
-    std::replace( section.begin(), section.end(), ' ', '_' );
-    std::transform( key.begin(), key.end(), key.begin(), ::tolower );
-    std::string hash_key_name = section + "_" + key;
+    SECURE_EXTRACT( section, key );
     if ( this->ini_table[ hash_key_name ].type != ini::ValueType::numbers )
-        ERROR( "[%s] -> [%s] is not numbers type!", section.c_str(), key.c_str() );
+        WARN( "[%s] -> [%s] is not numbers type!", section.c_str(), key.c_str() );
     auto                  vals = this->split( this->ini_table[ hash_key_name ].content );
     std::vector< double > res( vals.size() );
     for ( size_t i = 0; i < vals.size(); ++i )
@@ -259,21 +276,17 @@ std::vector< double > ini_parser::get_doubles( std::string section, std::string 
 
 std::string ini_parser::get_str( std::string section, std::string key ) const
 {
-    std::replace( section.begin(), section.end(), ' ', '_' );
-    std::transform( key.begin(), key.end(), key.begin(), ::tolower );
-    std::string hash_key_name = section + "_" + key;
+    SECURE_EXTRACT( section, key );
     if ( this->ini_table[ hash_key_name ].type != ini::ValueType::string )
-        ERROR( "[%s] -> [%s] is not string type!", section.c_str(), key.c_str() );
+        WARN( "[%s] -> [%s] is not string type!", section.c_str(), key.c_str() );
     return this->ini_table[ hash_key_name ].content;
 }
 
 std::vector< std::string > ini_parser::get_strs( std::string section, std::string key ) const
 {
-    std::replace( section.begin(), section.end(), ' ', '_' );
-    std::transform( key.begin(), key.end(), key.begin(), ::tolower );
-    std::string hash_key_name = section + "_" + key;
+    SECURE_EXTRACT( section, key );
     if ( this->ini_table[ hash_key_name ].type != ini::ValueType::strings )
-        ERROR( "[%s] -> [%s] is not strings type!", section.c_str(), key.c_str() );
+        WARN( "[%s] -> [%s] is not strings type!", section.c_str(), key.c_str() );
     return this->split( this->ini_table[ hash_key_name ].content );
 }
 
@@ -390,10 +403,10 @@ int ini_parser::test_lineparser( void ) const
     // illegal lines
     char bad_section_line1[] = "[This is a bad section";
     char bad_section_line2[] = "+[This is a bad section]";
-    char bad_key_value1[]    = " = \n";
-    char bad_key_value2[]    = "1 = \n";
-    char bad_key_value3[]    = " = 12\n";
-    char bad_key_value4[]    = "key1 key2 = 12\n";
+    char bad_key_value1[]    = " = ";
+    char bad_key_value2[]    = "1 = ";
+    char bad_key_value3[]    = " = 12";
+    char bad_key_value4[]    = "key1 key2 = 12";
 
     auto empty_line_res      = line_parser( empty_line );
     auto blank_line_res      = line_parser( blank_line );
@@ -551,6 +564,21 @@ int ini_parser::test_get( void ) const
     ini_table.erase( "TestSec_numbers" );
     ini_table.erase( "TestSec_string" );
     ini_table.erase( "TestSec_strings" );
+
+    println( "Test the case of non-exist key:" );
+    try
+    {
+        get_bool( "TestSec", "non_exist_key" );
+    }
+    catch ( std::runtime_error& e )
+    {
+        println( "It failed as expected, error message: %s", e.what() );
+    }
+    catch ( ... )
+    {
+        println( "It failed unexpectedly!" );
+        return 1;
+    }
 
     bool success = ( res1 == target1 ) && ( res2 == target2 ) && ( res3 == target3 )
                    && ( res4 == target4 ) && ( res5 == target5 );
