@@ -1,3 +1,5 @@
+#ifndef __GALOTFA_INI_PARSER_CPP__
+#define __GALOTFA_INI_PARSER_CPP__
 #include "ini-parser.h"
 #include "../tools/prompt.h"
 #include <algorithm>
@@ -585,3 +587,4 @@ int ini_parser::test_get( void ) const
 }
 #endif
 }  // namespace galotfa
+#endif

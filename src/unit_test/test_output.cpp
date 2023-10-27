@@ -1,6 +1,7 @@
 // Call the unit test functions for output part.
 #ifndef _OUTPUT_TEST_
 #define _OUTPUT_TEST_
+#include "../output/writer.cpp"
 #include "../output/writer.h"
 #include "../tools/prompt.h"
 #include <stdio.h>
@@ -15,8 +16,7 @@ void test_output( void )
     int unknown = 0;
 
     // call the unit test functions for the output part.
-    COUNT( unit_test::test_createh5() );
-    SUMMARY();
-    return;
+    COUNT( unit_test::test_create_h5() );
+    SUMMARY( "output" );
 }
 #endif
