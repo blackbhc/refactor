@@ -27,7 +27,7 @@
 
 ## Installation <a href="#contents"><font size=4>(contents)</font></a> <a id="install"></a>
 
-##### Dependencies
+### Dependencies
 
 First, you need to check the following dependencies
 
@@ -40,7 +40,7 @@ First, you need to check the following dependencies
   - any `MPI` library.
   - `gsl` library.
 
-##### Download and install step by step
+### Download and install step by step
 
 1. clone the `galotfa` repo with `git`: run `git clone -b main https://github.com/blackbhc/galotfa --depth=1`
 
@@ -100,12 +100,12 @@ First, you need to check the following dependencies
 
 ### Complete illustrations
 
-##### Use `galotfa` in simulation codes
+#### Use `galotfa` in simulation codes
 
 `galotfa` is based on `MPI`, and all `galotfa` APIs are designed to be used in `MPI` mode. So you need to
 call `MPI_Init` before using any `galotfa` APIs.
 
-##### INI parameter file
+#### INI parameter file
 
 Note: the section name is case sensitive, but the key/value name is case insensitive.
 

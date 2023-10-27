@@ -5,7 +5,7 @@ information for modification of the codes and further development.
 Please feel free to raise an issue or give your valuable improvement suggestions for the project
 and the documentations.
 
-### Content <a name="content"></a>
+## Content <a name="content"></a>
 
 1. <a href="#deps">Dependencies</a>
 2. <a href="#files">Project Frame</a>
@@ -13,7 +13,7 @@ and the documentations.
 4. <a href="#add_new_module">Add New Function Module</a>
 5. <a href="#codes_structure">Codes Structure</a>
 
-### Dependencies <a name="deps"></a><a href="#contents"><font size=4>(content)</font></a>
+## Dependencies <a name="deps"></a><a href="#contents"><font size=4>(content)</font></a>
 
 This project depends on the following tools or libraries:
 
@@ -24,7 +24,7 @@ This project depends on the following tools or libraries:
 - [hdf5](https://www.hdfgroup.org/solutions/hdf5/): the HDF5 library, which is used to store the analysis results.
 - a `MPI` library: `mpich`, `openmpi` or `intel mpi` etc.
 
-### Project Frame <a name="files"></a><a href="#contents"><font size=4>(content)</font></a>
+## Project Frame <a name="files"></a><a href="#contents"><font size=4>(content)</font></a>
 
 - `Makefile`: the main makefile of the project, with some sub-makefiles in the `make-config` directory.
   - Note: due to the sub-makefiles, the `make` command should always be run in the root directory of the project.
@@ -45,21 +45,21 @@ This project depends on the following tools or libraries:
 - `build`(optional): the temporary directory for the building of the project, which will be created by the
   `make` command.
 
-### Unit Test <a name="unit_test"></a><a href="#contents"><font size=4>(content)</font></a>
+## Unit Test <a name="unit_test"></a><a href="#contents"><font size=4>(content)</font></a>
 
-#### 1. Run test in one command
+### 1. Run test in one command
 
 Run `make test` or `make mpi_test` in the root directory of the project, you can test all unit tests.
 
 The `test` target is for the unit test of the serial case, and the `mpi_test` for parallel case. It will
 compile the code and run the unit test.
 
-#### 2. Specify test units
+### 2. Specify test units
 
 By modifying the default value of the `TEST_TARGET` in the Makefile, or run `make test/mpi_test units=<unit to be tested>`
 you can specify the which unit to be tested.
 
-#### 3. Unit test convention
+### 3. Unit test convention
 
 `galotfa` unit test convention is similar to reference to the practice in `RUST`: They
 are all implemented in corresponding modules enclosed by some macros for conditional compiling (e.g.
@@ -72,7 +72,7 @@ This convention is aimed to make the unit test more readable.
 
 The macro of the unit test is defined by `make` in the `Makefile` according to the `TEST_TARGET` variable.
 
-#### 4. Add new unit test
+### 4. Add new unit test
 
 There are 5 steps to add a new unit test:
 
@@ -95,7 +95,7 @@ There are 5 steps to add a new unit test:
 
 6. run `make test` or `make mpi_test` to compile and run the test.
 
-### Add New Function Module <a name="add_new_module"></a><a href="#contents"><font size=4>(content)</font></a>
+## Add New Function Module <a name="add_new_module"></a><a href="#contents"><font size=4>(content)</font></a>
 
 1. add a new directory in the `src` directory, with both `*.cpp` and `*.h` files: follow the unit test design,
    you can add a new class or a new function module.
@@ -111,9 +111,9 @@ There are 5 steps to add a new unit test:
 
 6. add a C wrapper function for the new function if you want make it become a public API.
 
-### Codes Structure <a name="codes_structure"></a><a href="#contents"><font size=4>(content)</font></a>
+## Codes Structure <a name="codes_structure"></a><a href="#contents"><font size=4>(content)</font></a>
 
-#### `src/tools`
+### `src/tools`
 
 - `prompt.h`: define some macros for prompt message.
   Note: to used the following macro in MPI mode, you need to include the `mpi.h` before `prompt.h`, otherwise CPP can not
@@ -126,7 +126,7 @@ There are 5 steps to add a new unit test:
   - `WARN`: print a warning message, based on the `fprintln` macro.
   - `ERROR`: print a error message, based on the `fprintln` macro.
 
-#### `src/parameter`
+### `src/parameter`
 
 Note: the section name is case sensitive, but the key/value name is case insensitive.
 The `ini_parser` class will parse the ini parameter file into a hash table.
@@ -150,9 +150,9 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
     and vector of number and string.
   - `has`: check whether a key exist in the parameter file.
 
-#### `src/output`
+### `src/output`
 
-##### Convention of the data output
+#### Convention of the data output
 
 - `galotfa` use `hdf5` for data output, where different analysis modules will be stored in different files.
 - For better performance, `galotfa` will store the analysis results with chunked dataset to save space.
@@ -164,4 +164,4 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
   documentations about this feature, and such feature is not always activated in the hdf5 library, so
   `galotfa` only collect the analysis results into the main process and output the data in it.
 
-##### Basic analysis results
+#### Basic analysis results
