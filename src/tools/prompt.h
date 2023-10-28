@@ -54,18 +54,19 @@
 
 #ifdef DO_UNIT_TEST
 // macro for check the rusult of unit test, to make the code more compact
-#define CHECK_RETURN( status_flag )                                              \
-    {                                                                            \
-        if ( !( status_flag ) )                                                  \
-        {                                                                        \
-            WARN( "The test failed at %d line in file %s", __LINE__, __FILE__ ); \
-            return 1;                                                            \
-        }                                                                        \
-        else                                                                     \
-        {                                                                        \
-            println( "The test passed." );                                       \
-            return 0;                                                            \
-        }                                                                        \
+#define CHECK_RETURN( status_flag )                                                             \
+    {                                                                                           \
+        if ( !( status_flag ) )                                                                 \
+        {                                                                                       \
+            WARN( "The test failed at %d line in file %s, of function %s.", __LINE__, __FILE__, \
+                  __func__ );                                                                   \
+            return 1;                                                                           \
+        }                                                                                       \
+        else                                                                                    \
+        {                                                                                       \
+            println( "The test passed." );                                                      \
+            return 0;                                                                           \
+        }                                                                                       \
     }
 
 // count the result of unit test
