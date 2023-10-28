@@ -34,6 +34,9 @@
 #ifdef debug_prompt
 #include "test_prompt.cpp"
 #endif
+#ifdef debug_string
+#include "test_string.cpp"
+#endif
 
 #ifdef MPI_TEST
 int main( int argc, char* argv[] )
@@ -81,6 +84,9 @@ int main()
 #endif
 #ifdef debug_prompt
         test_prompt();
+#endif
+#ifdef debug_string
+        test_string();
 #endif
 
         println( "--------------------------------------------------------------------" );

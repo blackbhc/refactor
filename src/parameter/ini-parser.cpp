@@ -2,9 +2,10 @@
 #define __GALOTFA_INI_PARSER_CPP__
 #include "ini-parser.h"
 #include "../tools/prompt.h"
+#include "../tools/string.h"
+#include "string.h"
 #include <algorithm>
 #include <stdio.h>
-#include <string.h>
 #include <sys/stat.h>
 
 namespace galotfa {
@@ -195,9 +196,7 @@ ini::Line ini_parser::line_parser( const char* str ) const
 
 inline std::string ini_parser::trim( std::string str ) const
 {
-    str.erase( 0, str.find_first_not_of( blank ) );
-    str.erase( str.find_last_not_of( blank ) + 1 );
-    // remove the possible comments
+    str = galotfa::string::trim( str, blank );
     if ( str.find_first_of( comment_prefix ) != std::string::npos )
     {
         str.erase( str.find_first_of( comment_prefix ) );
@@ -207,21 +206,7 @@ inline std::string ini_parser::trim( std::string str ) const
 
 inline std::vector< std::string > ini_parser::split( std::string str ) const
 {
-    std::vector< std::string > vals;
-    str = this->trim( str );
-    while ( true )
-    {
-        size_t pos = str.find_first_of( value_sep );
-        vals.push_back( str.substr( 0, pos ) );
-        str.erase( 0, pos );
-        str.erase( 0, str.find_first_not_of( value_sep ) );
-        if ( str.find_first_of( value_sep ) == std::string::npos )
-        {
-            vals.push_back( str );
-            break;
-        }
-    }
-    return vals;
+    return galotfa::string::split( str, value_sep );
 }
 
 // macro: get the hash key name, and make sure there is such key

@@ -4,19 +4,19 @@
 #include "../output/writer.cpp"
 #include "../output/writer.h"
 #include "../tools/prompt.h"
-#include <stdio.h>
 
 
 // include the head file of the output part.
 void test_output( void )
 {
     println( "Testing the output part.\n" );
-    int success = 0;
-    int fail    = 0;
-    int unknown = 0;
+    int             success = 0;
+    int             fail    = 0;
+    int             unknown = 0;
+    galotfa::writer writer( "test.h5" );
 
     // call the unit test functions for the output part.
-    COUNT( unit_test::test_create_h5() );
+    COUNT( writer.test_create_file() );
     SUMMARY( "output" );
 }
 #endif
