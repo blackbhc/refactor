@@ -35,7 +35,7 @@ You can remove such flags if you want, which is located in `make-config/flags` f
 
 - `Makefile`: the main makefile of the project, with some sub-makefiles in the `make-config` directory.
   - Note: due to the sub-makefiles, the `make` command should always be run in the root directory of the project.
-- `src`: the source code directory, each sub-directory is a module (just a logic unit, not the c++20 module)
+- `src`: the source code directory, each sub-directory is a module / modules (just a logic unit, not the c++20 module)
   of the project.
 
   - `C_wrapper`: the directory include the public C wrapper APIs of the project.
@@ -124,8 +124,9 @@ There are 5 steps to add a new unit test:
 ### `src/tools`
 
 - `prompt.h`: define some macros for prompt message.
-  Note: to used the following macro in MPI mode, you need to include the `mpi.h` before `prompt.h`, otherwise CPP can not
-  distinguish the `MPI` environment.
+
+  <font color=red>Note: to used the following macro in MPI mode, you need to include the `mpi.h` before include `prompt.h`,
+  otherwise `CPP` can not distinguish the `MPI` environment.</font>
 
   - `println`: print a message with a new line, this is the most commonly used macro and will only print
     the message in the root process if the program is running in MPI mode.
@@ -143,6 +144,12 @@ There are 5 steps to add a new unit test:
     wrapper's file name where you use this macro).
 
 - `prompt.cpp`: the unit test wrapper for the prompt module.
+- `string.h`: define a sub namespace of `galotfa` namespace, which contains some string related functions.
+  - `std::string trim(std::string str, std::string blank)`: remove the leading and trailing blank characters in the
+    string `str`. The default blank characters are `" \t\n\r\f\v"`.
+  - `std::vector<std::string> split(std::string str, std::string delim)`: split the string `str` into a vector of
+    strings based on the delimiters in `delim`. The default delimiter is `" "`.
+- `string.cpp`: the unit test wrapper for the string module.
 
 ### `src/parameter`
 
@@ -163,8 +170,8 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
   - comment prefix: `#` and `;`, string after the prefix will be treated as comments.
 
 - most important methods:
-  - `trim`: remove the white spaces and comments after the main content of a line.
-  - `split`: split the values into a vector of sub-strings.
+  - `trim`: a wrapper of `galotfa::string::trim`, which will further remove the comment part of the string.
+  - `split`: a wrapper of `galotfa::string::split`.
   - `line_parser`: get the type of a line, namely a section header or a key-value pair, based on `trim` and `split`.
     If the line is in boolean type, its content will set as "true" for better consistence of internal usage.
   - `read`: the main interface used to read the parameter file, based on `line_parser`.
@@ -198,16 +205,22 @@ where `N` is the length of the second dimension of the array. The analogy is als
 dimensional array, e.g. `i*N + j*M + k`, where the block size multiplied by the index is the size of
 the sub-space of the array.
 
-#### Files
+#### Writer class
 
 - `writer.h`: the interface of the data output module, with realization in `writer.cpp`.
 
   - `writer(std::string)`: the class for data output, which require a string to specify the path to the output
-    file for initialization.
-  - `writer::create_file(std::string)`: create a hdf5 file with the given path to file. Due to there may be
-    a case of restart simulation, `create_file` will not overwrite the existing file, but create a new file
-    with a `-n` suffix that start from 1, where `n` is the smallest integer that make the new file name not exist.
+    file for initialization. This function can only be used in the main process, due to the hdf5 file lock.
 
-    This function can only be used in the main process, due to the hdf5 file lock.
+    - `writer::create_file(std::string)`: create a hdf5 file with the given path to file. Due to there may be
+      a case of restart simulation, `create_file` will not overwrite the existing file, but create a new file
+      with a `-n` suffix that start from 1, where `n` is the smallest integer that make the new file name not exist.
+    - `writer::~writer()`: the destructor of the class, which will close the hdf5 file and the created hdf5 objects,
+      such as dataset and group.
+    - `writer::create_group(std::string)`: create a hdf5 group with the given name.
+    - `writer::create_dataset(std::string)`: create a hdf5 dataset with the given name, shape and data type.
+      Note: this wrapper follow the default convention of the hdf5 library, so the groups and datasets can not be
+      created recursively, namely to create something like "/group1/group2":
 
-    - `writer::~writer()`: the destructor of the class, which will close the hdf5 file.
+      - <font color="green">correct</font>: create "/group1" first, then create "/group1/group2".
+      - <font color="red">wrong</font>: create "/group1/group2" directly.

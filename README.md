@@ -108,6 +108,9 @@ First, you need to check the following dependencies
 `galotfa` is based on `MPI`, and all `galotfa` APIs are designed to be used in `MPI` mode. So you need to
 call `MPI_Init` before using any `galotfa` APIs.
 
+<font color=red>**Note:**</font> `galotfa` is designed to be used in `MPI` mode, so you need to call `MPI_Init`
+before using any `galotfa` APIs.
+
 #### INI parameter file
 
 Note: the section name is case sensitive, but the key/value name is case insensitive.
@@ -177,5 +180,7 @@ Selct --> LogOC
 Model --> LogMd
 ```
 
-Every box is a functional module with independent implementation, which is class or a part of a class. The details of them are illustrated in <a href="#code">Code structure</a>. The connection lines between the boxes stands for the APIs between such modules.  
-Expect the above modules, `galotfa` also uses a standalone `INI` parameter file to control the behaviours of all modules and APIs in the preceding workflow.
+Every box is a functional module with independent implementation, which is class or a part of a class.
+The details of them are illustrated in <a href="#code">Code structure</a>. The connection lines between
+the boxes stands for the APIs between such modules. Expect the above modules, `galotfa` also uses a standalone
+`INI` parameter file to control the behaviours of all modules and APIs in the preceding workflow.
