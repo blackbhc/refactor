@@ -149,7 +149,7 @@ There are 5 steps to add a new unit test:
     string `str`. The default blank characters are `" \t\n\r\f\v"`.
   - `std::vector<std::string> split(std::string str, std::string delim)`: split the string `str` into a vector of
     strings based on the delimiters in `delim`. The default delimiter is `" "`.
-- `string.cpp`: the unit test wrapper for the string module.
+- `string.cpp`: the implementation of the string related functions.
 
 ### `src/parameter`
 
@@ -211,16 +211,15 @@ the sub-space of the array.
 
   - `writer(std::string)`: the class for data output, which require a string to specify the path to the output
     file for initialization. This function can only be used in the main process, due to the hdf5 file lock.
+    To get the status of the hdf5 file, namely how many datasets and groups are created, the writer will map
+    every group and dataset into a private hash table with string-type key and `hid_t`-type value.
 
     - `writer::create_file(std::string)`: create a hdf5 file with the given path to file. Due to there may be
       a case of restart simulation, `create_file` will not overwrite the existing file, but create a new file
       with a `-n` suffix that start from 1, where `n` is the smallest integer that make the new file name not exist.
     - `writer::~writer()`: the destructor of the class, which will close the hdf5 file and the created hdf5 objects,
       such as dataset and group.
-    - `writer::create_group(std::string)`: create a hdf5 group with the given name.
-    - `writer::create_dataset(std::string)`: create a hdf5 dataset with the given name, shape and data type.
-      Note: this wrapper follow the default convention of the hdf5 library, so the groups and datasets can not be
-      created recursively, namely to create something like "/group1/group2":
-
-      - <font color="green">correct</font>: create "/group1" first, then create "/group1/group2".
-      - <font color="red">wrong</font>: create "/group1/group2" directly.
+    - `writer::create_group(std::string)`: create a hdf5 group with the given name, can be used to create a
+      group hierarchy e.g. `group1/group2/group3`.
+    - `writer::create_dataset(std::string)`: create a hdf5 dataset with the given name, if the string before
+      the final dataset name, take a example: `a/b/c/dataset_name`, will be created as group, `a/b/c` here.
