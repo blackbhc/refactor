@@ -3,6 +3,9 @@
 #include "ini-parser.h"
 #include "../tools/prompt.h"
 #include "../tools/string.h"
+#ifdef DO_UNIT_TEST
+#include "../tools/string.cpp"
+#endif
 #include "string.h"
 #include <algorithm>
 #include <stdio.h>

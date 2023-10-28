@@ -16,6 +16,7 @@ void test_string( void )
     // call the unit test functions for the output part.
     COUNT( unit_test::test_trim() );
     COUNT( unit_test::test_split() );
+    COUNT( unit_test::test_replace() );
     SUMMARY( "string" );
 }
 #endif
