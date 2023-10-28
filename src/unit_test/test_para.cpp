@@ -18,8 +18,6 @@ void test_parameter( void )
     galotfa::ini_parser ini( "./galotfa.ini" );
 
     COUNT( ini.test_checksize() );
-    // COUNT( ini.test_trim() );
-    // COUNT( ini.test_split() );
     COUNT( ini.test_lineparser() );
     COUNT( ini.test_read() );
     COUNT( ini.test_get() );
