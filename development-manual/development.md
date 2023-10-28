@@ -28,7 +28,7 @@ This project depends on the following tools or libraries:
 ## Debug Mode<a name="debug"></a><a href="#contents"><font size=4>(content)</font></a>
 
 `galotfa` will enable the `-fsanitize=address,leak,undefined` check in the debug mode, which will check the address
-leak and undefined behavior of the codes. Such check will slow down the codes, and may cause some false positive.
+leak and undefined behavior of the codes. Such check will slow down the codes, and may cause some tedious error.
 You can remove such flags if you want, which is located in `make-config/flags` file.
 
 ## Project Frame <a name="files"></a><a href="#contents"><font size=4>(content)</font></a>
@@ -149,6 +149,13 @@ There are 5 steps to add a new unit test:
 Note: the section name is case sensitive, but the key/value name is case insensitive.
 The `ini_parser` class will parse the ini parameter file into a hash table.
 
+- namespace `ini`:
+
+  - enum class `LineType`: the type of a line in the ini file, `section`, `key_value` or `empty`.
+  - enum class `ValueType`: the type of a key-value pair, `boolean`, `number(s)` or `string(s)`.
+  - structure `Line`: the structure to store the content of a line in the ini file.
+  - structure `Value`: similar but for the value of a key-value pair.
+
 - `ini-parser`: a simple ini parameter file parser, which is used to parse the parameter file.
 
   - allowed boolean value in the ini file: case insensitive `true` and `false`, `on` and `off`, `enable` and `disable`, `yes` and `no`.
@@ -162,7 +169,7 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
     If the line is in boolean type, its content will set as "true" for better consistence of internal usage.
   - `read`: the main interface used to read the parameter file, based on `line_parser`.
   - `insert_to_table`: insert the parsed key-value pair into the hash table. The hash table is defined with
-    string key and a structure value (`galotfa::ini::Value`) pair. The key of the hash table = section name +
+    string-type key and a `ini::Value`-type value. The key of the hash table = section name +
     "_" + key name of parameter in the ini file, where the space in the section name will be replaced by `_`.
   - `get_xxx`: the function to extract the value of a key in the parameter file. Support to get boolean, number, string,
     and vector of number and string.
@@ -178,9 +185,9 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
   to the hdf5 file when the stack is full or the simulation is finished. This strategy is due to the
   uncertainty of how many synchronized time steps will be analyzed during a simulation.
   This can avoid the frequent opening and closing of the hdf5 file, which is time consuming.
-- It seems to be possible to use the `MPI` parallel hdf5 IO to improve the performance, but there is few
+- It seems to be possible to use the parallel hdf5 IO to improve the performance, but there is few
   documentations about this feature, and such feature is not always activated in the hdf5 library, so
-  `galotfa` only collect the analysis results into the main process and output the data in it.
+  `galotfa` only use a serial mode to write date, which is collected from all processes into the main process.
 
 #### Convention for array
 
@@ -194,7 +201,13 @@ the sub-space of the array.
 #### Files
 
 - `writer.h`: the interface of the data output module, with realization in `writer.cpp`.
-  - `create_h5(string)`: create a hdf5 file with the given path to file. Due to there may be a case of restart
-    simulation, `create_h5` will not overwrite the existing file, but create a new file with a `-n` suffix
-    that start from 1, where `n` is the smallest integer that make the new file name not exist. This function
-    can only be used in the main process, due to hdf5 file lock.
+
+  - `writer(std::string)`: the class for data output, which require a string to specify the path to the output
+    file for initialization.
+  - `writer::create_file(std::string)`: create a hdf5 file with the given path to file. Due to there may be
+    a case of restart simulation, `create_file` will not overwrite the existing file, but create a new file
+    with a `-n` suffix that start from 1, where `n` is the smallest integer that make the new file name not exist.
+
+    This function can only be used in the main process, due to the hdf5 file lock.
+
+    - `writer::~writer()`: the destructor of the class, which will close the hdf5 file.
