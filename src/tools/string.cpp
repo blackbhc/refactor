@@ -15,10 +15,25 @@ std::string string::trim( std::string str, std::string blank )
 
 std::vector< std::string > string::split( std::string str, std::string delimiter )
 {
+    if ( delimiter == "" )
+    {
+        WARN( "The delimiter for string split is empty!" );
+        return { str };
+    }
+    else if ( str == "" )
+    {
+        WARN( "The string to be split is empty!" );
+        return { "" };
+    }
     std::vector< std::string > vals;
     while ( true )
     {
-        size_t      pos    = str.find_first_of( delimiter );
+        size_t pos = str.find_first_of( delimiter );
+        if ( pos == std::string::npos )
+        {
+            vals.push_back( str );
+            break;
+        }
         std::string substr = str.substr( 0, pos );
         if ( substr != "" )
             vals.push_back( substr );
@@ -90,15 +105,18 @@ int test_split( void )
 
     std::vector< std::string > target1 = { "1", "2", "3", "4" };
     std::vector< std::string > target2 = { "1.012", "string", "3", "4" };
+    std::vector< std::string > target3 = { "1.012+string+3&4" };
+
 
     auto res1 = galotfa::string::split( str1, " \t,-:+&" );
     auto res2 = galotfa::string::split( str2, " \t,-:+&" );
     auto res3 = galotfa::string::split( str3, " \t,-:+&" );
     auto res4 = galotfa::string::split( str4, " \t,-:+&" );
     auto res5 = galotfa::string::split( str5, " \t,-:+&" );
+    auto res6 = galotfa::string::split( str5, "OKOK" );
 
     bool success = ( res1 == target1 ) && ( res2 == target1 ) && ( res3 == target1 )
-                   && ( res4 == target1 ) && ( res5 == target2 );
+                   && ( res4 == target1 ) && ( res5 == target2 ) && ( res6 == target3 );
     CHECK_RETURN( success );
 }
 
