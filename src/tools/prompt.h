@@ -46,6 +46,7 @@
     }
 
 // throw a error with a message
+// TODO: support more error type
 #define ERROR( ... )                                                         \
     {                                                                        \
         fprintln( stderr, "\033[0;1;31m [ERROR]: \033[0m" __VA_ARGS__ );     \
