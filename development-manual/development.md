@@ -1,6 +1,8 @@
-This documentation is for the code development of the project. I write this documentation for the
-developers who are interested in the project. And I wish the documentation can cover all necessary
-information for modification of the codes and further development.
+This documentation is for the ones who are interested in the code development of the project.
+It will include the APIs and some Implementation details of the codes, but not for the algorithm details.
+For the algorithm details of the analysis, please check the `quantity.md` file (TO-BE FINISHED).
+And I wish the documentation can cover all necessary information for modification of the codes
+and further development.
 
 Please feel free to raise an issue or give your valuable improvement suggestions for the project
 and the documentations.
@@ -139,6 +141,8 @@ There are 5 steps to add a new unit test:
 
 #### APIs
 
+For `prompt.h`, `prompt.cpp`:
+
 <font color=red>Note: to used the following macro in MPI mode, you need to include the `mpi.h` before include `prompt.h`,
 otherwise `CPP` can not distinguish the `MPI` environment.</font>
 
@@ -156,34 +160,42 @@ otherwise `CPP` can not distinguish the `MPI` environment.</font>
 - `SUMMARY(<c str of a module name>)`: should be called after all `COUNT(<somthing>)` statement, which will
   print the summary of the unit test results with the given module name.
 
+For `string.h`, `string.cpp`:
+
+- `std::string trim(std::string str, std::string blank)`: remove the leading and trailing blank characters in the
+  string `str`. The default blank characters are `" \t\n\r\f\v"`.
+- `std::vector<std::string> split(std::string str, std::string delim)`: split the string `str` into a vector of strings
+  based on the delimiters in `delim`. The default delimiter is `" "`.
+- `std::string replace(std::string str, std::string old_str, std::string new_str)`: replace the `old_str` in the
+  string `str` with the `new_str`.
+
 #### Implementation details
 
 - `prompt.h`: define some macros for prompt message.
 
-  - `println`: print a message with a new line, this is the most commonly used macro and will only print
-    the message in the root process if the program is running in MPI mode.
-  - `fprintln`: similar but for `fprintf`.
-    the message in the root process if the program is running in MPI mode.
+  - `println`: if include `mpi.h`, get the rank of current process, then print the message with a next line
+    symbol in the root process. If not include `mpi.h`, just print the message with a next line symbol,
+    namely `printf(...); printf("\n");`.
+  - `fprintln`: similar as `println` but print to a FILE pointer.
   - `WARN`: print a warning message, based on the `fprintln` macro.
   - `ERROR`: print a error message, based on the `fprintln` macro.
-  - `CHECK_RETURN(status_flag)`: check the status flag of a boolean value, designed to be used in the
-    unit test functions (the true test function, not the wrappers) to check and return the test result.
-  - `COUNT(<call a unit test function>)`: the function to check the result of a unit test, then increase the int variable `success`, `fail` and
-    `unknown` correspondingly. This macro should be used in the unit test wrapper functions, where `success`,
-    `fail` and `unknown` are defined.
-  - `SUMMARY(<c str of a module name)`: should be called after all `COUNT(<somthing>)` statement, which will
-    print the summary of the unit test results with the given module name (so it should be consistent with the
-    wrapper's file name where you use this macro).
-
-- `prompt.cpp`: the unit test wrapper for the prompt module.
-- `string.h`: define a sub namespace of `galotfa` namespace, which contains some string related functions.
-  - `std::string trim(std::string str, std::string blank)`: remove the leading and trailing blank characters in the
-    string `str`. The default blank characters are `" \t\n\r\f\v"`.
-  - `std::vector<std::string> split(std::string str, std::string delim)`: split the string `str` into a vector of
-    strings based on the delimiters in `delim`. The default delimiter is `" "`.
-- `string.cpp`: the implementation of the string related functions.
+  - `COUNT(<call a unit test function>)`: the function to check the result of a unit test, then increase
+    the int variable `success`, `fail` and `unknown` correspondingly, in the local environment where the macro is called.
+    This macro should be used only in the unit test wrapper functions, where the unit test functions will
+    return 0 for success, 1 for failure and other value for unknown.
+  - `SUMMARY(<c str of a module name)`: sum the `success`, `fail` and `unknown` variables, then print the results.
+    This macro should be used only in the unit test wrapper functions, after all `COUNT(<somthing>)` statement.
 
 ### `src/parameter`
+
+#### APIs
+
+- `ini_parser(std::string path_to_file)`: the constructor of the class, which will read the parameter file with the given path.
+- `ini_parser::get_xxx()`: the function to extract the value of a key in the parameter file. Support to get boolean, number, string,
+  and vector of number and string.
+- `ini_parser::has()`: check whether a key exist in the parameter file.
+
+#### Implementation details
 
 Note: the section name is case sensitive, but the key/value name is case insensitive.
 The `ini_parser` class will parse the ini parameter file into a hash table.
@@ -210,9 +222,6 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
   - `insert_to_table`: insert the parsed key-value pair into the hash table. The hash table is defined with
     string-type key and a `ini::Value`-type value. The key of the hash table = section name +
     "_" + key name of parameter in the ini file, where the space in the section name will be replaced by `_`.
-  - `get_xxx`: the function to extract the value of a key in the parameter file. Support to get boolean, number, string,
-    and vector of number and string.
-  - `has`: check whether a key exist in the parameter file.
 
 ### `src/output`: define the `writer` class
 
@@ -221,6 +230,9 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
 - constructor: `writer(std::string)`, create a writer object with the given path to the output file.
   If there is a file with the same name, the writer will create a new file with a `-n` suffix that start from 1,
   where `n` is the smallest integer that make the new file name not exist.
+- close the hdf5 file: `~writer()`, the destructor will close all resources of the corresponding hdf5 file,
+  and you have no need to call a close function manually.
+  hdf5 objects, such as dataset and group.
 - `create_group(std::string)`: create a hdf5 group with the given name, can create group hierarchy e.g.
   if given a argument like `group1/group2/group3`, the writer will create `group1` , `group2` and `group3`
   recursively if they do not exist. The group name without a prefix `/` will be treated as a root group.
@@ -229,7 +241,12 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
   `create_dateset("a/b/c/dataset_name", info)` == `create_group("a/b/c")` then `create_dataset("a/b/c", "dataset_name")`.
 - `add_attribute(std::string target, std::string attr_name, T value(???))`: add a attribute to a target group
   or dataset, where `T` is the type of the value, which can be `int`, `float`, `double`, `std::string` or `char*`.
-- `push(void* ptr, std::string dataset)`: push a array of data to the dataset.
+- `push(void* ptr, std::string dataset)`: push a array of data to a existing dataset.
+
+- <font color=red>NOTE</font>: The name of group and dataset is case sensitive and unique, there can not be
+  dataset or group share the same under the same group, e.g. `a/a/a` is legal for either a dataset `a` or a
+  subgroup `a` under parent group `a/a`, but under group `a/a/` there can not be a dataset and a subgroup
+  with the same name `a`. This is not a behavior of `galotfa`, but a convention of the hdf5 library.
 
 #### Convention of the data output
 
@@ -254,15 +271,33 @@ the sub-space of the array.
 
 #### Implementation details
 
+- namespace `galotfa::hdf5`:
+
+  - enum class `NodeType`: the type of a hdf5 node,`file` or `group` or `dataset`, also a `uninitialized` type for
+    the default constructor of the `node` class.
+  - class `node`: the class for a hdf5 node, which can be a group or a dataset, this class will take
+    over the resources organization of the hdf5 file, so there is no need to close the hdf5 objects manually.
+    - constructor: `node(std::string, NodeType)`, create a node object with the given name and type. This
+      constructor should be called only for the file node, as its parent node is `nullptr`.
+    - constructor: `node(node*, std::string, NodeType)`, create a node object with the given name, type and
+      parent node. If all sub-nodes are created by this constructor correctly, the tree structure of the
+      nodes is the same as the hdf5 file and can organize their resources correctly.
+
 - `writer(std::string)`: the class for data output, which require a string to specify the path to the output
   file for initialization. This function can only be used in the main process, due to the hdf5 file lock.
-  To get the status of the hdf5 file, namely how many datasets and groups are created, the writer will map
-  every group and dataset into a private hash table with string-type key and `hid_t`-type value.
 
   - `writer::create_file(std::string)`.
   - `writer::~writer()`: the destructor of the class, which will close the hdf5 file and the created hdf5 objects,
     such as dataset and group.
-  - `writer::create_group(std::string)`: create a hdf5 group with the given name, can be used to create a
-    group hierarchy e.g. `group1/group2/group3`.
+  - `writer::create_group(std::string)`: create a hdf5 group with the given name, can be used to create nested
+    groups recursively, e.g. given `group1/group2/group3`, the writer will create `group1` , `group2` and `group3`
+    recursively if they do not exist. The group name without a prefix `/` will be treated as a root group.
   - `writer::create_dataset(std::string)`: create a hdf5 dataset with the given name, if the string before
     the final dataset name, take a example: `a/b/c/dataset_name`, will be created as group, `a/b/c` here.
+  - `nodes`: the hash map with string-type key, and `galotfa::hdf5::node`-type value, the key is the absolute
+    path of the node, e.g. `/group1/group2/dataset_name` and `/` for the file.
+    - Note: due to there is no default constructor for the `node` class, to call a `node` object in the hash map,
+      you need to use the `at` method.
+    - The key must start with `/` and end without `/`.
+  - `open_file`: open a hdf5 file and return its id, private.
+  - `open_dataset`: open a hdf5 dataset and return its id, private.
