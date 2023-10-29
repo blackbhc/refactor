@@ -73,7 +73,8 @@ and `units=TEST_TARGET`, `TEST_TARGET` is set in the `Makefile`.
   debug macro, where `xxx` is the name of the test case.
 - For non-class functions, the unit test functions should be defined in a `unit_test` namespace that enclosed by
   the corresponding debug macro.
-- The return code of a unit test functions in each module: 0 for success, 1 for failure and other value for unknown status.
+- The return code of a unit test functions in each module: 0 for success, 1 for failure and other value
+  for unknown status. In general, the `unknown` status means that the unit test has not covered all possibilities.
 - The debug macro of the unit test is defined by `make` in the `Makefile` according to the `TEST_TARGET`
   variable or the run time argument `units` of the `make test/mpi_test` command.
 - There are wrappers for each module, in which the unit test functions are called and the test results are
