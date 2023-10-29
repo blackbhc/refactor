@@ -55,53 +55,67 @@ You can remove such flags if you want, which is located in `make-config/flags` f
 
 ## Unit Test <a name="unit_test"></a><a href="#contents"><font size=4>(content)</font></a>
 
-### 1. Run test in one command
+### 1. Run test
 
-Run `make test` or `make mpi_test` in the root directory of the project, you can test all unit tests.
+In root directory of the project, run: `make test/mpi_test mode=debug/release units=<unit to be tested>`.
 
-The `test` target is for the unit test of the serial case, and the `mpi_test` for parallel case. It will
-compile the code and run the unit test.
+If the `mode` or `units` are not specified, the default value will be used, which are `mode=release`
+and `units=TEST_TARGET`, `TEST_TARGET` is set in the `Makefile`.
 
-### 2. Specify test units
+### 2. Unit test convention
 
-By modifying the default value of the `TEST_TARGET` in the Makefile, or run `make test/mpi_test units=<unit to be tested>`
-you can specify the which unit to be tested.
+- `galotfa` unit test convention is inspired by `RUST` built-in unit test style: all unit test codes
+  are all implemented in corresponding modules enclosed by some macros for conditional compiling (e.g.
+  `debug_parameter`). Such macro will be called "debug macro" in this documentation.
+- For class, the unit test functions should be public member function `test_xxx` in such class enclosed by
+  debug macro, where `xxx` is the name of the test case.
+- For non-class functions, the unit test functions should be defined in a `unit_test` namespace that enclosed by
+  the corresponding debug macro.
+- The return code of a unit test functions in each module: 0 for success, 1 for failure and other value for unknown status.
+- The debug macro of the unit test is defined by `make` in the `Makefile` according to the `TEST_TARGET`
+  variable or the run time argument `units` of the `make test/mpi_test` command.
+- There are wrappers for each module, in which the unit test functions are called and the test results are
+  counted. The wrappers are defined in the `src/unit_test/` directory.
+- As available in the existing test wrappers, there are three integer to count the test results: `success`,
+  `fail` and `unknown`, to call the unit test function and count its result, just need to use the
+  `COUNT(<call a unit test function>)` macro.
+- For unit test functions, to get the test result, just need to use the `CHECK_RETURN(<boolean value>)` macro,
+  which will return 0 for success and 1 for failure for some boolean value related to the test results, for example:
+  `success = (test_result1 == expected_result1) && (test_result2 == expected_result2); CHECK_RETURN(success)`.
 
-### 3. Unit test convention
+### 3. Add new unit test
 
-`galotfa` unit test convention is similar to reference to the practice in `RUST`: They
-are all implemented in corresponding modules enclosed by some macros for conditional compiling (e.g.
-`debug_parameter` to open the unit test for the parameter module). Such macro will be called "debug macro"
-in this documentation. The unit test functions should return 0 for success or 1 for failure or other for unknown.
-For unit test of a class, the unit test functions should be public member function `test_xxx` in such class,
-where `xxx` is the name of the test case. For unit test of other functions, the unit test functions
-should be defined in a `unit_test` namespace that enclosed by the corresponding macros.
-This convention is aimed to make the unit test more readable.
-
-The macro of the unit test is defined by `make` in the `Makefile` according to the `TEST_TARGET` variable.
-
-### 4. Add new unit test
+If you want to add a new unit test, please check the convention in the last section first.
 
 There are 5 steps to add a new unit test:
 
-1. consider a corresponding debug macro for a new module part, or choose a existing module and its debug macro
-   to control the conditional compilation of the new test. Such macro will be automatically defined `make`
-   when run `make test/mpi_test` if you add such macro into the `TEST_TARGET` in the Makefile,
-   for example: if you set `TEST_TARGET = <somthing>`, then the `debug_<somthing>` macro will be add
-   to `CXXFLAGS` by `-Ddebug_<somthing>`.
+1. Choose a in-used debug macro or define a new debug macro to control the unit test, the in-used debug
+   macros can be found in the `src/unit_test/test.cpp` file.
 
-2. design the unit test functions, follow the unit test convention.
+2. design the unit test functions of a module, follow the unit test convention.
 
-3. For a new module, add a new `c++` file in the `src/test` directory, and define a wrapper function
-   in which you call the test functions defined in the previous step.
+3. For a new module, add a new `c++` file in the `src/test` directory, and define a wrapper function in it
+   to call the new unit test functions defined in the step 2. Then include the new `c++` file in the
+   `src/unit_test/test.cpp` file analogous to the other modules. You can design your own style to print the
+   test results in the end of the unit test wrapper function, or just use the existing style:
 
-4. For a new module, in the `main` function of the `src/unit_test/test.cpp` file, include the new `c++`,
-   file create in the last step.
+   - define integer variables `success = 0`, `fail = 0` and `unknown = 0` at the beginning of the wrapper
+     function.
+   - call `COUNT(<call a unit test function>)` for each unit test function.
+   - call `SUMMARY(<c str of a module name>)` in the end of the wrapper function, which will print the
+     summary of the unit test results with the given module name.
 
-5. Call the test wrapper function defined in the step 3, or the test wrapper the debug macro you choose
-   in the step 1, in the `main` function of the `src/unit_test/test.cpp` file.
+4. For a existing module, call the new unit test functions defined in the step 2 in the module's `c++` file
+   which defines a wrapper function for such module. You can follow the unit test convention and existing
+   wrappers to do this:
 
-6. run `make test` or `make mpi_test` to compile and run the test.
+   - define integer variables `success = 0`, `fail = 0` and `unknown = 0` at the beginning of the wrapper
+     function.
+   - call `COUNT(<call a unit test function>)` for each unit test function.
+   - call `SUMMARY(<c str of a module name>)` in the end of the wrapper function, which will print the
+     summary of the unit test results with the given module name.
+
+5. run `make test` or `make mpi_test` to compile and run the test.
 
 ## Add New Function Module <a name="add_new_module"></a><a href="#contents"><font size=4>(content)</font></a>
 
@@ -123,10 +137,28 @@ There are 5 steps to add a new unit test:
 
 ### `src/tools`
 
-- `prompt.h`: define some macros for prompt message.
+#### APIs
 
-  <font color=red>Note: to used the following macro in MPI mode, you need to include the `mpi.h` before include `prompt.h`,
-  otherwise `CPP` can not distinguish the `MPI` environment.</font>
+<font color=red>Note: to used the following macro in MPI mode, you need to include the `mpi.h` before include `prompt.h`,
+otherwise `CPP` can not distinguish the `MPI` environment.</font>
+
+- `println`: macro, print a message with a next line symbol, which will only print the message in the
+  root process if the program is running in MPI mode.
+- `fprintln`: macro, similar as `println` but aims to simplify `fprintf`.
+- `WARN`: print a warning message to `stderr`, based on the `fprintln` macro.
+- `ERROR`: print a error message to `stderr`, based on the `fprintln` macro.
+- `CHECK_RETURN(status_flag)`: check the status flag of a boolean value, return 0 for success and 1 for failure.
+  If it's failure, print a warning message to the line, file and function where the macro is called.
+  This is designed to be used in the unit test functions (the true test function, not the wrappers) to
+  check and return the test result.
+- `COUNT(<call a unit test function>)`: the function to check and count the result of a unit test, seen in the
+  unit test section.
+- `SUMMARY(<c str of a module name>)`: should be called after all `COUNT(<somthing>)` statement, which will
+  print the summary of the unit test results with the given module name.
+
+#### Implementation details
+
+- `prompt.h`: define some macros for prompt message.
 
   - `println`: print a message with a new line, this is the most commonly used macro and will only print
     the message in the root process if the program is running in MPI mode.
@@ -182,7 +214,22 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
     and vector of number and string.
   - `has`: check whether a key exist in the parameter file.
 
-### `src/output`
+### `src/output`: define the `writer` class
+
+#### APIs
+
+- constructor: `writer(std::string)`, create a writer object with the given path to the output file.
+  If there is a file with the same name, the writer will create a new file with a `-n` suffix that start from 1,
+  where `n` is the smallest integer that make the new file name not exist.
+- `create_group(std::string)`: create a hdf5 group with the given name, can create group hierarchy e.g.
+  if given a argument like `group1/group2/group3`, the writer will create `group1` , `group2` and `group3`
+  recursively if they do not exist. The group name without a prefix `/` will be treated as a root group.
+- `create_dataset(std::string dataset, info(???))` or `create_dataset(std::string group, std::string datasetm info)`:
+  create a hdf5 dataset with the given name, if the group before the final dataset name, take a example:
+  `create_dateset("a/b/c/dataset_name", info)` == `create_group("a/b/c")` then `create_dataset("a/b/c", "dataset_name")`.
+- `add_attribute(std::string target, std::string attr_name, T value(???))`: add a attribute to a target group
+  or dataset, where `T` is the type of the value, which can be `int`, `float`, `double`, `std::string` or `char*`.
+- `push(void* ptr, std::string dataset)`: push a array of data to the dataset.
 
 #### Convention of the data output
 
@@ -196,7 +243,7 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
   documentations about this feature, and such feature is not always activated in the hdf5 library, so
   `galotfa` only use a serial mode to write date, which is collected from all processes into the main process.
 
-#### Convention for array
+#### Convention for array of data
 
 To simplify the functions parameters and better performance, `galotfa` always use 1D C-style array
 to store the analysis results. When store a multi-dimensional array, the array will be stored as different
@@ -205,21 +252,17 @@ where `N` is the length of the second dimension of the array. The analogy is als
 dimensional array, e.g. `i*N + j*M + k`, where the block size multiplied by the index is the size of
 the sub-space of the array.
 
-#### Writer class
+#### Implementation details
 
-- `writer.h`: the interface of the data output module, with realization in `writer.cpp`.
+- `writer(std::string)`: the class for data output, which require a string to specify the path to the output
+  file for initialization. This function can only be used in the main process, due to the hdf5 file lock.
+  To get the status of the hdf5 file, namely how many datasets and groups are created, the writer will map
+  every group and dataset into a private hash table with string-type key and `hid_t`-type value.
 
-  - `writer(std::string)`: the class for data output, which require a string to specify the path to the output
-    file for initialization. This function can only be used in the main process, due to the hdf5 file lock.
-    To get the status of the hdf5 file, namely how many datasets and groups are created, the writer will map
-    every group and dataset into a private hash table with string-type key and `hid_t`-type value.
-
-    - `writer::create_file(std::string)`: create a hdf5 file with the given path to file. Due to there may be
-      a case of restart simulation, `create_file` will not overwrite the existing file, but create a new file
-      with a `-n` suffix that start from 1, where `n` is the smallest integer that make the new file name not exist.
-    - `writer::~writer()`: the destructor of the class, which will close the hdf5 file and the created hdf5 objects,
-      such as dataset and group.
-    - `writer::create_group(std::string)`: create a hdf5 group with the given name, can be used to create a
-      group hierarchy e.g. `group1/group2/group3`.
-    - `writer::create_dataset(std::string)`: create a hdf5 dataset with the given name, if the string before
-      the final dataset name, take a example: `a/b/c/dataset_name`, will be created as group, `a/b/c` here.
+  - `writer::create_file(std::string)`.
+  - `writer::~writer()`: the destructor of the class, which will close the hdf5 file and the created hdf5 objects,
+    such as dataset and group.
+  - `writer::create_group(std::string)`: create a hdf5 group with the given name, can be used to create a
+    group hierarchy e.g. `group1/group2/group3`.
+  - `writer::create_dataset(std::string)`: create a hdf5 dataset with the given name, if the string before
+    the final dataset name, take a example: `a/b/c/dataset_name`, will be created as group, `a/b/c` here.
