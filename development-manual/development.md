@@ -292,16 +292,6 @@ the sub-space of the array.
 - `writer(std::string)`: the class for data output, which require a string to specify the path to the output
   file for initialization. This function can only be used in the main process, due to the hdf5 file lock.
 
-  - `writer::~writer()`: the destructor of the class, which will close the hdf5 file and the created hdf5 objects,
-    such as dataset and group.
-  - `writer::create_file(std::string)`.
-  - `writer::create_group(std::string)`: create a hdf5 group with the given name, can be used to create nested
-    groups recursively, e.g. given `group1/group2/group3`, the writer will create `group1` , `group2` and `group3`
-    recursively if they do not exist. The group name without a prefix `/` will be treated as a root group.
-  - `writer::create_dataset(std::string)`: create a hdf5 dataset with the given name, if the string before
-    the final dataset name, take a example: `a/b/c/dataset_name`, will be created as group, `a/b/c` here.
-  - Note: The previous three create function will return 1 if there is some warning, and 0 for success. So never
-    ignore the return value of these functions.
   - `nodes`: the hash map with string-type key, and `galotfa::hdf5::node`-type value, the key is the absolute
     path of the node, e.g. `/group1/group2/dataset_name` and `/` for the file.
 
@@ -313,7 +303,20 @@ the sub-space of the array.
       there is no any tree structure in the hash map, so it's hard to clean the tree structure of the individual
       node).
 
-      <font color=darkblue>TODO</font>: use a key with tree information to store the nodes in the hash map.
-
+  - `writer::~writer()`: the destructor of the class, which will close the hdf5 file and the created hdf5 objects,
+    such as dataset and group.
+  - `writer::create_file(std::string)`.
+  - `writer::create_group(std::string)`: create a hdf5 group with the given name, can be used to create nested
+    groups recursively, e.g. given `group1/group2/group3`, the writer will create `group1` , `group2` and `group3`
+    recursively if they do not exist. The group name without a prefix `/` will be treated as a root group.
+  - `writer::create_dataset(std::string, galotfa::hdf5::size_info&)`: create a hdf5 dataset with the given name, if the string before
+    the final dataset name, take a example: `a/b/c/dataset_name`, will be created as group, `a/b/c` here.
+  - Note: The previous three create function will return 1 if there is some warning, and 0 for success. So never
+    ignore the return value of these functions.
+  - `galota::hdf5::node create_datanode(node& parent, std::string& dataset, galotfa::hdf5::size_info&)`: setup the dataset
+    of the parent node with the given name and info. `dataset` string should be the name of dataset only, e.g. for
+    `/group1/group2/dataset_name` the given value should be `dataset_name`. The parent node should be a group node.
   - `open_file`: open a hdf5 file and return its id, private.
-  - `open_dataset`: open a hdf5 dataset and return its id, private.
+  - `push(void* buffer, std::string dataset_name)`: the main interface to push a array of data to a dataset,
+    the dataset name should be the absolute path of the dataset, e.g. `/group1/group2/dataset_name`. If such
+    dataset does not exist, the writer will create it automatically. The data type of the dataset will be
