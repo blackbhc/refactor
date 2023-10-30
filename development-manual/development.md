@@ -300,5 +300,9 @@ the sub-space of the array.
     - Note: due to there is no default constructor for the `node` class, to call a `node` object in the hash map,
       you need to use the `at` method.
     - The key must start with `/` and end without `/`.
+    - (Current feature) The `nodes` only support push nodes and clean the whole tree structure. So the `nodes`
+      are cleaned at the destruction of the writer. (This is duo to `nodes` use string-type key key and
+      there is no any tree structure in the hash map, so it's hard to clean the tree structure of the individual
+      node).
   - `open_file`: open a hdf5 file and return its id, private.
   - `open_dataset`: open a hdf5 dataset and return its id, private.
