@@ -56,40 +56,50 @@ int main()
 
     // HACK: run the unit test function at here
     println( "Running some unit tests ..." );
+    println( "--------------------------------------------------------------------" );
     try
     {
-#ifdef debug_parameter
-        test_parameter();
-#endif
-#ifdef debug_output
-        test_output();
-#endif
-#ifdef debug_pre
-        test_pre();
-#endif
-#ifdef debug_model
-        test_model();
-#endif
-#ifdef debug_particle
-        test_particle();
-#endif
-#ifdef debug_orbit
-        test_orbit();
-#endif
-#ifdef debug_group
-        test_group();
-#endif
-#ifdef debug_post
-        test_post();
+#ifdef debug_string
+        test_string();
+        println( "--------------------------------------------------------------------" );
 #endif
 #ifdef debug_prompt
         test_prompt();
+        println( "--------------------------------------------------------------------" );
 #endif
-#ifdef debug_string
-        test_string();
+#ifdef debug_parameter
+        test_parameter();
+        println( "--------------------------------------------------------------------" );
+#endif
+#ifdef debug_output
+        test_output();
+        println( "--------------------------------------------------------------------" );
+#endif
+#ifdef debug_pre
+        test_pre();
+        println( "--------------------------------------------------------------------" );
+#endif
+#ifdef debug_model
+        test_model();
+        println( "--------------------------------------------------------------------" );
+#endif
+#ifdef debug_particle
+        test_particle();
+        println( "--------------------------------------------------------------------" );
+#endif
+#ifdef debug_orbit
+        test_orbit();
+        println( "--------------------------------------------------------------------" );
+#endif
+#ifdef debug_group
+        test_group();
+        println( "--------------------------------------------------------------------" );
+#endif
+#ifdef debug_post
+        test_post();
+        println( "--------------------------------------------------------------------" );
 #endif
 
-        println( "--------------------------------------------------------------------" );
 #ifdef MPI_TEST
         MPI_Finalize();
 #endif

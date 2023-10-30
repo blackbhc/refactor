@@ -11,6 +11,7 @@ namespace unit_test {
 // the unit test for prompts
 int warn_and_error()
 {
+    println( " Test the prompt functions." );
     println( "It should print a warning message and a error message, don't worry." );
     WARN( "This is a warning message" );
     try
