@@ -20,6 +20,7 @@ void test_output( void )
     COUNT( writer.test_open_file() );
     COUNT( writer.test_create_close() );
     COUNT( writer.test_create_group() );
+    COUNT( writer.test_create_dataset() );
     SUMMARY( "output" );
 }
 #endif

@@ -9,9 +9,6 @@
 #include <hdf5.h>
 #include <unistd.h>
 
-#define OTF_STACK_STEP_SIZE = 1000
-// the size of the stack for on-the-fly writing
-
 namespace galotfa {
 
 namespace hdf5 {
@@ -230,6 +227,10 @@ int writer::create_group( std::string group_name )
 
 int writer::create_dataset( std::string dataset_name, hdf5::data_info info )
 {
+    // first check the size of the data_info is consistent
+    if ( ( size_t )info.rank != info.dims.size() )
+        ERROR( "The rank != the size of the dims vector!\n" );
+
     auto strings =
         galotfa::string::split( dataset_name, "/" );  // split the path into a string vector
     if ( strings.size() == 0 )
@@ -269,9 +270,11 @@ int writer::create_dataset( std::string dataset_name, hdf5::data_info info )
     // create the dataset
     hid_t data_id = open_dataset( this->nodes.at( parent_path ).get_id(), strings.back(), info );
     // insert the node
-    this->nodes.insert( std::pair< std::string, hdf5::node >(
+    auto pair = std::pair< std::string, hdf5::node >(
         parent_path + "/" + strings.back(),
-        std::move( hdf5::node( data_id, hdf5::NodeType::dataset ) ) ) );
+        std::move(
+            hdf5::node( &this->nodes.at( parent_path ), data_id, hdf5::NodeType::dataset ) ) );
+    this->nodes.insert( std::move( pair ) );
     return 0;
 }
 
@@ -501,6 +504,130 @@ int writer::test_create_group()
         WARN( "Test failed with error: %s", e.what() );
         CHECK_RETURN( false );
     }
+
+    CHECK_RETURN( true );
+}
+
+int writer::test_create_dataset( void )
+{
+    println( "Testing writer::create_dataset(std::string dataset_name, hdf5::data_info info) ..." );
+
+    std::string testfile    = "test.hdf5";
+    std::string testset1    = "/data";
+    std::string testset2    = "/group/data";
+    std::string testgroup   = "/group/data";  // for error test
+    auto        testfile_c  = testfile.c_str();
+    auto        testset1_c  = testset1.c_str();
+    auto        testset2_c  = testset2.c_str();
+    auto        testgroup_c = testgroup.c_str();  // for error test
+    ( void )testgroup;
+    ( void )testfile_c;
+    ( void )testset1_c;
+    ( void )testset2_c;
+    ( void )testgroup;
+    ( void )testgroup_c;
+
+    hdf5::data_info info{ 1, { 1 } };  // create a data_info object
+
+    // ensure the test file does not exist
+    if ( access( testfile_c, F_OK ) == 0 )
+        remove( testfile_c );
+    int create_file_failure = this->create_file( testfile );  // create the test file
+    if ( create_file_failure )
+        CHECK_RETURN( false );
+
+    try
+    {
+        println( "Testing it can create a dataset in \"/\" ..." );
+        int create_fail = this->create_dataset( testset1, info );
+        if ( create_fail )
+            CHECK_RETURN( false );
+    }
+    catch ( std::exception& e )
+    {
+        nodes.at( "/" ).close();
+        nodes.clear();
+        WARN( "Encounter unexpected error: %s", e.what() );
+        CHECK_RETURN( false );
+    }
+    // clean up
+    nodes.at( "/" ).close();
+    nodes.clear();
+
+    try
+    {
+        hid_t file_id    = H5Fopen( testfile_c, H5F_ACC_RDONLY, H5P_DEFAULT );
+        hid_t dataset_id = H5Dopen2( file_id, testset1_c, H5P_DEFAULT );  // open the dataset
+        H5Dclose( dataset_id );
+        H5Fclose( file_id );
+        remove( testfile_c );  // clean up
+    }
+    catch ( std::exception& e )
+    {
+        WARN( "The dataset does not exist! Error: %s", e.what() );
+        CHECK_RETURN( false );
+    }
+
+    try
+    {
+        // test it can create a dataset in a group
+        println( "Testing it can create a dataset in a group ..." );
+        int create_fail = this->create_file( testfile );
+        create_fail += this->create_dataset( testset2, info );
+        if ( create_fail )
+            CHECK_RETURN( false );
+    }
+    catch ( std::exception& e )
+    {
+        nodes.at( "/" ).close();
+        nodes.clear();
+        WARN( "Encounter unexpected error: %s", e.what() );
+        CHECK_RETURN( false );
+    }
+    // clean up
+    nodes.at( "/" ).close();
+    nodes.clear();
+
+    try
+    {
+        // read the file and check the dataset exists
+        hid_t file_id    = H5Fopen( testfile_c, H5F_ACC_RDONLY, H5P_DEFAULT );
+        hid_t group_id   = H5Gopen2( file_id, "/group", H5P_DEFAULT );    // open the group
+        hid_t dataset_id = H5Dopen2( file_id, testset2_c, H5P_DEFAULT );  // open the dataset
+        H5Dclose( dataset_id );
+        H5Gclose( group_id );
+        H5Fclose( file_id );
+        remove( testfile_c );  // clean up
+    }
+    catch ( std::exception& e )
+    {
+        WARN( "The dataset does not exist! Error: %s", e.what() );
+        CHECK_RETURN( false );
+    }
+
+    println( "Test wrong path to create dataset, it should raise a Warning ..." );
+    try
+    {
+        int create_fail = this->create_file( testfile );
+        create_fail += this->create_group( testgroup );
+        create_fail += this->create_dataset( testset2, info );
+        if ( create_fail != 1 )
+            CHECK_RETURN( false );
+    }
+    catch ( std::runtime_error& e )
+    {
+        println( "It raise error as expected: %s", e.what() );
+    }
+    catch ( std::exception& e )
+    {
+        nodes.at( "/" ).close();
+        nodes.clear();
+        WARN( "Encounter unexpected error: %s", e.what() );
+        CHECK_RETURN( false );
+    }
+    // clean up
+    nodes.at( "/" ).close();
+    nodes.clear();
 
     CHECK_RETURN( true );
 }

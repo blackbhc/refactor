@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <vector>
 
+#define VIRTUAL_STACK_SIZE = 1000
+// the size of the stack for on-the-fly writing
 
 namespace galotfa {
 
@@ -23,9 +25,9 @@ namespace hdf5 {
         // node*                parent   = nullptr;
         std::vector< node* > children;
         node*                parent = nullptr;
-        hid_t                attr   = -1;  // attribute
-        hid_t                prop   = -1;  // property
-        hid_t                space  = -1;  // dataspace
+        mutable hid_t        attr   = -1;  // attribute
+        mutable hid_t        prop   = -1;  // property
+        mutable hid_t        space  = -1;  // dataspace
         // public methods
     public:
         node( hid_t id, NodeType type );
@@ -54,6 +56,18 @@ namespace hdf5 {
         {
             return type == NodeType::dataset;
         }
+        inline void set_attribute( hid_t&& attr ) const
+        {
+            this->attr = attr;
+        }
+        inline void set_property( hid_t&& prop ) const
+        {
+            this->prop = prop;
+        }
+        inline void set_dataspace( hid_t&& space ) const
+        {
+            this->space = space;
+        }
 #ifdef debug_output
         node* get_parent( void ) const
         {
@@ -77,8 +91,8 @@ namespace hdf5 {
 
     struct data_info
     {
-        unsigned int rank;
-        hsize_t*     dims;
+        unsigned int           rank;
+        std::vector< hsize_t > dims;
     };
 
 }  // namespace hdf5
@@ -90,6 +104,7 @@ public:
     // private members
 private:
     std::unordered_map< std::string, hdf5::node > nodes = {};
+    // TODO: move to struct-type key with tree info, and implement a tree based clear method
 
     // public methods
 public:
