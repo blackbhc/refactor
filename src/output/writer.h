@@ -1,5 +1,6 @@
 #ifndef __GALOTFA_WRITER_H__
 #define __GALOTFA_WRITER_H__
+#include <algorithm>
 #include <hdf5.h>
 #include <list>
 #include <string>
@@ -29,10 +30,8 @@ namespace hdf5 {
     public:
         node( hid_t id, NodeType type );
         node( node* paraent, hid_t id, NodeType type );
-        ~node( void )
-        {
-            close();
-        };
+        node( node&& other ) noexcept;
+        ~node( void );
         void         add_child( node* child );
         inline hid_t get_id( void ) const
         {
@@ -61,8 +60,20 @@ namespace hdf5 {
             return parent;
         }
 #endif
+    private:
+        friend inline void shuffle( node& node );  // a friend function to shuffle the members
+        friend inline void swap( node& lhs,
+                                 node& rhs );  // a friend function to swap the children
     };
     // due to the node class is a cleaner for the hdf5 handle, its unit test is in the writer class
+
+    // HACK: two dangerous functions, use with caution
+    // if they are used, the node will be in an uninitialized state
+    // so there may be memory leak if the node is not closed properly
+    inline void
+    shuffle( node& node );  // a friend function to shuffle the members to uninitialized state
+    inline void swap( node& lhs, node& rhs );  // a friend function to swap the members
+
 
     struct data_info
     {
