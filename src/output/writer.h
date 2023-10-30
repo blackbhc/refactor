@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
-#define VIRTUAL_STACK_SIZE = 1000
+#define VIRTUAL_STACK_SIZE 1000
 // the size of the stack for on-the-fly writing
 
 namespace galotfa {
@@ -35,11 +35,11 @@ namespace hdf5 {
         node( node&& other ) noexcept;
         ~node( void );
         void         add_child( node* child );
-        inline hid_t get_id( void ) const
+        void         close( void );
+        inline hid_t get_hid( void ) const
         {
             return self;
         }
-        void        close( void );
         inline bool is_root( void ) const
         {
             return ( this->parent == nullptr ) && ( this->type == NodeType::file );
@@ -56,17 +56,21 @@ namespace hdf5 {
         {
             return type == NodeType::dataset;
         }
-        inline void set_attribute( hid_t&& attr ) const
+        inline void set_attribute( hid_t& attr ) const
         {
             this->attr = attr;
         }
-        inline void set_property( hid_t&& prop ) const
+        inline void set_property( hid_t& prop ) const
         {
             this->prop = prop;
         }
-        inline void set_dataspace( hid_t&& space ) const
+        inline void set_dataspace( hid_t& space ) const
         {
             this->space = space;
+        }
+        inline void set_hid( hid_t& id )
+        {
+            this->self = id;
         }
 #ifdef debug_output
         node* get_parent( void ) const
@@ -91,6 +95,7 @@ namespace hdf5 {
 
     struct data_info
     {
+        hid_t                  data_type;
         unsigned int           rank;
         std::vector< hsize_t > dims;
     };
@@ -114,6 +119,7 @@ public:
     int create_group( std::string group_name );
     int create_dataset( std::string dataset_name, hdf5::data_info info );
     int add_attribute( std::string node_name, std::string attr_name, hid_t type, void* data );
+    // TODO: to be implemented
     int push( void* ptr, std::string dataset_name );
 #ifdef debug_output
     int test_open_file( void );
@@ -125,8 +131,9 @@ public:
     // private methods
 private:
     // the nake open functions, without any check, internal use only
-    inline hid_t open_file( std::string path_to_file );
-    inline hid_t open_dataset( hid_t group_id, std::string dataset, hdf5::data_info info );
+    inline hid_t      open_file( std::string path_to_file );
+    inline hdf5::node create_datanode( hdf5::node& parent, std::string& dataset,
+                                       hdf5::data_info& info );
 };
 
 }  // namespace galotfa

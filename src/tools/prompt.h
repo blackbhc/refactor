@@ -65,7 +65,7 @@
         }                                                                                       \
         else                                                                                    \
         {                                                                                       \
-            println( "The test passed." );                                                      \
+            println( "Pass the test." );                                                      \
             return 0;                                                                           \
         }                                                                                       \
     }

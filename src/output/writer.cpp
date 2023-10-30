@@ -38,7 +38,8 @@ namespace hdf5 {
 
     node::~node( void )
     {
-        this->close();
+        if ( this->type != NodeType::uninitialized )
+            this->close();
     }
     void node::add_child( node* child )
     {
@@ -142,7 +143,7 @@ int writer::create_file( std::string path_to_file )
 }
 
 inline hid_t writer::open_file( std::string path_to_file )
-// split this part for
+// sperate this part for
 // 1. convenience of unit test and debug
 // 2. clean code in the public API
 {
@@ -212,7 +213,7 @@ int writer::create_group( std::string group_name )
         {
             // create the group
             hid_t group_id =
-                H5Gcreate2( this->nodes.at( parent_path ).get_id(), strings[ i ].c_str(),
+                H5Gcreate2( this->nodes.at( parent_path ).get_hid(), strings[ i ].c_str(),
                             H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
             // insert the node
             auto pair = std::pair< std::string, hdf5::node >(
@@ -268,25 +269,67 @@ int writer::create_dataset( std::string dataset_name, hdf5::data_info info )
         this->create_group( parent_path );
 
     // create the dataset
-    hid_t data_id = open_dataset( this->nodes.at( parent_path ).get_id(), strings.back(), info );
+    hdf5::node node = create_datanode( this->nodes.at( parent_path ), strings.back(), info );
     // insert the node
-    auto pair = std::pair< std::string, hdf5::node >(
-        parent_path + "/" + strings.back(),
-        std::move(
-            hdf5::node( &this->nodes.at( parent_path ), data_id, hdf5::NodeType::dataset ) ) );
+    auto pair = std::pair< std::string, hdf5::node >( parent_path + "/" + strings.back(),
+                                                      std::move( node ) );
     this->nodes.insert( std::move( pair ) );
     return 0;
 }
 
-inline hid_t writer::open_dataset( hid_t group_id, std::string dataset, hdf5::data_info info )
+inline hdf5::node writer::create_datanode( hdf5::node& parent, std::string& dataset,
+                                           hdf5::data_info& info )
 {
-    ( void )info;
-    hid_t data_id = H5Dcreate2( group_id, dataset.c_str(), H5T_NATIVE_DOUBLE,
-                                H5Screate( H5S_SCALAR ), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
-    // TODO: create the dataset according to the data_info
-    return data_id;
+    // check the size of the data_info is consistent: done in the caller-function create_file(
+    // ...)
+    /* head of the caller:
+    // first check the size of the data_info is consistent
+    if ( ( size_t )info.rank != info.dims.size() )
+        ERROR( "The rank != the size of the dims vector!\n" );
+    */
+
+    // set the chunk size and compression at here
+    hsize_t chunk_dims[ info.rank + 1 ];
+    hsize_t max_dims[ info.rank + 1 ];
+    hsize_t data_dims[ info.rank + 1 ];  // only for the data space creation
+    for ( size_t i = 0; i < info.rank; ++i )
+    {
+        max_dims[ i + 1 ] = chunk_dims[ i + 1 ] = info.dims[ i ];
+        data_dims[ i + 1 ]                      = 0;
+    }
+    chunk_dims[ 0 ] = VIRTUAL_STACK_SIZE;
+    max_dims[ 0 ]   = H5S_UNLIMITED;
+
+    // create property list and set chunk and compression
+    hid_t  prop_id = H5Pcreate( H5P_DATASET_CREATE );
+    herr_t status  = H5Pset_chunk( prop_id, info.rank + 1, chunk_dims );
+    status         = H5Pset_deflate( prop_id, 6 );
+    if ( status < 0 )
+        ERROR( "Failed to set deflate!" );
+
+    // create the dataspace
+    hid_t space_id = H5Screate_simple( info.rank + 1, data_dims, max_dims );
+
+    if ( !parent.is_group() && !parent.is_file() )  // if the parent is not a group or file
+        ERROR( "Try to create a dataset in a non-group or root node!" );
+
+    hid_t data_id = H5Dcreate2( parent.get_hid(), dataset.c_str(), info.data_type, space_id,
+                                H5P_DEFAULT, prop_id, H5P_DEFAULT );
+    // create the dataset with 0 size data
+    hdf5::node datanode( &parent, data_id, hdf5::NodeType::dataset );
+    datanode.set_hid( data_id );
+    datanode.set_property( prop_id );
+    datanode.set_dataspace( space_id );
+    return datanode;
 }
 
+int writer::push( void* ptr, std::string dataset_name )
+{
+    ( void )ptr;
+    ( void )dataset_name;
+
+    return 0;
+}
 
 
 #ifdef debug_output
@@ -527,7 +570,7 @@ int writer::test_create_dataset( void )
     ( void )testgroup;
     ( void )testgroup_c;
 
-    hdf5::data_info info{ 1, { 1 } };  // create a data_info object
+    hdf5::data_info info{ H5T_NATIVE_INT, 1, { 1 } };  // create a data_info object
 
     // ensure the test file does not exist
     if ( access( testfile_c, F_OK ) == 0 )
