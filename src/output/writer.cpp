@@ -71,6 +71,11 @@ namespace hdf5 {
                 break;
             case NodeType::dataset:
                 H5Dclose( this->self );
+                if ( this->info != nullptr )
+                {
+                    delete this->info;
+                    this->info = nullptr;
+                }
                 break;
             default:
                 WARN( "The closeed galotfa::hdf5::node target is uninitialized!" );
@@ -90,6 +95,7 @@ namespace hdf5 {
         node.children.clear();
     };
 
+    // dangerous: this should be used only for move constructor
     inline void swap( node& lhs, node& rhs )  // a friend function to swap the members
     {
         std::swap( lhs.self, rhs.self );
@@ -98,6 +104,8 @@ namespace hdf5 {
         std::swap( lhs.space, rhs.space );
         std::swap( lhs.type, rhs.type );
         std::swap( lhs.children, rhs.children );
+        if ( lhs.is_dataset() || rhs.is_dataset() )
+            std::swap( lhs.info, rhs.info );
     };
 
 }  // namespace hdf5
@@ -226,11 +234,12 @@ int writer::create_group( std::string group_name )
     return 0;
 }
 
-int writer::create_dataset( std::string dataset_name, hdf5::data_info info )
+int writer::create_dataset( std::string dataset_name, hdf5::size_info& info )
 {
-    // first check the size of the data_info is consistent
+    // first check the size of the size_info is consistent
     if ( ( size_t )info.rank != info.dims.size() )
-        ERROR( "The rank != the size of the dims vector!\n" );
+        ERROR( "The rank (%d) != the size of the dims vector (%lu)!\n", info.rank,
+               info.dims.size() );
 
     auto strings =
         galotfa::string::split( dataset_name, "/" );  // split the path into a string vector
@@ -278,12 +287,12 @@ int writer::create_dataset( std::string dataset_name, hdf5::data_info info )
 }
 
 inline hdf5::node writer::create_datanode( hdf5::node& parent, std::string& dataset,
-                                           hdf5::data_info& info )
+                                           hdf5::size_info& info )
 {
-    // check the size of the data_info is consistent: done in the caller-function create_file(
+    // check the size of the size_info is consistent: done in the caller-function create_file(
     // ...)
     /* head of the caller:
-    // first check the size of the data_info is consistent
+    // first check the size of the size_info is consistent
     if ( ( size_t )info.rank != info.dims.size() )
         ERROR( "The rank != the size of the dims vector!\n" );
     */
@@ -293,10 +302,8 @@ inline hdf5::node writer::create_datanode( hdf5::node& parent, std::string& data
     hsize_t max_dims[ info.rank + 1 ];
     hsize_t data_dims[ info.rank + 1 ];  // only for the data space creation
     for ( size_t i = 0; i < info.rank; ++i )
-    {
-        max_dims[ i + 1 ] = chunk_dims[ i + 1 ] = info.dims[ i ];
-        data_dims[ i + 1 ]                      = 0;
-    }
+        data_dims[ i + 1 ] = max_dims[ i + 1 ] = chunk_dims[ i + 1 ] = info.dims[ i ];
+    data_dims[ 0 ]  = 0;
     chunk_dims[ 0 ] = VIRTUAL_STACK_SIZE;
     max_dims[ 0 ]   = H5S_UNLIMITED;
 
@@ -307,7 +314,7 @@ inline hdf5::node writer::create_datanode( hdf5::node& parent, std::string& data
     if ( status < 0 )
         ERROR( "Failed to set deflate!" );
 
-    // create the dataspace
+    // create the zero-size dataspace
     hid_t space_id = H5Screate_simple( info.rank + 1, data_dims, max_dims );
 
     if ( !parent.is_group() && !parent.is_file() )  // if the parent is not a group or file
@@ -319,15 +326,72 @@ inline hdf5::node writer::create_datanode( hdf5::node& parent, std::string& data
     hdf5::node datanode( &parent, data_id, hdf5::NodeType::dataset );
     datanode.set_hid( data_id );
     datanode.set_property( prop_id );
+    H5Sclose( space_id );
+    data_dims[ 0 ] = 1;
+    space_id       = H5Screate_simple( info.rank + 1, data_dims, max_dims );
+    // insert the dataspace: 1 x the size of the data
     datanode.set_dataspace( space_id );
+    datanode.set_size_info( info );
     return datanode;
 }
 
-int writer::push( void* ptr, std::string dataset_name )
+template < typename T > int writer::push( T* ptr, std::string dataset_name )
 {
     ( void )ptr;
-    ( void )dataset_name;
+    // check whether the dataset exists
+    if ( this->nodes.find( dataset_name ) == this->nodes.end() )
+    {
+        WARN( "The dataset to push data in does not exist: %s", dataset_name.c_str() );
+        return 1;
+    }
+    else if ( !this->nodes.at( dataset_name ).is_dataset() )
+    {
+        WARN( "The target is not a dataset: %s", dataset_name.c_str() );
+        return 1;
+    }
+    else if ( this->stack_counter.find( dataset_name ) == this->stack_counter.end() )
+    {
+        stack_counter[ dataset_name ] = 1;
+        // if it is the first push, initialize the stack counter
+    }
 
+    // get the filespace
+    hid_t dataset   = this->nodes.at( dataset_name ).get_hid();
+    hid_t filespace = H5Dget_space( dataset );
+
+    // extend the dataset
+    // get the data info from the node
+    hdf5::size_info* info    = this->nodes.at( dataset_name ).get_size_info();
+    auto&            datadim = info->dims;
+    hsize_t          newsizes[ datadim.size() + 1 ];
+    hsize_t          hyperslab[ datadim.size() + 1 ];
+    hyperslab[ 0 ] = 1;
+    newsizes[ 0 ]  = ( size_t )stack_counter[ dataset_name ];
+    for ( size_t i = 0; i < datadim.size(); ++i )
+        hyperslab[ i + 1 ] = newsizes[ i + 1 ] = datadim[ i ] + 1;
+    hsize_t test_size[] = { 1, 3 };
+    herr_t  status      = H5Dset_extent( dataset, test_size );
+
+    // select the hyperslab, namely a subset of the dataset
+    auto& offset = test_size;
+    offset[ 0 ] -= 1;
+    status = H5Sselect_hyperslab( filespace, H5S_SELECT_SET, offset, NULL, hyperslab, NULL );
+
+    // write the data (only call the API, not flush)
+    hid_t& memspace = this->nodes.at( dataset_name ).get_dataspace();
+    status          = H5Dwrite( dataset, H5T_NATIVE_INT, memspace, filespace, H5P_DEFAULT, ptr );
+
+    // flush the buffer if the stack is "full"
+    if ( stack_counter[ dataset_name ] % VIRTUAL_STACK_SIZE == 0 )
+        H5Dflush( this->nodes.at( dataset_name ).get_hid() );
+
+    H5Sclose( filespace );
+    ++stack_counter[ dataset_name ];
+    if ( status < 0 )
+    {
+        WARN( "Failed to push data into dataset: %s", dataset_name.c_str() );
+        return 1;
+    }
     return 0;
 }
 
@@ -335,8 +399,8 @@ int writer::push( void* ptr, std::string dataset_name )
 #ifdef debug_output
 int writer::test_node( void )
 {
-    // TODO: to be completed
     println( "Testing hdf5::node ..." );
+    println( "The size of hdf5::node is %lu", sizeof( hdf5::node ) );
     println( "Testing hdf5::node::node( hid_t id, NodeType type ) with non file type, it should "
              "raise a error ..." );
     try
@@ -553,24 +617,17 @@ int writer::test_create_group()
 
 int writer::test_create_dataset( void )
 {
-    println( "Testing writer::create_dataset(std::string dataset_name, hdf5::data_info info) ..." );
+    println( "Testing writer::create_dataset(std::string dataset_name, hdf5::size_info info) ..." );
 
-    std::string testfile    = "test.hdf5";
-    std::string testset1    = "/data";
-    std::string testset2    = "/group/data";
-    std::string testgroup   = "/group/data";  // for error test
-    auto        testfile_c  = testfile.c_str();
-    auto        testset1_c  = testset1.c_str();
-    auto        testset2_c  = testset2.c_str();
-    auto        testgroup_c = testgroup.c_str();  // for error test
-    ( void )testgroup;
-    ( void )testfile_c;
-    ( void )testset1_c;
-    ( void )testset2_c;
-    ( void )testgroup;
-    ( void )testgroup_c;
+    std::string testfile   = "test.hdf5";
+    std::string testset1   = "/data";
+    std::string testset2   = "/group/data";
+    std::string testgroup  = "/group/data";  // for error test
+    auto        testfile_c = testfile.c_str();
+    auto        testset1_c = testset1.c_str();
+    auto        testset2_c = testset2.c_str();
 
-    hdf5::data_info info{ H5T_NATIVE_INT, 1, { 1 } };  // create a data_info object
+    hdf5::size_info info{ H5T_NATIVE_INT, 1, { 1 } };  // create a size_info object
 
     // ensure the test file does not exist
     if ( access( testfile_c, F_OK ) == 0 )
@@ -675,6 +732,49 @@ int writer::test_create_dataset( void )
     CHECK_RETURN( true );
 }
 
+int writer::test_push( void )
+{
+    println( "Testing writer::push(T* ptr, std::string dataset_name) ..." );
+    std::string testfile = "test.hdf5";
+    std::string testset2 = "/group/data";
+
+    // ensure the test file does not exist
+    if ( access( testfile.c_str(), F_OK ) == 0 )
+        remove( testfile.c_str() );
+    // ensure the nodes is clean
+    nodes.clear();
+    // create the test file and test dataset
+    int create_failure = this->create_file( testfile );  // create the test file
+    create_failure += this->create_group( "/group" );
+
+    hdf5::size_info info{ H5T_NATIVE_INT, 1, { 3 } };  // create a size_info object
+    create_failure += this->create_dataset( "/group/data", info );
+    if ( create_failure )
+        CHECK_RETURN( false );
+
+
+    // push data once
+    println( "Testing it can push data once ..." );
+    std::vector< int > data{ 1, 2, 3 };
+    try
+    {
+        int push_failure = this->push( data.data(), testset2 );
+        if ( push_failure )
+            CHECK_RETURN( false );
+    }
+    catch ( std::exception& e )
+    {
+        nodes.at( "/" ).close();
+        nodes.clear();
+        WARN( "Encounter unexpected error: %s", e.what() );
+        CHECK_RETURN( false );
+    }
+    // clean up
+    nodes.at( "/" ).close();
+    nodes.clear();
+
+    CHECK_RETURN( true );
+}
 #endif
 }  // namespace galotfa
 #endif

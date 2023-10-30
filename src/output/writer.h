@@ -1,5 +1,6 @@
 #ifndef __GALOTFA_WRITER_H__
 #define __GALOTFA_WRITER_H__
+#include "../tools/prompt.h"
 #include <algorithm>
 #include <hdf5.h>
 #include <list>
@@ -7,24 +8,38 @@
 #include <unordered_map>
 #include <vector>
 
-#define VIRTUAL_STACK_SIZE 1000
 // the size of the stack for on-the-fly writing
+#ifndef debug_output
+#define VIRTUAL_STACK_SIZE 1000
+#else
+#define VIRTUAL_STACK_SIZE 7
+// small size for debug
+#endif
 
 namespace galotfa {
 
 namespace hdf5 {
     enum class NodeType { group, dataset, file, uninitialized };
+
+    struct size_info
+    {
+        hid_t                  data_type;
+        unsigned int           rank;
+        std::vector< hsize_t > dims;
+    };
+
     class node
     // basic node for hdf5: group and dataset,
     // this class is used to organize the resources: dataspace, property and attribute
     {
         // private members
-    private:
+    public:
         hid_t    self = -1;
         NodeType type = NodeType::uninitialized;
         // node*                parent   = nullptr;
         std::vector< node* > children;
         node*                parent = nullptr;
+        hdf5::size_info*     info   = nullptr;
         mutable hid_t        attr   = -1;  // attribute
         mutable hid_t        prop   = -1;  // property
         mutable hid_t        space  = -1;  // dataspace
@@ -39,6 +54,10 @@ namespace hdf5 {
         inline hid_t get_hid( void ) const
         {
             return self;
+        }
+        inline hdf5::NodeType get_type( void ) const
+        {
+            return type;
         }
         inline bool is_root( void ) const
         {
@@ -72,6 +91,39 @@ namespace hdf5 {
         {
             this->self = id;
         }
+        inline void set_size_info( hdf5::size_info info )
+        {
+            if ( this->type != NodeType::dataset )
+            {
+                ERROR( "set_size_info is only for dataset" );
+            }
+            else if ( this->info != nullptr )
+                ERROR( "size_info is already set, try to set it again will cause memory leak!" );
+            this->info                = new hdf5::size_info;
+            this->info->dims          = info.dims;
+            ( this->info )->rank      = info.rank;
+            ( this->info )->data_type = info.data_type;
+        }
+        inline hdf5::size_info* get_size_info( void ) const
+        {
+            if ( this->type != NodeType::dataset )
+            {
+                ERROR( "get_size_info is only for dataset" );
+            }
+            else if ( this->info == nullptr )
+                ERROR( "size_info is not set, try return nullptr will cause Segmentation Fault!" );
+            return info;
+        }
+        inline hid_t& get_dataspace( void ) const
+        {
+            if ( this->type != NodeType::dataset )
+            {
+                ERROR( "get_dataspace is only for dataset" );
+            }
+            else if ( this->space == -1 )
+                WARN( "dataspace is not set, return -1." );
+            return this->space;
+        }
 #ifdef debug_output
         node* get_parent( void ) const
         {
@@ -91,15 +143,6 @@ namespace hdf5 {
     inline void
     shuffle( node& node );  // a friend function to shuffle the members to uninitialized state
     inline void swap( node& lhs, node& rhs );  // a friend function to swap the members
-
-
-    struct data_info
-    {
-        hid_t                  data_type;
-        unsigned int           rank;
-        std::vector< hsize_t > dims;
-    };
-
 }  // namespace hdf5
 
 class writer
@@ -110,6 +153,7 @@ public:
 private:
     std::unordered_map< std::string, hdf5::node > nodes = {};
     // TODO: move to struct-type key with tree info, and implement a tree based clear method
+    std::unordered_map< std::string, unsigned long long > stack_counter = {};
 
     // public methods
 public:
@@ -117,23 +161,24 @@ public:
     ~writer( void );
     int create_file( std::string path_to_file );
     int create_group( std::string group_name );
-    int create_dataset( std::string dataset_name, hdf5::data_info info );
-    int add_attribute( std::string node_name, std::string attr_name, hid_t type, void* data );
+    int create_dataset( std::string dataset_name, hdf5::size_info& info );
+    int add_attribute( std::string node_name, std::string attr_name, hdf5::size_info& info );
     // TODO: to be implemented
-    int push( void* ptr, std::string dataset_name );
+    template < typename T > int push( T* ptr, std::string dataset_name );
 #ifdef debug_output
     int test_open_file( void );
     int test_node( void );
     int test_create_close( void );
     int test_create_group( void );
     int test_create_dataset( void );
+    int test_push( void );
 #endif
     // private methods
 private:
     // the nake open functions, without any check, internal use only
     inline hid_t      open_file( std::string path_to_file );
     inline hdf5::node create_datanode( hdf5::node& parent, std::string& dataset,
-                                       hdf5::data_info& info );
+                                       hdf5::size_info& info );
 };
 
 }  // namespace galotfa

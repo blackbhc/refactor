@@ -21,6 +21,7 @@ void test_output( void )
     COUNT( writer.test_create_close() );
     COUNT( writer.test_create_group() );
     COUNT( writer.test_create_dataset() );
+    COUNT( writer.test_push() );
     SUMMARY( "output" );
 }
 #endif
