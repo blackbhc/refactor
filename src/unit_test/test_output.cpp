@@ -16,9 +16,9 @@ void test_output( void )
     galotfa::writer writer( "test.hdf5" );
 
     // call the unit test functions for the output part.
-    // COUNT( writer.test_node() );
-    // COUNT( writer.test_open_file() );
-    // COUNT( writer.test_create_close() );
+    COUNT( writer.test_node() );
+    COUNT( writer.test_open_file() );
+    COUNT( writer.test_create_close() );
     COUNT( writer.test_create_group() );
     SUMMARY( "output" );
 }
