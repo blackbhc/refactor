@@ -20,7 +20,7 @@ and the documentations.
 
 This project depends on the following tools or libraries:
 
-- [gnu make](https://www.gnu.org/software/make/): the main build tool of the project.
+- [make](https://www.gnu.org/software/make/): the main build tool of the project.
 - a c++ compiler which supports C++11: recommended ones are g++>=4.8.5 or clang++>=3.4, or icpx
   (the intel llvm-based compiler).
 - [gsl](https://www.gnu.org/software/gsl/): the GNU Scientific Library.
@@ -244,19 +244,24 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
   or dataset, where `T` is the type of the value, which can be `int`, `float`, `double`, `std::string` or `char*`.
 - `push(void* ptr, std::string dataset)`: push a array of data to a existing dataset.
 
-- <font color=red>NOTE</font>: The name of group and dataset is case sensitive and unique, there can not be
-  dataset or group share the same under the same group, e.g. `a/a/a` is legal for either a dataset `a` or a
-  subgroup `a` under parent group `a/a`, but under group `a/a/` there can not be a dataset and a subgroup
-  with the same name `a`. This is not a behavior of `galotfa`, but a convention of the hdf5 library.
+- <font color=red>NOTE</font>:
+  1. The name of group and dataset is case sensitive and unique, there can not be
+     dataset or group share the same under the same group, e.g. `a/a/a` is legal for either a dataset `a` or a
+     subgroup `a` under parent group `a/a`, but under group `a/a/` there can not be a dataset and a subgroup
+     with the same name `a`. This is not a behavior of `galotfa`, but a convention of the hdf5 library.
+  2. All APIs are designed to be used in the main process, due to the hdf5 file lock, and the unit test of
+     this part is only designed for the serial mode, `make mpi_test` with `units=output` definitely fails.
 
 #### Convention of the data output
 
 - `galotfa` use `hdf5` for data output, where different analysis modules will be stored in different files.
-- For better performance, `galotfa` will store the analysis results with chunked dataset to save space.
+- For better performance, `galotfa` will store the analysis results with chunked dataset and compress them to save space.
 - `galotfa` will use a virtual stack in the main process to store the analysis results, and output the data
   to the hdf5 file when the stack is full or the simulation is finished. This strategy is due to the
   uncertainty of how many synchronized time steps will be analyzed during a simulation.
   This can avoid the frequent opening and closing of the hdf5 file, which is time consuming.
+- The size of the virtual stack is in units of synchronized time steps in simulation, which is defined as
+  a constant `VIRTUAL_STACK_SIZE` in `src/output/writer.h`.
 - It seems to be possible to use the parallel hdf5 IO to improve the performance, but there is few
   documentations about this feature, and such feature is not always activated in the hdf5 library, so
   `galotfa` only use a serial mode to write date, which is collected from all processes into the main process.
@@ -287,22 +292,28 @@ the sub-space of the array.
 - `writer(std::string)`: the class for data output, which require a string to specify the path to the output
   file for initialization. This function can only be used in the main process, due to the hdf5 file lock.
 
-  - `writer::create_file(std::string)`.
   - `writer::~writer()`: the destructor of the class, which will close the hdf5 file and the created hdf5 objects,
     such as dataset and group.
+  - `writer::create_file(std::string)`.
   - `writer::create_group(std::string)`: create a hdf5 group with the given name, can be used to create nested
     groups recursively, e.g. given `group1/group2/group3`, the writer will create `group1` , `group2` and `group3`
     recursively if they do not exist. The group name without a prefix `/` will be treated as a root group.
   - `writer::create_dataset(std::string)`: create a hdf5 dataset with the given name, if the string before
     the final dataset name, take a example: `a/b/c/dataset_name`, will be created as group, `a/b/c` here.
+  - Note: The previous three create function will return 1 if there is some warning, and 0 for success. So never
+    ignore the return value of these functions.
   - `nodes`: the hash map with string-type key, and `galotfa::hdf5::node`-type value, the key is the absolute
     path of the node, e.g. `/group1/group2/dataset_name` and `/` for the file.
+
     - Note: due to there is no default constructor for the `node` class, to call a `node` object in the hash map,
       you need to use the `at` method.
     - The key must start with `/` and end without `/`.
     - (Current feature) The `nodes` only support push nodes and clean the whole tree structure. So the `nodes`
-      are cleaned at the destruction of the writer. (This is duo to `nodes` use string-type key key and
+      is cleaned only in the destructor of the writer. (This is due to `nodes` use string-type key and
       there is no any tree structure in the hash map, so it's hard to clean the tree structure of the individual
       node).
+
+      <font color=darkblue>TODO</font>: use a key with tree information to store the nodes in the hash map.
+
   - `open_file`: open a hdf5 file and return its id, private.
   - `open_dataset`: open a hdf5 dataset and return its id, private.
