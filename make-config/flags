@@ -5,9 +5,10 @@ define_a_print = 1
 ifeq ($(mode),release)
     CXXFLAGS += -std=c++11 -O3 -Wall -Wextra
 else ifeq ($(mode),debug)
-    CXXFLAGS += -std=c++11 -O3 -ggdb -Wall -Wextra -Werror
+    CXXFLAGS += -std=c++11 -O3 -ggdb -Wall -Wextra -Werror 
+	#-fsanitize=undefined,leak,address
 else
-    error "unknown build mode:" $(mode)
+    $(shell echo "unknown build mode:" $(mode))
 endif
 
 ifeq ($(type), header-only)

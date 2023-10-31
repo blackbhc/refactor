@@ -1,8 +1,10 @@
+#define DO_UNIT_TEST 1
 #ifdef MPI_TEST
 #include <mpi.h>
 #endif
 #include "../tools/prompt.h"
 #include <stdio.h>
+
 
 // include the unit test header files
 #ifdef debug_parameter
@@ -32,6 +34,9 @@
 #ifdef debug_prompt
 #include "test_prompt.cpp"
 #endif
+#ifdef debug_string
+#include "test_string.cpp"
+#endif
 
 #ifdef MPI_TEST
 int main( int argc, char* argv[] )
@@ -40,8 +45,8 @@ int main( int argc, char* argv[] )
     MPI_Init( &argc, &argv );
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
     MPI_Comm_size( MPI_COMM_WORLD, &size );
-    test_info( "--------------------------------------------------------------------\n" );
-    test_info( "\t\tRunning test on %d processors ...\n", size );
+    println( "--------------------------------------------------------------------" );
+    println( "\t\tRunning test on %d processors ...", size );
 #else
 int main()
 {
@@ -51,37 +56,50 @@ int main()
 
     // HACK: run the unit test function at here
     println( "Running some unit tests ..." );
+    println( "--------------------------------------------------------------------" );
     try
     {
-#ifdef debug_parameter
-        test_parameter();
-#endif
-#ifdef debug_output
-        test_output();
-#endif
-#ifdef debug_pre
-        test_pre();
-#endif
-#ifdef debug_model
-        test_model();
-#endif
-#ifdef debug_particle
-        test_particle();
-#endif
-#ifdef debug_orbit
-        test_orbit();
-#endif
-#ifdef debug_group
-        test_group();
-#endif
-#ifdef debug_post
-        test_post();
+#ifdef debug_string
+        test_string();
+        println( "--------------------------------------------------------------------" );
 #endif
 #ifdef debug_prompt
         test_prompt();
+        println( "--------------------------------------------------------------------" );
+#endif
+#ifdef debug_parameter
+        test_parameter();
+        println( "--------------------------------------------------------------------" );
+#endif
+#ifdef debug_output
+        test_output();
+        println( "--------------------------------------------------------------------" );
+#endif
+#ifdef debug_pre
+        test_pre();
+        println( "--------------------------------------------------------------------" );
+#endif
+#ifdef debug_model
+        test_model();
+        println( "--------------------------------------------------------------------" );
+#endif
+#ifdef debug_particle
+        test_particle();
+        println( "--------------------------------------------------------------------" );
+#endif
+#ifdef debug_orbit
+        test_orbit();
+        println( "--------------------------------------------------------------------" );
+#endif
+#ifdef debug_group
+        test_group();
+        println( "--------------------------------------------------------------------" );
+#endif
+#ifdef debug_post
+        test_post();
+        println( "--------------------------------------------------------------------" );
 #endif
 
-        println( "--------------------------------------------------------------------" );
 #ifdef MPI_TEST
         MPI_Finalize();
 #endif
