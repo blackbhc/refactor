@@ -10,11 +10,11 @@ and the documentations.
 ## Content <a name="content"></a>
 
 1. <a href="#deps">Dependencies</a>
-1. <a href="#debug">Debug Mode</a>
-1. <a href="#files">Project Frame</a>
-1. <a href="#unit_test">Unit Test</a>
-1. <a href="#add_new_module">Add New Function Module</a>
-1. <a href="#codes_structure">Codes Structure</a>
+2. <a href="#debug">Debug Mode</a>
+3. <a href="#files">Project Frame</a>
+4. <a href="#unit_test">Unit Test</a>
+5. <a href="#add_new_module">Add New Function Module</a>
+6. <a href="#codes_structure">Codes Structure</a>
 
 ## Dependencies <a name="deps"></a><a href="#contents"><font size=4>(content)</font></a>
 
@@ -237,19 +237,29 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
 - `create_group(std::string)`: create a hdf5 group with the given name, can create group hierarchy e.g.
   if given a argument like `group1/group2/group3`, the writer will create `group1` , `group2` and `group3`
   recursively if they do not exist. The group name without a prefix `/` will be treated as a root group.
-- `create_dataset(std::string dataset, info(???))` or `create_dataset(std::string group, std::string datasetm info)`:
+- `create_dataset(std::string dataset, hdf5::info)` or `create_dataset(std::string group, std::string datasetm info)`:
   create a hdf5 dataset with the given name, if the group before the final dataset name, take a example:
   `create_dateset("a/b/c/dataset_name", info)` == `create_group("a/b/c")` then `create_dataset("a/b/c", "dataset_name")`.
-- `add_attribute(std::string target, std::string attr_name, T value(???))`: add a attribute to a target group
-  or dataset, where `T` is the type of the value, which can be `int`, `float`, `double`, `std::string` or `char*`.
 - `push(void* ptr, std::string dataset)`: push a array of data to a existing dataset.
 
+- steps to use the `writer` class to organize the hdf5 file:
+
+  1. create a writer object with the given path to the output file: `writer(std::string)`.
+  2. create an `galotfa::hdf5::info` object that specify the info of the dataset: data type, rank and dimension.
+  3. create a dataset with the given name and info: `writer::create_dataset(std::string dataset, hdf5::info)`
+  4. push the data array to the dataset when needed: `writer::push(void* ptr, std::string dataset)`.
+  5. After all steps, the `writer` will organize the resources of the hdf5 file automatically, there is no need to close
+     anything manually.
+
 - <font color=red>NOTE</font>:
-  1. The name of group and dataset is case sensitive and unique, there can not be
+
+  1. The pushed data array should follow the 1D array convention (see <a href="#convention of data array">Convention for arrays of data</a> )
+  2. Make sure that the size of the pushed data array is the same as the size of the dataset otherwise the behavior is undefined.
+  3. The name of group and dataset is case sensitive and unique, there can not be
      dataset or group share the same under the same group, e.g. `a/a/a` is legal for either a dataset `a` or a
      subgroup `a` under parent group `a/a`, but under group `a/a/` there can not be a dataset and a subgroup
      with the same name `a`. This is not a behavior of `galotfa`, but a convention of the hdf5 library.
-  2. All APIs are designed to be used in the main process, due to the hdf5 file lock, and the unit test of
+  4. All APIs are designed to be used in the main process, due to the hdf5 file lock, and the unit test of
      this part is only designed for the serial mode, `make mpi_test` with `units=output` definitely fails.
 
 #### Convention of the data output
@@ -266,7 +276,7 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
   documentations about this feature, and such feature is not always activated in the hdf5 library, so
   `galotfa` only use a serial mode to write date, which is collected from all processes into the main process.
 
-#### Convention for array of data
+#### Convention for arrays of data <a name="convention of data array"></a>
 
 To simplify the functions parameters and better performance, `galotfa` always use 1D C-style array
 to store the analysis results. When store a multi-dimensional array, the array will be stored as different
@@ -281,6 +291,8 @@ the sub-space of the array.
 
   - enum class `NodeType`: the type of a hdf5 node,`file` or `group` or `dataset`, also a `uninitialized` type for
     the default constructor of the `node` class.
+  - `info`: the structure to specify the info of a dataset, which include the data type (`.data_type`, hdf5 type id),
+    rank (`.rank`, unsigned int) and dimension (`.dims`, `std::vector` of `hsize_t`).
   - class `node`: the class for a hdf5 node, which can be a group or a dataset, this class will take
     over the resources organization of the hdf5 file, so there is no need to close the hdf5 objects manually.
     - constructor: `node(std::string, NodeType)`, create a node object with the given name and type. This
@@ -317,6 +329,7 @@ the sub-space of the array.
     of the parent node with the given name and info. `dataset` string should be the name of dataset only, e.g. for
     `/group1/group2/dataset_name` the given value should be `dataset_name`. The parent node should be a group node.
   - `open_file`: open a hdf5 file and return its id, private.
-  - `push(void* buffer, std::string dataset_name)`: the main interface to push a array of data to a dataset,
+  - `push(void* buffer, std::string dataset_name)`: the main interface to push a array of data to a existing dataset,
     the dataset name should be the absolute path of the dataset, e.g. `/group1/group2/dataset_name`. If such
-    dataset does not exist, the writer will create it automatically. The data type of the dataset will be
+    dataset does not exist, the writer will create it automatically. The data type of the dataset will be restored
+    by `node`, during creation of the dataset.
