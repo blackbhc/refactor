@@ -51,38 +51,48 @@ int main()
 
     // HACK: run the unit test function at here
     println( "Running some unit tests ..." );
+    try
+    {
 #ifdef debug_parameter
-    test_parameter();
+        test_parameter();
 #endif
 #ifdef debug_output
-    test_output();
+        test_output();
 #endif
 #ifdef debug_pre
-    test_pre();
+        test_pre();
 #endif
 #ifdef debug_model
-    test_model();
+        test_model();
 #endif
 #ifdef debug_particle
-    test_particle();
+        test_particle();
 #endif
 #ifdef debug_orbit
-    test_orbit();
+        test_orbit();
 #endif
 #ifdef debug_group
-    test_group();
+        test_group();
 #endif
 #ifdef debug_post
-    test_post();
+        test_post();
 #endif
 #ifdef debug_prompt
-    test_prompt();
+        test_prompt();
 #endif
 
-    println( "--------------------------------------------------------------------" );
+        println( "--------------------------------------------------------------------" );
 #ifdef MPI_TEST
-    MPI_Finalize();
+        MPI_Finalize();
 #endif
+    }
+    catch ( const std::exception& e )
+    {
+        println( "Encounter an error during the unit test, error message: %s", e.what() );
+#ifdef MPI_TEST
+        MPI_Finalize();
+#endif
+    }
 
     return 0;
 }
