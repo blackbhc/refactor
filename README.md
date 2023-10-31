@@ -103,30 +103,73 @@ First, you need to check the following dependencies
 
 ### Complete illustrations
 
-#### Use `galotfa` in simulation codes
-
-`galotfa` is based on `MPI`, and all `galotfa` APIs are designed to be used in `MPI` mode. So you need to
-call `MPI_Init` before using any `galotfa` APIs.
-
-<font color=red>**Note:**</font> `galotfa` is designed to be used in `MPI` mode, so you need to call `MPI_Init`
-before using any `galotfa` APIs.
-
 #### INI parameter file
 
 Note: the section name is case sensitive, but the key/value name is case insensitive.
 
 - available boolean: case insensitive `true` and `false`, `on` and `off`, `enable` and `disable`, `yes` and `no`.
-- available value type: number (doesn't distinguish integer and float), string, boolean.
+- available value type: boolean, string(s), number(s). For numbers, there is no difference between integer and
+  float, but the value(s) will be converted to required type of the target parameter.
 - comment prefix: `#` and `;`.
 - supported value separator: white space, `,`, `-`, `+`, `:` and `&`. Note: the name of key can not contain these characters.
 - unexpected additional value for a key will be illegal, e.g. `<a key for boolean> = true yes` will make the parser to detect
   the value of the key as `true yes`, which is in string type and may cause error in the following parsing.
+
+#### List of parameters for `galotfa`
+
+All the parameters are listed below, and their function is indicated by the name, or you can click the link
+to see their explanation.
+
+| Section          | Key Name                                                     | Value Type | Default       | Available Values                                            |
+| ---------------- | ------------------------------------------------------------ | ---------- | ------------- | ----------------------------------------------------------- |
+| `Global`         |                                                              |            |               |                                                             |
+|                  | <a href="#demo">`demo`</a>                                   |            |               |                                                             |
+|                  | <a href="#switch">`switch`</a>                               | Boolean    | `on`          |                                                             |
+|                  | <a href="#output_dir">`output_dir`</a>                       | String     | `./otfoutput` | Any valid path.                                             |
+|                  | <a href="#target_types">`target_types`</a>                   | Integer(s) |               | Based on your IC of simulation                              |
+|                  | <a href="#convergence_type">`convergence_type`</a>           | String     | `absolute`    | `absolute` or `relative`.                                   |
+|                  | <a href="#convergence_threshold">`convergence_threshold`</a> | Float      | 0.001         | $(0, 1)$ if `convergence_type` = `relative`, otherwise $>0$ |
+|                  | <a href="#equal_threshold">`equal_threshold`</a>             | Float      | 1e-5          | $>0$, but not too large.                                    |
+| `Pre Process`    |                                                              |
+| `Single Galaxy`  |                                                              |
+| `Particle`       |                                                              |
+| `Particle Group` |                                                              |
+| `Partilce Orbit` |                                                              |
+
+#### Explanation of parameters
+
+##### Global
+
+This section specify some parameters that control the behaviour of `galotfa` on the machine.
+
+- <a id="switch"></a>`switch`: whether to enable the demo mode or not. If `on`, `galotfa` will only run for a few steps
+  and output some demo files to the `output_dir`. This option is only for test purpose or may be useful for some special cases.
+- <a id="output_dir"></a>`output_dir`: the path to store the output files, create it if not exist.
+- <a id="target_types"></a>`target_types`: the type of target particle types to do the on-the-fly analysis, must be
+  given at least one type, otherwise the program will raise an error.
+- <a id="convergence_type"></a>`convergence_type`: the type of convergence criterion for the on-the-fly analysis.
+- <a id="convergence_threshold"></a>`convergence_threshold`: the threshold for numerical convergence during the
+  on-the-fly analysis.
+  - `convergence_type` = `absolute`: the convergence criterion is $\Delta Q < \epsilon$ for some quantity $Q$,
+    where $\epsilon$ is the `convergence_threshold`.
+  - `convergence_type` = `relative`: the convergence criterion is $\Delta Q / Q < \epsilon$ for some quantity $Q$,
+    where $\epsilon$ is the `convergence_threshold`.
+- <a id="equal_threshold"></a>`equal_threshold`: the threshold for equality of two floating point numbers, e.g.
+  if the threshold=0.001, then two float numbers $a$ and $b$ are considered equal.
 
 #### Output files
 
 Due to there may be a case of a restart simulation, `galotfa` will not overwrite any existing file,
 but create a new file with a `-n` suffix that start from 1, where `n` is the smallest integer that make the new file
 name not exist. In this way, the suffix can be served as a restart index.
+
+#### Use `galotfa` in general simulation codes
+
+`galotfa` is based on `MPI`, and all `galotfa` APIs are designed to be used in `MPI` mode. So you need to
+call `MPI_Init` before using any `galotfa` APIs.
+
+<font color=red>**Note:**</font> `galotfa` is designed to be used in `MPI` mode, so you need to call `MPI_Init`
+before using any `galotfa` APIs.
 
 ---
 
