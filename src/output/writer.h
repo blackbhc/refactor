@@ -37,11 +37,13 @@ namespace hdf5 {
         hid_t    self = -1;
         NodeType type = NodeType::uninitialized;
         // node*                parent   = nullptr;
-        std::vector< node* > children;
-        node*                parent    = nullptr;
-        hdf5::size_info*     info      = nullptr;
-        mutable hid_t        prop      = -1;  // property
-        mutable hid_t        dataspace = -1;  // dataspace
+        std::vector< node* >   children;
+        node*                  parent    = nullptr;
+        hdf5::size_info*       info      = nullptr;
+        hid_t                  prop      = -1;  // property
+        hid_t                  dataspace = -1;  // dataspace
+        hid_t                  memspace  = -1;  // memspace for analysis result in single step
+        std::vector< hsize_t > dim_ext;  // the dim to extend: {1, info.dims[1], info.dims[2], ...}
         // public methods
     public:
         node( hid_t id, NodeType type );
@@ -74,13 +76,21 @@ namespace hdf5 {
         {
             return type == NodeType::dataset;
         }
-        inline void set_property( hid_t& prop ) const
+        inline void set_property( hid_t& prop )
         {
             this->prop = prop;
         }
-        inline void set_dataspace( hid_t& space ) const
+        inline void set_dataspace( hid_t& space )
         {
             this->dataspace = space;
+        }
+        inline void set_memspace( hid_t& space )
+        {
+            this->memspace = space;
+        }
+        inline void set_dim_ext( std::vector< hsize_t >& ext )
+        {
+            this->dim_ext = ext;
         }
         inline void set_hid( hid_t& id )
         {
@@ -109,15 +119,13 @@ namespace hdf5 {
                 ERROR( "size_info is not set, try return nullptr will cause Segmentation Fault!" );
             return info;
         }
-        inline hid_t& get_dataspace( void ) const
+        inline hid_t get_memspace( void ) const
         {
-            if ( this->type != NodeType::dataset )
-            {
-                ERROR( "get_dataspace is only for dataset" );
-            }
-            else if ( this->dataspace == -1 )
-                WARN( "dataspace is not set, return -1." );
-            return this->dataspace;
+            return memspace;
+        }
+        inline std::vector< hsize_t > get_dim_ext( void ) const
+        {
+            return dim_ext;
         }
 #ifdef debug_output
         node* get_parent( void ) const
