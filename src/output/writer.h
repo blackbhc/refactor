@@ -40,7 +40,6 @@ namespace hdf5 {
         std::vector< node* > children;
         node*                parent    = nullptr;
         hdf5::size_info*     info      = nullptr;
-        mutable hid_t        attr      = -1;  // attribute
         mutable hid_t        prop      = -1;  // property
         mutable hid_t        dataspace = -1;  // dataspace
         // public methods
@@ -74,10 +73,6 @@ namespace hdf5 {
         inline bool is_dataset( void ) const
         {
             return type == NodeType::dataset;
-        }
-        inline void set_attribute( hid_t& attr ) const
-        {
-            this->attr = attr;
         }
         inline void set_property( hid_t& prop ) const
         {

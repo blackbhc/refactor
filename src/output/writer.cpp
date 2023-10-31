@@ -54,8 +54,6 @@ namespace hdf5 {
 
         // if the attribute, property or dataspace is not created, the handle is -1
         // if created, close it
-        if ( this->attr != -1 )
-            H5Aclose( this->attr );
         if ( this->prop != -1 )
             H5Pclose( this->prop );
         if ( this->dataspace != -1 )
@@ -87,7 +85,6 @@ namespace hdf5 {
     inline void shuffle( node& node )
     {
         node.self      = -1;
-        node.attr      = -1;
         node.prop      = -1;
         node.dataspace = -1;
         node.type      = NodeType::uninitialized;
@@ -100,7 +97,6 @@ namespace hdf5 {
     inline void swap( node& lhs, node& rhs )  // a friend function to swap the members
     {
         std::swap( lhs.self, rhs.self );
-        std::swap( lhs.attr, rhs.attr );
         std::swap( lhs.prop, rhs.prop );
         std::swap( lhs.dataspace, rhs.dataspace );
         std::swap( lhs.type, rhs.type );
@@ -379,10 +375,10 @@ template < typename T > int writer::push( T* ptr, std::string dataset_name )
         dimexet[ i + 1 ] = datadims[ i ];
 
     hsize_t dim_new[ 2 ] = { stack_counter[ dataset_name ], 3 };
-    hid_t   memspace     = H5Screate_simple( 2, dimexet, NULL );  // TODO: move this into node
-    hsize_t offset[ 2 ]  = { stack_counter[ dataset_name ] - 1, 0 };
     herr_t  status       = H5Dset_extent( dataset_id, dim_new );
     hid_t   filespace    = H5Dget_space( dataset_id );
+    hid_t   memspace     = H5Screate_simple( 2, dimexet, NULL );  // TODO: move this into node
+    hsize_t offset[ 2 ]  = { stack_counter[ dataset_name ] - 1, 0 };
     status = H5Sselect_hyperslab( filespace, H5S_SELECT_SET, offset, NULL, dimexet, NULL );
     status = H5Dwrite( dataset_id, info->data_type, memspace, filespace, H5P_DEFAULT, ptr );
     H5Sclose( memspace );
