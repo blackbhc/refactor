@@ -120,21 +120,22 @@ Note: the section name is case sensitive, but the key/value name is case insensi
 All the parameters are listed below, and their function is indicated by the name, or you can click the link
 to see their explanation.
 
-| Section          | Key Name                                                     | Value Type | Default       | Available Values                                            |
-| ---------------- | ------------------------------------------------------------ | ---------- | ------------- | ----------------------------------------------------------- |
-| `Global`         |                                                              |            |               |                                                             |
-|                  | <a href="#demo">`demo`</a>                                   |            |               |                                                             |
-|                  | <a href="#switch">`switch`</a>                               | Boolean    | `on`          |                                                             |
-|                  | <a href="#output_dir">`output_dir`</a>                       | String     | `./otfoutput` | Any valid path.                                             |
-|                  | <a href="#target_types">`target_types`</a>                   | Integer(s) |               | Based on your IC of simulation                              |
-|                  | <a href="#convergence_type">`convergence_type`</a>           | String     | `absolute`    | `absolute` or `relative`.                                   |
-|                  | <a href="#convergence_threshold">`convergence_threshold`</a> | Float      | 0.001         | $(0, 1)$ if `convergence_type` = `relative`, otherwise $>0$ |
-|                  | <a href="#equal_threshold">`equal_threshold`</a>             | Float      | 1e-5          | $>0$, but not too large.                                    |
-| `Pre Process`    |                                                              |
-| `Single Galaxy`  |                                                              |
-| `Particle`       |                                                              |
-| `Particle Group` |                                                              |
-| `Partilce Orbit` |                                                              |
+| Section    | Key Name                                                     | Value Type | Default       | Available Values                                            |
+| ---------- | ------------------------------------------------------------ | ---------- | ------------- | ----------------------------------------------------------- |
+| `Global`   |                                                              |            |               |                                                             |
+|            | <a href="#demo">`demo`</a>                                   |            |               |                                                             |
+|            | <a href="#switch">`switch`</a>                               | Boolean    | `on`          |                                                             |
+|            | <a href="#output_dir">`output_dir`</a>                       | String     | `./otfoutput` | Any valid path.                                             |
+|            | <a href="#target_types">`target_types`</a>                   | Integer(s) |               | Based on your IC of simulation                              |
+|            | <a href="#convergence_type">`convergence_type`</a>           | String     | `absolute`    | `absolute` or `relative`.                                   |
+|            | <a href="#convergence_threshold">`convergence_threshold`</a> | Float      | 0.001         | $(0, 1)$ if `convergence_type` = `relative`, otherwise $>0$ |
+|            | <a href="#equal_threshold">`equal_threshold`</a>             | Float      | 1e-5          | $>0$, but not too large.                                    |
+| `Pre`      |                                                              |
+| `Model`    |                                                              |
+| `Particle` |                                                              |
+| `Group`    |                                                              |
+| `Orbits`   |                                                              |
+| `Post`     |                                                              |
 
 #### Explanation of parameters
 
