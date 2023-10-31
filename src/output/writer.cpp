@@ -58,8 +58,8 @@ namespace hdf5 {
             H5Aclose( this->attr );
         if ( this->prop != -1 )
             H5Pclose( this->prop );
-        if ( this->space != -1 )
-            H5Sclose( this->space );
+        if ( this->dataspace != -1 )
+            H5Sclose( this->dataspace );
         if ( this->self != -1 )
             switch ( this->type )
             {
@@ -86,13 +86,14 @@ namespace hdf5 {
 
     inline void shuffle( node& node )
     {
-        node.self   = -1;
-        node.attr   = -1;
-        node.prop   = -1;
-        node.space  = -1;
-        node.type   = NodeType::uninitialized;
-        node.parent = nullptr;
+        node.self      = -1;
+        node.attr      = -1;
+        node.prop      = -1;
+        node.dataspace = -1;
+        node.type      = NodeType::uninitialized;
+        node.parent    = nullptr;
         node.children.clear();
+        node.info = nullptr;
     };
 
     // dangerous: this should be used only for move constructor
@@ -101,7 +102,7 @@ namespace hdf5 {
         std::swap( lhs.self, rhs.self );
         std::swap( lhs.attr, rhs.attr );
         std::swap( lhs.prop, rhs.prop );
-        std::swap( lhs.space, rhs.space );
+        std::swap( lhs.dataspace, rhs.dataspace );
         std::swap( lhs.type, rhs.type );
         std::swap( lhs.children, rhs.children );
         if ( lhs.is_dataset() || rhs.is_dataset() )
@@ -297,6 +298,10 @@ inline hdf5::node writer::create_datanode( hdf5::node& parent, std::string& data
         ERROR( "The rank != the size of the dims vector!\n" );
     */
 
+    // check whther the parent is a group or file
+    if ( !parent.is_group() && !parent.is_file() )
+        ERROR( "Try to create a dataset in a non-group or root node!" );
+
     // set the chunk size and compression at here
     hsize_t chunk_dims[ info.rank + 1 ];
     hsize_t max_dims[ info.rank + 1 ];
@@ -308,29 +313,22 @@ inline hdf5::node writer::create_datanode( hdf5::node& parent, std::string& data
     max_dims[ 0 ]   = H5S_UNLIMITED;
 
     // create property list and set chunk and compression
-    hid_t  prop_id = H5Pcreate( H5P_DATASET_CREATE );
-    herr_t status  = H5Pset_chunk( prop_id, info.rank + 1, chunk_dims );
-    status         = H5Pset_deflate( prop_id, 6 );
+    hid_t  prop_list = H5Pcreate( H5P_DATASET_CREATE );
+    herr_t status    = H5Pset_chunk( prop_list, info.rank + 1, chunk_dims );
+    status           = H5Pset_deflate( prop_list, 6 );
     if ( status < 0 )
         ERROR( "Failed to set deflate!" );
 
     // create the zero-size dataspace
-    hid_t space_id = H5Screate_simple( info.rank + 1, data_dims, max_dims );
+    hid_t dataspace = H5Screate_simple( info.rank + 1, data_dims, max_dims );
 
-    if ( !parent.is_group() && !parent.is_file() )  // if the parent is not a group or file
-        ERROR( "Try to create a dataset in a non-group or root node!" );
-
-    hid_t data_id = H5Dcreate2( parent.get_hid(), dataset.c_str(), info.data_type, space_id,
-                                H5P_DEFAULT, prop_id, H5P_DEFAULT );
+    hid_t data_id = H5Dcreate2( parent.get_hid(), dataset.c_str(), info.data_type, dataspace,
+                                H5P_DEFAULT, prop_list, H5P_DEFAULT );
     // create the dataset with 0 size data
     hdf5::node datanode( &parent, data_id, hdf5::NodeType::dataset );
     datanode.set_hid( data_id );
-    datanode.set_property( prop_id );
-    H5Sclose( space_id );
-    data_dims[ 0 ] = 1;
-    space_id       = H5Screate_simple( info.rank + 1, data_dims, max_dims );
-    // insert the dataspace: 1 x the size of the data
-    datanode.set_dataspace( space_id );
+    datanode.set_property( prop_list );
+    datanode.set_dataspace( dataspace );
     datanode.set_size_info( info );
     return datanode;
 }
@@ -355,7 +353,7 @@ template < typename T > int writer::push( T* ptr, std::string dataset_name )
         // if it is the first push, initialize the stack counter
     }
 
-    // get the filespace
+    /* // get the filespace
     hid_t dataset   = this->nodes.at( dataset_name ).get_hid();
     hid_t filespace = H5Dget_space( dataset );
 
@@ -363,29 +361,37 @@ template < typename T > int writer::push( T* ptr, std::string dataset_name )
     // get the data info from the node
     hdf5::size_info* info    = this->nodes.at( dataset_name ).get_size_info();
     auto&            datadim = info->dims;
-    hsize_t          newsizes[ datadim.size() + 1 ];
+    hsize_t          new_sizes[ datadim.size() + 1 ];
     hsize_t          hyperslab[ datadim.size() + 1 ];
     hyperslab[ 0 ] = 1;
-    newsizes[ 0 ]  = ( size_t )stack_counter[ dataset_name ];
+    new_sizes[ 0 ] = ( size_t )stack_counter[ dataset_name ];
     for ( size_t i = 0; i < datadim.size(); ++i )
-        hyperslab[ i + 1 ] = newsizes[ i + 1 ] = datadim[ i ] + 1;
-    hsize_t test_size[] = { 1, 3 };
-    herr_t  status      = H5Dset_extent( dataset, test_size );
+        hyperslab[ i + 1 ] = new_sizes[ i + 1 ] = datadim[ i ];
+    // herr_t status = H5Dset_extent( dataset, new_sizes ); */
 
     // select the hyperslab, namely a subset of the dataset
-    auto& offset = test_size;
-    offset[ 0 ] -= 1;
-    status = H5Sselect_hyperslab( filespace, H5S_SELECT_SET, offset, NULL, hyperslab, NULL );
+    hdf5::size_info* info       = this->nodes.at( dataset_name ).get_size_info();
+    auto&            datadims   = info->dims;
+    hid_t            dataset_id = this->nodes.at( dataset_name ).get_hid();
+    hsize_t          dimexet[ info->rank + 1 ];  // TODO: move this into node
+    dimexet[ 0 ] = 1;
+    for ( size_t i = 0; i < info->rank; ++i )
+        dimexet[ i + 1 ] = datadims[ i ];
 
-    // write the data (only call the API, not flush)
-    hid_t& memspace = this->nodes.at( dataset_name ).get_dataspace();
-    status          = H5Dwrite( dataset, H5T_NATIVE_INT, memspace, filespace, H5P_DEFAULT, ptr );
+    hsize_t dim_new[ 2 ] = { stack_counter[ dataset_name ], 3 };
+    hid_t   memspace     = H5Screate_simple( 2, dimexet, NULL );  // TODO: move this into node
+    hsize_t offset[ 2 ]  = { stack_counter[ dataset_name ] - 1, 0 };
+    herr_t  status       = H5Dset_extent( dataset_id, dim_new );
+    hid_t   filespace    = H5Dget_space( dataset_id );
+    status = H5Sselect_hyperslab( filespace, H5S_SELECT_SET, offset, NULL, dimexet, NULL );
+    status = H5Dwrite( dataset_id, info->data_type, memspace, filespace, H5P_DEFAULT, ptr );
+    H5Sclose( memspace );
+    H5Sclose( filespace );
 
     // flush the buffer if the stack is "full"
     if ( stack_counter[ dataset_name ] % VIRTUAL_STACK_SIZE == 0 )
         H5Dflush( this->nodes.at( dataset_name ).get_hid() );
 
-    H5Sclose( filespace );
     ++stack_counter[ dataset_name ];
     if ( status < 0 )
     {
@@ -747,18 +753,24 @@ int writer::test_push( void )
     int create_failure = this->create_file( testfile );  // create the test file
     create_failure += this->create_group( "/group" );
 
-    hdf5::size_info info{ H5T_NATIVE_INT, 1, { 3 } };  // create a size_info object
+    hdf5::size_info info{ H5T_NATIVE_DOUBLE, 1, { 3 } };  // create a size_info object
     create_failure += this->create_dataset( "/group/data", info );
     if ( create_failure )
         CHECK_RETURN( false );
 
 
-    // push data once
+    // push data one-by-one
     println( "Testing it can push data once ..." );
-    std::vector< int > data{ 1, 2, 3 };
+    std::vector< double > vec{ 3, 4, 5 };
     try
     {
-        int push_failure = this->push( data.data(), testset2 );
+        int push_failure = 0;
+        for ( int i = 0; i < 3; ++i )
+        {
+            push_failure += this->push( vec.data(), testset2 );
+            for ( auto& v : vec )
+                v += 1;
+        }
         if ( push_failure )
             CHECK_RETURN( false );
     }
@@ -772,6 +784,7 @@ int writer::test_push( void )
     // clean up
     nodes.at( "/" ).close();
     nodes.clear();
+    // remove( testfile.c_str() );
 
     CHECK_RETURN( true );
 }

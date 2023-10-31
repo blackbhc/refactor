@@ -38,11 +38,11 @@ namespace hdf5 {
         NodeType type = NodeType::uninitialized;
         // node*                parent   = nullptr;
         std::vector< node* > children;
-        node*                parent = nullptr;
-        hdf5::size_info*     info   = nullptr;
-        mutable hid_t        attr   = -1;  // attribute
-        mutable hid_t        prop   = -1;  // property
-        mutable hid_t        space  = -1;  // dataspace
+        node*                parent    = nullptr;
+        hdf5::size_info*     info      = nullptr;
+        mutable hid_t        attr      = -1;  // attribute
+        mutable hid_t        prop      = -1;  // property
+        mutable hid_t        dataspace = -1;  // dataspace
         // public methods
     public:
         node( hid_t id, NodeType type );
@@ -85,7 +85,7 @@ namespace hdf5 {
         }
         inline void set_dataspace( hid_t& space ) const
         {
-            this->space = space;
+            this->dataspace = space;
         }
         inline void set_hid( hid_t& id )
         {
@@ -120,9 +120,9 @@ namespace hdf5 {
             {
                 ERROR( "get_dataspace is only for dataset" );
             }
-            else if ( this->space == -1 )
+            else if ( this->dataspace == -1 )
                 WARN( "dataspace is not set, return -1." );
-            return this->space;
+            return this->dataspace;
         }
 #ifdef debug_output
         node* get_parent( void ) const
