@@ -183,13 +183,15 @@ For `string.h`, `string.cpp`:
 #### APIs
 
 - `ini_parser(std::string path_to_file)`: the constructor of the class, which will read the parameter file with the given path.
-- `ini_parser::get_xxx()`: the function to extract the value of a key in the parameter file. Support to get boolean, number, string,
-  and vector of number and string.
+- `ini_parser::get_xxx()`: the function to extract the value of a key in the parameter file. Support to get boolean, int,
+  double, string, and vector of int, double and string.
 - `ini_parser::has()`: check whether a key exist in the parameter file.
 - structure `para`: the structure to store the value of parameters, and read the parameter file based on the `ini_parser` class.
   - member prefix indicates their section in the parameter file: `gb` for the global section, `pre` for the
     pre-process section, `md` for the model section, `ptc` for the particle section, `orb` for the orbit section,
     `grp` for the group section and `post` for the post-process section.
+  - constructor: with a reference to a created `ini_parser` object, then update the value of the parameters
+    based on the parameter file (with hard code, the ugly but fast way).
 
 #### Implementation details
 
