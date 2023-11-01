@@ -1,6 +1,6 @@
 `galotfa`: <font size=4>**gal**</font>actic <font size=4>**o**</font>n-<font size=4>**t**</font>he-<font size=4>**f**</font>ly <font size=4>**a**</font>nalysis, is a library for on-the-fly analysis of disk galaxy simulations.
 
----
+______________________________________________________________________
 
 ## <a id="contents">Contents</a>
 
@@ -9,21 +9,28 @@
 - <a href="#scheme">Design scheme</a>
 - <a href="#usage">Usage</a>
 
----
+______________________________________________________________________
 
 ## Features of `galotfa` <a href="#contents"><font size=4>(contents)</font></a> <a id="feature"></a>
 
-1. User friendly program API and usage guidance.
-2. Doesn't couple with any simulation code.
-3. Highly modular and widely usage the template programing of `c++`: easy to reuse or refactor the codes,
-   and easy for further development when needed (flavor of "you complete me").
-4. Low dependency on other libraries: only standard libraries or included in the project.
-5. Fast: use MPI and design to, a level of **~5%?** more CPU time during a run of simulation.
-6. by the hand: `galotfa` repo also provides some extended version of widely used simulation codes,
+1. Out-of-the-box: in general no need to modify the simulation code, just run some demos with simplest
+   steps. If you feel hard to use some part of `galotfa`, please let us know.
+1. User friendly program API and usage guidance: although we hope most functions of `galotfa` can be
+   used out-of-the-box, we also provide detailed guidance for users to use `galotfa` in their own customized
+   way.
+1. Extensible: easy to add new analysis functions or apply to new simulation code which follows the general
+   simulation convention. Besides, although this project is concentrated on disk galaxy simulations, it can
+   also be easily extended to other types of simulations, such as cluster simulations, cosmology simulations,
+   etc.
+1. Notice us if you need more wonderful features: you-complete-me flavor, you can make this project better.
+   We are also happy to merge your code into this project if you want.
+1. Low dependency on other libraries: only standard libraries or included in the project.
+1. Fast: use MPI and design to, a level of **~5%?** more CPU time during a run of simulation.
+1. by the hand: `galotfa` repo also provides some extended version of widely used simulation codes,
    with `galotfa` built-in. You can also add `galotfa` in any simulation code by yourself or submit it.
-7. Open: we welcome new participants who are interested in improve this project.
+1. Open: we welcome new participants who are interested in improve this project.
 
----
+______________________________________________________________________
 
 ## Installation <a href="#contents"><font size=4>(contents)</font></a> <a id="install"></a>
 
@@ -37,6 +44,7 @@ First, you need to check the following dependencies
 - a `c++` compiler with `c++11` support, e.g. `g++`>4.8.5 or `clang++`>3.9.1 are recommended.
 
 - dependent libraries:
+
   - any `MPI` library.
   - `gsl` library.
 
@@ -46,11 +54,13 @@ First, you need to check the following dependencies
 
    If you don't have `git`, try `wget -O- https://github.com/blackbhc/galotfa/archive/main.zip | tar xz`.
 
-2. run `cd galotfa`
-3. run `make build mode=release type=header-only`.
+1. run `cd galotfa`
+
+1. run `make build mode=release type=header-only`.
 
    - the `mode` option can be `release` or `debug`, default is `release` which has `-O3` optimization mode.
      `debug` make the compiled library includes debug symbols for debugging which is only useful for developers.
+
    - the `type` option can be `header-only`, `static`, `shared`, `all`:
 
      - `header-only`: only copy the header files, no library files.
@@ -69,20 +79,21 @@ First, you need to check the following dependencies
      compile the `galotfa` header files. Therefore, to use `galotfa` in a simulation code written in `C`,
      the `type` option should be `static` or `shared`.
 
-4. run `make -p <path/to/install>`:
+1. run `make -p <path/to/install>`:
 
    Create the directory for the installation of `galotfa`, if it already exists, skip this step.
 
-5. run `make install prefix=</path/to/install>`:
+1. run `make install prefix=</path/to/install>`:
 
    Install the `galotfa` to the directory specified by `prefix`, which should be the same as
    the one you specified in the last step.
 
-6. After configure the `CPATH`, `LIBRARY_PATH` and `LD_LIBRARY_PATH` environment variables,
+1. After configure the `CPATH`, `LIBRARY_PATH` and `LD_LIBRARY_PATH` environment variables,
    you can use `galotfa` in your project.:
 
    - (temporary) run `export CPATH=$CPATH:<prefix>/include`, `export LIBRARY_PATH=$LIBRARY_PATH:<prefix>/lib`,
      `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<prefix>/lib` before you compile your project every time.
+
    - (permanent) add the above three `export` commands into your shell configuration file:
 
      e.g. `~/.bashrc` for `bash` or
@@ -90,12 +101,12 @@ First, you need to check the following dependencies
      like `/bin/bash` to your terminal. Then run `source ~/.bashrc`/`source ~/.zshrc` to make the changes take effect.
      Then you can use `galotfa` without configure every time.
 
-7. If you want to uninstall `galotfa`, run `make uninstall` in the `galotfa` repo directory.
+1. If you want to uninstall `galotfa`, run `make uninstall` in the `galotfa` repo directory.
 
    If the install path contain `galotfa`, then such directory will be removed completely. Otherwise, only
    the `galotfa` library files under such directory will be removed.
 
----
+______________________________________________________________________
 
 ## Usage <a href="#contents"><font size=4>(contents)</font></a> <a id="usage"></a>
 
@@ -129,13 +140,21 @@ to see their explanation.
 |            | <a href="#target_types">`target_types`</a>                   | Integer(s) |               | Based on your IC of simulation                              |
 |            | <a href="#convergence_type">`convergence_type`</a>           | String     | `absolute`    | `absolute` or `relative`.                                   |
 |            | <a href="#convergence_threshold">`convergence_threshold`</a> | Float      | 0.001         | $(0, 1)$ if `convergence_type` = `relative`, otherwise $>0$ |
+|            | <a href="#max_iter">`max_iter`</a>                           | Integer    | 25            | $>0$                                                        |
 |            | <a href="#equal_threshold">`equal_threshold`</a>             | Float      | 1e-5          | $>0$, but not too large.                                    |
-| `Pre`      |                                                              |
-| `Model`    |                                                              |
-| `Particle` |                                                              |
-| `Group`    |                                                              |
-| `Orbits`   |                                                              |
-| `Post`     |                                                              |
+|            | <a href="#sim_type">`sim_type`</a>                           | String     | `galaxy`      | Only support `galaxy` at present.                           |
+| `Pre`      |                                                              |            |               |                                                             |
+|            | <a href="#recenter">`recenter`</a>                           | Boolean    | `on`          |                                                             |
+|            | <a href="#region_shape">`region_shape`</a>                   | String     | `sphere`      | `sphere`, `cylinder` or `box`.                              |
+|            | <a href="#ratio">`ratio`</a>                                 | Float      | 1.0           | $>0$                                                        |
+|            | <a href="#size">`region_size`</a>                            | Float      | 1.0           | $>0$                                                        |
+|            | <a href="#recenter_method">`recenter_method`</a>             | String     | `com`         | `com`, `density` or `potential` (not yet supported)         |
+|            | <a href="#align_bar">`align_bar`</a>                         | Boolean    | `off`         |                                                             |
+| `Model`    |                                                              |            |               |                                                             |
+| `Particle` |                                                              |            |               |                                                             |
+| `Group`    |                                                              |            |               |                                                             |
+| `Orbits`   |                                                              |            |               |                                                             |
+| `Post`     |                                                              |            |               |                                                             |
 
 #### Explanation of parameters
 
@@ -151,12 +170,85 @@ This section specify some parameters that control the behaviour of `galotfa` on 
 - <a id="convergence_type"></a>`convergence_type`: the type of convergence criterion for the on-the-fly analysis.
 - <a id="convergence_threshold"></a>`convergence_threshold`: the threshold for numerical convergence during the
   on-the-fly analysis.
-  - `convergence_type` = `absolute`: the convergence criterion is $\Delta Q < \epsilon$ for some quantity $Q$,
-    where $\epsilon$ is the `convergence_threshold`.
-  - `convergence_type` = `relative`: the convergence criterion is $\Delta Q / Q < \epsilon$ for some quantity $Q$,
-    where $\epsilon$ is the `convergence_threshold`.
+  - `convergence_type` = `absolute`: the convergence criterion is $\\Delta$ $Q\<\\epsilon$ for some quantity $Q$,
+    where $\\epsilon$ is the `convergence_threshold`.
+  - `convergence_type` = `relative`: the convergence criterion is $\\Delta Q / Q \< \\epsilon$ for some quantity $Q$,
+    where $\\epsilon$ is the `convergence_threshold`.
+- <a id="max_iter"></a>`max_iter`: the maximum number of iterations during analysis.
 - <a id="equal_threshold"></a>`equal_threshold`: the threshold for equality of two floating point numbers, e.g.
   if the threshold=0.001, then two float numbers $a$ and $b$ are considered equal.
+- <a id="sim_type"></a>`sim_type`: the type of simulation, e.g. `galaxy`, `cluster`, `cosmology` and `cosmology_zoom_in`.
+  At present, only `galaxy` is supported.
+
+##### Pre
+
+This section is about the pre-processing of the simulation data before some concrete analysis, such as calculate the
+center of the target particle(s), calculate the bar major axis (if exist) and align the bar major axis to the $x$-axis.
+
+- <a id="recenter"></a>`recenter`: whether to recenter the target particle(s) to the center the target
+  particle(s) or not, note the recenter is only for the on-the-fly analysis, and will not change the simulation data.
+
+- <a id="region_shape"></a>`region_shape`: only meaningful when `recenter` = `on`, the shape of the region
+  to calculate the center of the target particle(s), which will affect how the `region_size` is interpreted (see below).
+
+  - `region_shape` = `sphere`: the region is a sphere or spheroid if `ratio` $\\neq$ 1, the axis of the spheroid is the
+    parallel to the $z$-axis.
+  - `region_shape` = `cylinder`: the region is a cylinder with symmetry axis parallel to the $z$-axis.
+  - `region_shape` = `box`: the region is a box with sides parallel to the $x$, $y$ and $z$ axis.
+
+- <a id="ratio"></a>`ratio`: only meaningful when `recenter` = `on`, the ratio of the region's characteristic
+  lengths, which will affect how the `region_size` is interpreted.
+
+- <a id="size"></a>`region_size`: only meaningful when `recenter` = `on`, the size of the region to calculate
+  the center of the target particle(s), which will
+
+  - `region_shape` = `sphere`: the region is a sphere with $R=$ `region_size` if `ratio` = 1. If `ratio` is not 1,
+    the sphere will be stretched along the $z$-axis with $R_z=$ `ratio` $\\times$ `region_size`.
+  - `region_shape` = `cylinder`: the region is a cylinder with $R=$ `region_size`, and half height $H=$
+    `ratio` $\\times$ `region_size`.
+  - `region_shape` = `box`: the region is a cube with side length $L=$ `region_size`, and stretched along the
+    $z$-axis with $L_z=$ `ratio` $\\times$ `region_size`.
+
+- <a id="recenter_method"></a>`recenter_method`: the method to calculate the center of the target particle(s),
+  with iteration if necessary (see `convergence_type` and `convergence_threshold`).
+
+  - `recenter_method` = `com`: the center is defined as the center of mass of the target particle(s).
+  - `recenter_method` = `density`: the center is defined as the pixel of the highest surface density of the target
+    particle(s), the size of the pixel is determined by (???)
+  - `recenter_method` = `potential`: not supported yet.
+
+- <a id="align_bar"></a>`align_bar`: whether rotate the coordinates to align the $x$-axis to the bar major axis,
+  this option is only available when the bar is detected. It's may be useful to align the bar major axis to the
+  $x$-axis for some analysis or visualization.
+
+##### Model
+
+The model level on-the-fly analysis of the target particle(s). The most common case at present is a disk galaxy.
+
+- <a id="switch_m"></a>`switch`: whether to enable the model level analysis or not.
+
+- <a id="region_shape_m"></a>`region_shape`: similar to the `region_shape` in the `Pre` section, but this one is
+  used to calculate the model quantifications of the target particle(s).
+
+  - `region_shape` = `sphere`: the region is a sphere or spheroid if `ratio` $\\neq$ 1, the axis of the spheroid is the
+    parallel to the $z$-axis.
+  - `region_shape` = `cylinder`: the region is a cylinder with symmetry axis parallel to the $z$-axis.
+  - `region_shape` = `box`: the region is a box with sides parallel to the $x$, $y$ and $z$ axis.
+
+- <a id="ratio_m"></a>`ratio`: similar to the `ratio` in the `Pre` section, but this one is used to calculate the
+  model quantifications of the target particle(s).
+
+- <a id="size_m"></a>`region_size`: similar to the `region_size` in the `Pre` section, but this one is used to
+
+  - `region_shape` = `sphere`: the region is a sphere with $R=$ `region_size` if `ratio` = 1. If `ratio` $\\neq$ 1, the sphere
+    will be stretched along the $z$-axis with $R_z=$ `ratio` $\\times$ `region_size`.
+  - `region_shape` = `cylinder`: the region is a cylinder with $R=$ `region_size`, and half height $H=$
+    `ratio` $\\times$ `region_size`.
+  - `region_shape` = `box`: the region is a cube with side length $L=$ `region_size`, and stretched along the $z$-axis with
+    $L_z=$ `ratio` $\\times$ `region_size`.
+
+- <a id="period_m"><a/>`period`: the period of model level analysis, in unit of synchronized time steps in
+  simulation.
 
 #### Output files
 
@@ -172,7 +264,7 @@ call `MPI_Init` before using any `galotfa` APIs.
 <font color=red>**Note:**</font> `galotfa` is designed to be used in `MPI` mode, so you need to call `MPI_Init`
 before using any `galotfa` APIs.
 
----
+______________________________________________________________________
 
 ## Design scheme <a href="#contents"><font size=4>(contents)</font></a> <a id="scheme"></a>
 
@@ -181,16 +273,16 @@ before using any `galotfa` APIs.
 The physical quantities of interested of `galotfa` are classified into two four types:
 
 1. Model quantifications:
-   - numerical precision: $\Delta E$, $\Delta L$
-   - structure properties: center and axis of the disk, bar major axis, strength of the bar $S_{bar}$, bar length $L_{bar}$, peanutness $a_6$, axis ratio of the bar, symmetry parameters ($A_0$, $A_2$ ...).
+   - numerical precision: $\\Delta E$, $\\Delta L$
+   - structure properties: center and axis of the disk, bar major axis, strength of the bar $S\_{bar}$, bar length $L\_{bar}$, peanutness $a_6$, axis ratio of the bar, symmetry parameters ($A_0$, $A_2$ ...).
    - dynamical properties: rotation curves, pattern speed, Toomre $Q$ parameter, velocity dispersion, anisotropies, buckling strength.
-2. Particle quantifications:
-   - orbital properties: angular momentum, energy, guiding radius, epicycle frequency, other orbital frequency, actions, circularity $\epsilon$,
-     3D circularity $\epsilon _{3D}$.
+1. Particle quantifications:
+   - orbital properties: angular momentum, energy, guiding radius, epicycle frequency, other orbital frequency, actions, circularity $\\epsilon$,
+     3D circularity $\\epsilon \_{3D}$.
    - sub-grid physical properties: temperature, SFR, viscosity, acoustic velocity, density, metallicity.
-3. Population level quantifications:
+1. Population level quantifications:
    Special case of model quantifications, but only for particular stellar population.
-4. Selctital curves:
+1. Selctital curves:
    Log exact positions of particular particles at one or several synchronized time bins to trace their exact curves during simulation.
 
 ### Basic workflow of `galotfa`
