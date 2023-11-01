@@ -27,14 +27,14 @@
             printf( "\n" );                     \
         }                                       \
     }
-#define fprintln( file_prt, ... )               \
+#define fprintln( file_ptr, ... )               \
     {                                           \
         int rank;                               \
         MPI_Comm_rank( MPI_COMM_WORLD, &rank ); \
         if ( rank == 0 )                        \
         {                                       \
             fprintf( file_ptr, __VA_ARGS__ );   \
-            fprintf( file_prt, "\n" );          \
+            fprintf( file_ptr, "\n" );          \
         }                                       \
     }
 #endif
@@ -65,7 +65,7 @@
         }                                                                                       \
         else                                                                                    \
         {                                                                                       \
-            println( "Pass the test." );                                                      \
+            println( "Pass the test." );                                                        \
             return 0;                                                                           \
         }                                                                                       \
     }
