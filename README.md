@@ -141,7 +141,7 @@ to see their explanation.
 | `Global`   |                                                              |            |               |                                                             |
 |            | <a href="#switch">`switch`</a>                               | Boolean    | `on`          |                                                             |
 |            | <a href="#output_dir">`output_dir`</a>                       | String     | `./otfoutput` | Any valid path.                                             |
-|            | <a href="#target_types">`target_types`</a>                   | Integer(s) |               | Based on your IC of simulation                              |
+|            | <a href="#particle_types">`particle_types`</a>               | Integer(s) |               | Based on your IC of simulation                              |
 |            | <a href="#convergence_type">`convergence_type`</a>           | String     | `absolute`    | `absolute` or `relative`.                                   |
 |            | <a href="#convergence_threshold">`convergence_threshold`</a> | Float      | 0.001         | $(0, 1)$ if `convergence_type` = `relative`, otherwise $>0$ |
 |            | <a href="#max_iter">`max_iter`</a>                           | Integer    | 25            | $>0$                                                        |
@@ -206,7 +206,7 @@ This section specify some parameters that control the behaviour of `galotfa` on 
 - <a id="switch"></a>`switch`: whether to enable the demo mode or not. If `on`, `galotfa` will only run for a few steps
   and output some demo files to the `output_dir`. This option is only for test purpose or may be useful for some special cases.
 - <a id="output_dir"></a>`output_dir`: the path to store the output files, create it if not exist.
-- <a id="target_types"></a>`target_types`: the type(s) of target particles types to do the on-the-fly analysis, must be
+- <a id="particle_types"></a>`particle_types`: the type(s) of target particles types to do the on-the-fly analysis, must be
   given at least one type, otherwise the program will raise an error.
 - <a id="convergence_type"></a>`convergence_type`: the type of convergence criterion for the on-the-fly analysis.
 - <a id="convergence_threshold"></a>`convergence_threshold`: the threshold for numerical convergence during the
@@ -345,7 +345,7 @@ of stars that contribute to the bar, or the spiral arms, etc.
 - <a id="target_id"></a>`target_id`: the path to an ASCII file of particles id of the target particle to trace, must
   be given at least one id if the orbit curve log is enabled, otherwise the program will raise an error. The particle
   type of this part can be any type of particles in the simulation, not restricted to the target particles specified
-  by the `target_types` parameter in the `Global` section.
+  by the `particle_types` parameter in the `Global` section.
   - The particle id in this file can be separated by any of the following characters: white space, new line,
     `,`, `-`, `+`, `:` and `&`.
   - Particle ID that is not exist in the simulation will be ignored, with some warning message.

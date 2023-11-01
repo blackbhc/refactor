@@ -186,6 +186,10 @@ For `string.h`, `string.cpp`:
 - `ini_parser::get_xxx()`: the function to extract the value of a key in the parameter file. Support to get boolean, number, string,
   and vector of number and string.
 - `ini_parser::has()`: check whether a key exist in the parameter file.
+- structure `para`: the structure to store the value of parameters, and read the parameter file based on the `ini_parser` class.
+  - member prefix indicates their section in the parameter file: `gb` for the global section, `pre` for the
+    pre-process section, `md` for the model section, `ptc` for the particle section, `orb` for the orbit section,
+    `grp` for the group section and `post` for the post-process section.
 
 #### Implementation details
 
