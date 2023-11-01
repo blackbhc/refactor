@@ -23,9 +23,9 @@ const std::string ini_parser::value_sep      = " \t,-:+&";
 ini_parser::ini_parser( const char* file_name )
 {
     this->filename = file_name;
-#ifndef debug_parameter  // no initialization in debug mode
+    // #ifndef debug_parameter  // no initialization in debug mode
     this->read( this->filename.c_str() );
-#endif
+    // #endif
 }
 
 void ini_parser::read( const char* filename )
@@ -266,6 +266,29 @@ std::vector< double > ini_parser::get_doubles( std::string section, std::string 
     }
     return res;
 }
+
+int ini_parser::get_int( std::string section, std::string key ) const
+{
+    SECURE_EXTRACT( section, key );
+    if ( this->ini_table[ hash_key_name ].type != ini::ValueType::number )
+        WARN( "[%s] -> [%s] is not number type!", section.c_str(), key.c_str() );
+    return std::stoi( this->ini_table[ hash_key_name ].content );
+}
+
+std::vector< int > ini_parser::get_ints( std::string section, std::string key ) const
+{
+    SECURE_EXTRACT( section, key );
+    if ( this->ini_table[ hash_key_name ].type != ini::ValueType::numbers )
+        WARN( "[%s] -> [%s] is not numbers type!", section.c_str(), key.c_str() );
+    auto               vals = this->split( this->ini_table[ hash_key_name ].content );
+    std::vector< int > res( vals.size() );
+    for ( size_t i = 0; i < vals.size(); ++i )
+    {
+        res[ i ] = std::stoi( vals[ i ] );
+    }
+    return res;
+}
+
 
 std::string ini_parser::get_str( std::string section, std::string key ) const
 {

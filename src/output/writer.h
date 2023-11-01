@@ -167,7 +167,7 @@ public:
     int create_dataset( std::string dataset_name, hdf5::size_info& info );
     int add_attribute( std::string node_name, std::string attr_name, hdf5::size_info& info );
     // TODO: to be implemented
-    template < typename T > int push( T* ptr, std::string dataset_name );
+    template < typename T > int push( T* ptr, unsigned int len, std::string dataset_name );
 #ifdef debug_output
     int test_open_file( void );
     int test_node( void );
