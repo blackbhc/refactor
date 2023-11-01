@@ -114,6 +114,11 @@ ______________________________________________________________________
 
 ### Complete illustrations
 
+#### Units of quantities
+
+Due to the mutability of the simulation's internal units, the units of analysis results are based on the
+simulation internal units, keep this in mind when you use the analysis results.
+
 #### INI parameter file
 
 Note: the section name is case sensitive, but the key/value name is case insensitive.
@@ -165,7 +170,7 @@ This section specify some parameters that control the behaviour of `galotfa` on 
 - <a id="switch"></a>`switch`: whether to enable the demo mode or not. If `on`, `galotfa` will only run for a few steps
   and output some demo files to the `output_dir`. This option is only for test purpose or may be useful for some special cases.
 - <a id="output_dir"></a>`output_dir`: the path to store the output files, create it if not exist.
-- <a id="target_types"></a>`target_types`: the type of target particle types to do the on-the-fly analysis, must be
+- <a id="target_types"></a>`target_types`: the type(s) of target particles types to do the on-the-fly analysis, must be
   given at least one type, otherwise the program will raise an error.
 - <a id="convergence_type"></a>`convergence_type`: the type of convergence criterion for the on-the-fly analysis.
 - <a id="convergence_threshold"></a>`convergence_threshold`: the threshold for numerical convergence during the
@@ -183,13 +188,16 @@ This section specify some parameters that control the behaviour of `galotfa` on 
 ##### Pre
 
 This section is about the pre-processing of the simulation data before some concrete analysis, such as calculate the
-center of the target particle(s), calculate the bar major axis (if exist) and align the bar major axis to the $x$-axis.
+center of the target particles, calculate the bar major axis (if exist) and align the bar major axis to the $x$-axis.
 
-- <a id="recenter"></a>`recenter`: whether to recenter the target particle(s) to the center the target
+- <a id="recenter"></a>`recenter`: whether to recenter the target particles to the center the target
   particle(s) or not, note the recenter is only for the on-the-fly analysis, and will not change the simulation data.
+  The parameter will significantly affect the result of the on-the-fly analysis that is sensitive to the origin of
+  coordinates, such as the bar major axis, the pattern speed, etc. Therefore, it's recommended to always turn on this
+  option, unless you know what you are doing.
 
 - <a id="region_shape"></a>`region_shape`: only meaningful when `recenter` = `on`, the shape of the region
-  to calculate the center of the target particle(s), which will affect how the `region_size` is interpreted (see below).
+  to calculate the center of the target particles, which will affect how the `region_size` is interpreted (see below).
 
   - `region_shape` = `sphere`: the region is a sphere or spheroid if `ratio` $\\neq$ 1, the axis of the spheroid is the
     parallel to the $z$-axis.
@@ -200,7 +208,7 @@ center of the target particle(s), calculate the bar major axis (if exist) and al
   lengths, which will affect how the `region_size` is interpreted.
 
 - <a id="size"></a>`region_size`: only meaningful when `recenter` = `on`, the size of the region to calculate
-  the center of the target particle(s), which will
+  the center of the target particles, which will
 
   - `region_shape` = `sphere`: the region is a sphere with $R=$ `region_size` if `ratio` = 1. If `ratio` is not 1,
     the sphere will be stretched along the $z$-axis with $R_z=$ `ratio` $\\times$ `region_size`.
@@ -209,10 +217,10 @@ center of the target particle(s), calculate the bar major axis (if exist) and al
   - `region_shape` = `box`: the region is a cube with side length $L=$ `region_size`, and stretched along the
     $z$-axis with $L_z=$ `ratio` $\\times$ `region_size`.
 
-- <a id="recenter_method"></a>`recenter_method`: the method to calculate the center of the target particle(s),
+- <a id="recenter_method"></a>`recenter_method`: the method to calculate the center of the target particles,
   with iteration if necessary (see `convergence_type` and `convergence_threshold`).
 
-  - `recenter_method` = `com`: the center is defined as the center of mass of the target particle(s).
+  - `recenter_method` = `com`: the center is defined as the center of mass of the target particles.
   - `recenter_method` = `density`: the center is defined as the pixel of the highest surface density of the target
     particle(s), the size of the pixel is determined by (???)
   - `recenter_method` = `potential`: not supported yet.
@@ -223,12 +231,12 @@ center of the target particle(s), calculate the bar major axis (if exist) and al
 
 ##### Model
 
-The model level on-the-fly analysis of the target particle(s). The most common case at present is a disk galaxy.
+The model level on-the-fly analysis of the target particles. The most common case at present is a disk galaxy.
 
 - <a id="switch_m"></a>`switch`: whether to enable the model level analysis or not.
 
 - <a id="region_shape_m"></a>`region_shape`: similar to the `region_shape` in the `Pre` section, but this one is
-  used to calculate the model quantifications of the target particle(s).
+  used to calculate the model quantifications of the target particles, can get multiple values.
 
   - `region_shape` = `sphere`: the region is a sphere or spheroid if `ratio` $\\neq$ 1, the axis of the spheroid is the
     parallel to the $z$-axis.
@@ -236,7 +244,7 @@ The model level on-the-fly analysis of the target particle(s). The most common c
   - `region_shape` = `box`: the region is a box with sides parallel to the $x$, $y$ and $z$ axis.
 
 - <a id="ratio_m"></a>`ratio`: similar to the `ratio` in the `Pre` section, but this one is used to calculate the
-  model quantifications of the target particle(s).
+  model quantifications of the target particles.
 
 - <a id="size_m"></a>`region_size`: similar to the `region_size` in the `Pre` section, but this one is used to
 
@@ -247,8 +255,59 @@ The model level on-the-fly analysis of the target particle(s). The most common c
   - `region_shape` = `box`: the region is a cube with side length $L=$ `region_size`, and stretched along the $z$-axis with
     $L_z=$ `ratio` $\\times$ `region_size`.
 
-- <a id="period_m"><a/>`period`: the period of model level analysis, in unit of synchronized time steps in
+- <a id="period_m"></a>`period`: the period of model level analysis, in unit of synchronized time steps in
   simulation.
+
+- <a id="filename_m"></a>`filename`: the filename of the output file of the model level analysis, the suffix `.hdf5`
+  will be added automatically so you only need to specify the prefix of the filename.
+
+- <a id="image"></a>`image`: whether to output the image matrices of the target particles.
+
+  - The particles will be divided into bins in each axis (according to the `region_shape`) and do some statistics
+    in each bin, such as the mean value of some quantity, the number of particles in each bin, etc. The bin number
+    is specified by the `image_bins` parameter (see below).
+  - For each region type, there will be 3 image matrices by different combination of the 3 axes, e.g. for a
+    `region_shape` = `box`, there will be 3 image matrices for the $x$-$y$ plane, $x$-$z$ plane and $y$-$z$ plane.
+  - The quantities of the image are specified by the `colors` parameter in the view of color coded (see below).
+    (The name `image` may be changed in the future, as its meaning is not so clear.)
+
+- <a id="image_bins"></a>`image_bins`: how many bins of the image matrices in each dimension, for the axis that
+  may be stretched, the number of bins in such axis is also determined by the `ratio` parameter.
+
+- <a id="colors"></a>`colors`:
+
+  - `particle_number`: the number of particles in each bin.
+  - `surface_density`: the surface density of the particles in each bin. The unit is $\[M\]/\[L\]^2$, $\[M\]$ and
+    $\[L\]$ are the internal unit of mass and length in the simulation, the same below.
+  - `mean_velocity`: the mean velocity of the particles in each bin, one component for each axis.
+  - `dispersion`: the velocity dispersion of the particles in each bin, one component for each axis.
+  - `dispersion_tensor`: the velocity dispersion tensor of the particles in each bin.
+
+- <a id="bar_major_axis"></a>`bar_major_axis`: whether calculate the bar major axis in the target particles,
+  if detected a bar, defined as the phase angle of the $m$=2 Fourier component of the surface density after
+  projection into the equatorial plane, $\\arg(A_2)$.
+
+- <a id="bar_length"></a>`bar_length`: whether calculate the bar length in the target particles,
+  if detected a bar.
+
+- <a id="inerita_tensor"></a>`inertia_tensor`: whether calculate the inertia tensor of the target particles.
+
+- <a id="sbar"></a>`sbar`: whether calculate the bar strength parameter, where $S\_{bar}$ is defined
+  as $A_2/A_0$
+
+- <a id="sbuckle"></a>`sbuckle`: whether calculate the buckling strength parameter, where $S\_{\\buckling}$
+  is defined as $A_2/A_0$
+
+- <a id="An"></a>`An`: whether calculate the $A_n$ parameters, where $A_n$ is the $n$-th Fourier component of the
+  surface density after projection into the equatorial plane.
+
+##### Particle
+
+- <a id="switch_p"></a>`switch`: whether to enable the particle level analysis or not.
+- <a id="period_p"></a>`period`: the period of particle level analysis, in unit of synchronized time steps in
+  simulation.
+- <a id="filename_p"></a>`filename`: the filename of the output file of the particle level analysis, the suffix `.hdf5`
+  will be added automatically so you only need to specify the prefix of the filename.
 
 #### Output files
 
