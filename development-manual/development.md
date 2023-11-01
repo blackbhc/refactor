@@ -187,11 +187,10 @@ For `string.h`, `string.cpp`:
   double, string, and vector of int, double and string.
 - `ini_parser::has()`: check whether a key exist in the parameter file.
 - structure `para`: the structure to store the value of parameters, and read the parameter file based on the `ini_parser` class.
-  - member prefix indicates their section in the parameter file: `gb` for the global section, `pre` for the
-    pre-process section, `md` for the model section, `ptc` for the particle section, `orb` for the orbit section,
-    `grp` for the group section and `post` for the post-process section.
-  - constructor: with a reference to a created `ini_parser` object, then update the value of the parameters
-    based on the parameter file (with hard code, the ugly but fast way).
+  - call `para.<sec>_<para>` to use the parameter, where `<sec>` is an alias the section name and `<para>` is the
+    parameter name. Alias: `gb` for the global section, `pre` for the pre-process section, `md` for the model section,
+    `ptc` for the particle section, `orb` for the orbit section, `grp` for the group section and `post` for the
+    post-process section.
 
 #### Implementation details
 
@@ -223,6 +222,11 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
     "\_" + key name of parameter in the ini file, where the space in the section name will be replaced by `_`.
 
 - class `para`: define the default value of some parameters, and update the value according the ini parameter file.
+  - member prefix indicates their section in the parameter file: `gb` for the global section, `pre` for the
+    pre-process section, `md` for the model section, `ptc` for the particle section, `orb` for the orbit section,
+    `grp` for the group section and `post` for the post-process section.
+  - constructor: with a reference to a created `ini_parser` object, then update the value of the parameters
+    based on the parameter file (with hard code, the ugly but fast way).
 
 #### Steps to add new parameter into the code
 
