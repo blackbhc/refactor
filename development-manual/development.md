@@ -10,11 +10,11 @@ and the documentations.
 ## Content <a name="content"></a>
 
 1. <a href="#deps">Dependencies</a>
-1. <a href="#debug">Debug Mode</a>
-1. <a href="#files">Project Frame</a>
-1. <a href="#unit_test">Unit Test</a>
-1. <a href="#add_new_module">Add New Function Module</a>
-1. <a href="#codes_structure">Codes Structure</a>
+2. <a href="#debug">Debug Mode</a>
+3. <a href="#files">Project Frame</a>
+4. <a href="#unit_test">Unit Test</a>
+5. <a href="#add_new_module">Add New Function Module</a>
+6. <a href="#codes_structure">Codes Structure</a>
 
 ## Dependencies <a name="deps"></a><a href="#contents"><font size=4>(content)</font></a>
 
@@ -39,7 +39,6 @@ You can remove such flags if you want, which is located in `make-config/flags` f
   - Note: due to the sub-makefiles, the `make` command should always be run in the root directory of the project.
 - `src`: the source code directory, each sub-directory is a module / modules (just a logic unit, not the c++20 module)
   of the project.
-
   - `C_wrapper`: the directory include the public C wrapper APIs of the project.
   - `unit_test`: the directory of unit test wrapper codes, more details in the <a href="#unit_test">Unit Test</a> section.
   - `analysis`: the directory of the core analysis codes.
@@ -48,7 +47,6 @@ You can remove such flags if you want, which is located in `make-config/flags` f
   - `parameter`: parameter file reading and parsing.
   - `engine`: the main virtual analysis engine, which is a wrapper of other modules.
   - `simcodes`: the interface with some simulation software, at now `Gadget4`, `AREPO`, `GIZMO` and `RAMSES` are supported.
-
 - `documentation`: the directory of the developers' documentation and the details of the analysis codes.
 - `test_dir`(optional): the temporary directory for the building and running unit test, which will
   be created by the `make test/mpi_test` command.
@@ -94,9 +92,7 @@ There are 5 steps to add a new unit test:
 
 1. Choose a in-used debug macro or define a new debug macro to control the unit test, the in-used debug
    macros can be found in the `src/unit_test/test.cpp` file.
-
 2. design the unit test functions of a module, follow the unit test convention.
-
 3. For a new module, add a new `c++` file in the `src/test` directory, and define a wrapper function in it
    to call the new unit test functions defined in the step 2. Then include the new `c++` file in the
    `src/unit_test/test.cpp` file analogous to the other modules. You can design your own style to print the
@@ -124,16 +120,11 @@ There are 5 steps to add a new unit test:
 
 1. add a new directory in the `src` directory, with both `*.cpp` and `*.h` files: follow the unit test design,
    you can add a new class or a new function module.
-
 2. add the new directory name into the dependencies of the makefile. (UNFINISHED! by myself)
-
 3. call the new functions/modules/classes in the unit test wrapper codes, and check its correctness.
-
 4. use it in other codes, with cross-module unit test.
-
 5. include the new `*.cpp` file in the `src/C_wrapper/galotfa.h` file, in the end part pf the file that is
    enclosed by the `#ifdef header_only ... #else ... #endif` statement, so that the new functions can work in the header-only case.
-
 6. add a C wrapper function for the new function if you want make it become a public API.
 
 ## Codes Structure <a name="codes_structure"></a><a href="#contents"><font size=4>(content)</font></a>
@@ -192,9 +183,14 @@ For `string.h`, `string.cpp`:
 #### APIs
 
 - `ini_parser(std::string path_to_file)`: the constructor of the class, which will read the parameter file with the given path.
-- `ini_parser::get_xxx()`: the function to extract the value of a key in the parameter file. Support to get boolean, number, string,
-  and vector of number and string.
+- `ini_parser::get_xxx()`: the function to extract the value of a key in the parameter file. Support to get boolean, int,
+  double, string, and vector of int, double and string.
 - `ini_parser::has()`: check whether a key exist in the parameter file.
+- structure `para`: the structure to store the value of parameters, and read the parameter file based on the `ini_parser` class.
+  - call `para.<sec>_<para>` to use the parameter, where `<sec>` is an alias the section name and `<para>` is the
+    parameter name. Alias: `gb` for the global section, `pre` for the pre-process section, `md` for the model section,
+    `ptc` for the particle section, `orb` for the orbit section, `grp` for the group section and `post` for the
+    post-process section.
 
 #### Implementation details
 
@@ -215,6 +211,7 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
   - comment prefix: `#` and `;`, string after the prefix will be treated as comments.
 
 - most important methods:
+
   - `trim`: a wrapper of `galotfa::string::trim`, which will further remove the comment part of the string.
   - `split`: a wrapper of `galotfa::string::split`.
   - `line_parser`: get the type of a line, namely a section header or a key-value pair, based on `trim` and `split`.
@@ -222,7 +219,23 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
   - `read`: the main interface used to read the parameter file, based on `line_parser`.
   - `insert_to_table`: insert the parsed key-value pair into the hash table. The hash table is defined with
     string-type key and a `ini::Value`-type value. The key of the hash table = section name +
-    "_" + key name of parameter in the ini file, where the space in the section name will be replaced by `_`.
+    "\_" + key name of parameter in the ini file, where the space in the section name will be replaced by `_`.
+
+- class `para`: define the default value of some parameters, and update the value according the ini parameter file.
+  - member prefix indicates their section in the parameter file: `gb` for the global section, `pre` for the
+    pre-process section, `md` for the model section, `ptc` for the particle section, `orb` for the orbit section,
+    `grp` for the group section and `post` for the post-process section.
+  - constructor: with a reference to a created `ini_parser` object, then update the value of the parameters
+    based on the parameter file (with hard code, the ugly but fast way).
+
+#### Steps to add new parameter into the code
+
+1. Edit the parameter table and explanation in the `README.md` file, during which choose the name, type and
+   default value of the new parameter.
+2. Edit the `para` class in the `src/parameter/default.h` file, add the parameter into the chosen section
+   and default value.
+3. Add a line in the update function (???) to update the value of the new parameter from the ini file.
+4. Use the new parameter in the analysis code.
 
 ### `src/output`: define the `writer` class
 
@@ -237,19 +250,31 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
 - `create_group(std::string)`: create a hdf5 group with the given name, can create group hierarchy e.g.
   if given a argument like `group1/group2/group3`, the writer will create `group1` , `group2` and `group3`
   recursively if they do not exist. The group name without a prefix `/` will be treated as a root group.
-- `create_dataset(std::string dataset, info(???))` or `create_dataset(std::string group, std::string datasetm info)`:
+- `create_dataset(std::string dataset, hdf5::info)` or `create_dataset(std::string group, std::string datasetm info)`:
   create a hdf5 dataset with the given name, if the group before the final dataset name, take a example:
   `create_dateset("a/b/c/dataset_name", info)` == `create_group("a/b/c")` then `create_dataset("a/b/c", "dataset_name")`.
-- `add_attribute(std::string target, std::string attr_name, T value(???))`: add a attribute to a target group
-  or dataset, where `T` is the type of the value, which can be `int`, `float`, `double`, `std::string` or `char*`.
 - `push(void* ptr, std::string dataset)`: push a array of data to a existing dataset.
+- steps to use the `writer` class to organize the hdf5 file:
+
+  1. create a writer object with the given path to the output file: `writer(std::string)`.
+  2. create an `galotfa::hdf5::info` object that specify the info of the dataset: data type, rank and dimension.
+  3. create a dataset with the given name and info: `writer::create_dataset(std::string dataset, hdf5::info)`
+  4. push the data array to the dataset when needed: `writer::push(void* ptr, std::string dataset)`.
+  5. After all steps, the `writer` will organize the resources of the hdf5 file automatically, there is no need to close
+     anything manually.
 
 - <font color=red>NOTE</font>:
-  1. The name of group and dataset is case sensitive and unique, there can not be
+
+  1. The pushed data array should follow the 1D array convention (see <a href="#convention of data array">Convention for arrays of data</a> )
+  2. Make sure that the size of the pushed data array is the same as the size of the dataset otherwise the behavior is undefined.
+     - Although there is a `len` parameter to specify the 1D array size, but the for a C-style array, such
+       parameter is only for check. And the code actually can not detect the size of the array. The cost
+       of the UB is for better performance with raw C-style array.
+  3. The name of group and dataset is case sensitive and unique, there can not be
      dataset or group share the same under the same group, e.g. `a/a/a` is legal for either a dataset `a` or a
      subgroup `a` under parent group `a/a`, but under group `a/a/` there can not be a dataset and a subgroup
      with the same name `a`. This is not a behavior of `galotfa`, but a convention of the hdf5 library.
-  2. All APIs are designed to be used in the main process, due to the hdf5 file lock, and the unit test of
+  4. All APIs are designed to be used in the main process, due to the hdf5 file lock, and the unit test of
      this part is only designed for the serial mode, `make mpi_test` with `units=output` definitely fails.
 
 #### Convention of the data output
@@ -266,7 +291,7 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
   documentations about this feature, and such feature is not always activated in the hdf5 library, so
   `galotfa` only use a serial mode to write date, which is collected from all processes into the main process.
 
-#### Convention for array of data
+#### Convention for arrays of data <a name="convention of data array"></a>
 
 To simplify the functions parameters and better performance, `galotfa` always use 1D C-style array
 to store the analysis results. When store a multi-dimensional array, the array will be stored as different
@@ -281,6 +306,8 @@ the sub-space of the array.
 
   - enum class `NodeType`: the type of a hdf5 node,`file` or `group` or `dataset`, also a `uninitialized` type for
     the default constructor of the `node` class.
+  - `info`: the structure to specify the info of a dataset, which include the data type (`.data_type`, hdf5 type id),
+    rank (`.rank`, unsigned int) and dimension (`.dims`, `std::vector` of `hsize_t`).
   - class `node`: the class for a hdf5 node, which can be a group or a dataset, this class will take
     over the resources organization of the hdf5 file, so there is no need to close the hdf5 objects manually.
     - constructor: `node(std::string, NodeType)`, create a node object with the given name and type. This
@@ -305,18 +332,26 @@ the sub-space of the array.
 
   - `writer::~writer()`: the destructor of the class, which will close the hdf5 file and the created hdf5 objects,
     such as dataset and group.
+
   - `writer::create_file(std::string)`.
+
   - `writer::create_group(std::string)`: create a hdf5 group with the given name, can be used to create nested
     groups recursively, e.g. given `group1/group2/group3`, the writer will create `group1` , `group2` and `group3`
     recursively if they do not exist. The group name without a prefix `/` will be treated as a root group.
+
   - `writer::create_dataset(std::string, galotfa::hdf5::size_info&)`: create a hdf5 dataset with the given name, if the string before
     the final dataset name, take a example: `a/b/c/dataset_name`, will be created as group, `a/b/c` here.
+
   - Note: The previous three create function will return 1 if there is some warning, and 0 for success. So never
     ignore the return value of these functions.
+
   - `galota::hdf5::node create_datanode(node& parent, std::string& dataset, galotfa::hdf5::size_info&)`: setup the dataset
     of the parent node with the given name and info. `dataset` string should be the name of dataset only, e.g. for
     `/group1/group2/dataset_name` the given value should be `dataset_name`. The parent node should be a group node.
+
   - `open_file`: open a hdf5 file and return its id, private.
-  - `push(void* buffer, std::string dataset_name)`: the main interface to push a array of data to a dataset,
+
+  - `push(void* buffer, unsigned int len, std::string dataset_name)`: the main interface to push a array of data to a existing dataset,
     the dataset name should be the absolute path of the dataset, e.g. `/group1/group2/dataset_name`. If such
-    dataset does not exist, the writer will create it automatically. The data type of the dataset will be
+    dataset does not exist, the writer will create it automatically. The data type of the dataset will be restored
+    by `node`, during creation of the dataset.
