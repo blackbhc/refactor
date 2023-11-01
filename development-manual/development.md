@@ -21,8 +21,9 @@ and the documentations.
 This project depends on the following tools or libraries:
 
 - [make](https://www.gnu.org/software/make/): the main build tool of the project.
-- a c++ compiler which supports C++11: recommended ones are g++>=4.8.5 or clang++>=3.4, or icpx
+- a c++ compiler with full support of C++11: recommended ones are g++>=4.8.5 or clang++>=3.9.1, or any icpx
   (the intel llvm-based compiler).
+- For the default Makefile of the project, the priority of the compilers: clang++ > icpx > icpc > g++.
 - [gsl](https://www.gnu.org/software/gsl/): the GNU Scientific Library.
 - [hdf5](https://www.hdfgroup.org/solutions/hdf5/): the HDF5 library, which is used to store the analysis results.
 - a `MPI` library: `mpich`, `openmpi` or `intel mpi` etc.
