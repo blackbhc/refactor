@@ -149,8 +149,8 @@ int writer::create_file( std::string path_to_file )
     }
 
     // insert the root node
-    this->nodes.insert( std::pair< std::string, hdf5::node >(
-        "/", std::move( hdf5::node( file_id, hdf5::NodeType::file ) ) ) );
+    this->nodes.insert(
+        std::pair< std::string, hdf5::node >( "/", hdf5::node( file_id, hdf5::NodeType::file ) ) );
     return 0;
 }
 
@@ -229,8 +229,8 @@ int writer::create_group( std::string group_name )
                             H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
             // insert the node
             auto pair = std::pair< std::string, hdf5::node >(
-                this_path, std::move( hdf5::node( &this->nodes.at( parent_path ), group_id,
-                                                  hdf5::NodeType::group ) ) );
+                this_path,
+                hdf5::node( &this->nodes.at( parent_path ), group_id, hdf5::NodeType::group ) );
             this->nodes.insert( std::move( pair ) );
         }
         parent_path = this_path;
