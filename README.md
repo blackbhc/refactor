@@ -211,10 +211,10 @@ This section specify some parameters that control the behaviour of `galotfa` on 
 - <a id="convergence_type"></a>`convergence_type`: the type of convergence criterion for the on-the-fly analysis.
 - <a id="convergence_threshold"></a>`convergence_threshold`: the threshold for numerical convergence during the
   on-the-fly analysis.
-  - `convergence_type` = `absolute`: the convergence criterion is $\\Delta$ $Q\<\\epsilon$ for some quantity $Q$,
-    where $\\epsilon$ is the `convergence_threshold`.
-  - `convergence_type` = `relative`: the convergence criterion is $\\Delta Q / Q \< \\epsilon$ for some quantity $Q$,
-    where $\\epsilon$ is the `convergence_threshold`.
+  - `convergence_type` = `absolute`: the convergence criterion is $\Delta$ $Q\<\epsilon$ for some quantity $Q$,
+    where $\epsilon$ is the `convergence_threshold`.
+  - `convergence_type` = `relative`: the convergence criterion is $\Delta Q / Q \< \epsilon$ for some quantity $Q$,
+    where $\epsilon$ is the `convergence_threshold`.
 - <a id="max_iter"></a>`max_iter`: the maximum number of iterations during analysis.
 - <a id="equal_threshold"></a>`equal_threshold`: the threshold for equality of two floating point numbers, e.g.
   if the threshold=0.001, then two float numbers $a$ and $b$ are considered equal.
@@ -235,7 +235,7 @@ center of the target particles, calculate the bar major axis (if exist) and alig
   option, unless you know what you are doing.
 - <a id="region_shape"></a>`region_shape`: only meaningful when `recenter` = `on`, the shape of the region
   to calculate the center of the target particles, which will affect how the `region_size` is interpreted (see below).
-  - `region_shape` = `sphere`: the region is a sphere or spheroid if `ratio` $\\neq$ 1, the axis of the spheroid is the
+  - `region_shape` = `sphere`: the region is a sphere or spheroid if `ratio` $\neq$ 1, the axis of the spheroid is the
     parallel to the $z$-axis.
   - `region_shape` = `cylinder`: the region is a cylinder with symmetry axis parallel to the $z$-axis.
   - `region_shape` = `box`: the region is a box with sides parallel to the $x$, $y$ and $z$ axis.
@@ -244,11 +244,11 @@ center of the target particles, calculate the bar major axis (if exist) and alig
 - <a id="size"></a>`region_size`: only meaningful when `recenter` = `on`, the size of the region to calculate
   the center of the target particles, which will
   - `region_shape` = `sphere`: the region is a sphere with $R=$ `region_size` if `ratio` = 1. If `ratio` is not 1,
-    the sphere will be stretched along the $z$-axis with $R_z=$ `ratio` $\\times$ `region_size`.
+    the sphere will be stretched along the $z$-axis with $R_z=$ `ratio` $\times$ `region_size`.
   - `region_shape` = `cylinder`: the region is a cylinder with $R=$ `region_size`, and half height $H=$
-    `ratio` $\\times$ `region_size`.
+    `ratio` $\times$ `region_size`.
   - `region_shape` = `box`: the region is a cube with side length $L=$ `region_size`, and stretched along the
-    $z$-axis with $L_z=$ `ratio` $\\times$ `region_size`.
+    $z$-axis with $L_z=$ `ratio` $\times$ `region_size`.
 - <a id="recenter_method"></a>`recenter_method`: the method to calculate the center of the target particles,
   with iteration if necessary (see `convergence_type` and `convergence_threshold`).
   - `recenter_method` = `com`: the center is defined as the center of mass of the target particles.
@@ -270,19 +270,19 @@ The model level on-the-fly analysis of the target particles. The most common cas
   simulation.
 - <a id="region_shape_m"></a>`region_shape`: similar to the `region_shape` in the `Pre` section, but this one is
   used to calculate the model quantifications of the target particles, can get multiple values.
-  - `region_shape` = `sphere`: the region is a sphere or spheroid if `ratio` $\\neq$ 1, the axis of the spheroid is the
+  - `region_shape` = `sphere`: the region is a sphere or spheroid if `ratio` $\neq$ 1, the axis of the spheroid is the
     parallel to the $z$-axis.
   - `region_shape` = `cylinder`: the region is a cylinder with symmetry axis parallel to the $z$-axis.
   - `region_shape` = `box`: the region is a box with sides parallel to the $x$, $y$ and $z$ axis.
 - <a id="ratio_m"></a>`ratio`: similar to the `ratio` in the `Pre` section, but this one is used to calculate the
   model quantifications of the target particles.
 - <a id="size_m"></a>`region_size`: similar to the `region_size` in the `Pre` section, but this one is used to
-  - `region_shape` = `sphere`: the region is a sphere with $R=$ `region_size` if `ratio` = 1. If `ratio` $\\neq$ 1, the sphere
-    will be stretched along the $z$-axis with $R_z=$ `ratio` $\\times$ `region_size`.
+  - `region_shape` = `sphere`: the region is a sphere with $R=$ `region_size` if `ratio` = 1. If `ratio` $\neq$ 1, the sphere
+    will be stretched along the $z$-axis with $R_z=$ `ratio` $\times$ `region_size`.
   - `region_shape` = `cylinder`: the region is a cylinder with $R=$ `region_size`, and half height $H=$
-    `ratio` $\\times$ `region_size`.
+    `ratio` $\times$ `region_size`.
   - `region_shape` = `box`: the region is a cube with side length $L=$ `region_size`, and stretched along the $z$-axis with
-    $L_z=$ `ratio` $\\times$ `region_size`.
+    $L_z=$ `ratio` $\times$ `region_size`.
 - <a id="image"></a>`image`: whether to output the image matrices of the target particles.
   - The particles will be divided into bins in each axis (according to the `region_shape`) and do some statistics
     in each bin, such as the mean value of some quantity, the number of particles in each bin, etc. The bin number
@@ -303,14 +303,14 @@ The model level on-the-fly analysis of the target particles. The most common cas
   - `dispersion_tensor`: the velocity dispersion tensor of the particles in each bin.
 - <a id="bar_major_axis"></a>`bar_major_axis`: whether calculate the bar major axis in the target particles,
   if detected a bar, defined as the phase angle of the $m$=2 Fourier component of the surface density after
-  projection into the equatorial plane, $\\arg(A_2)$.
+  projection into the equatorial plane, $\arg(A_2)$.
 - <a id="bar_length"></a>`bar_length`: whether calculate the bar length in the target particles,
   if detected a bar.
 - <a id="inerita_tensor"></a>`inertia_tensor`: whether calculate the inertia tensor of the target particles.
-- <a id="sbar"></a>`sbar`: whether calculate the bar strength parameter, where $S\_\\rm{bar}$ is defined
+- <a id="sbar"></a>`sbar`: whether calculate the bar strength parameter, where $S\_\rm{bar}$ is defined
   as $A_2/A_0$.
-- <a id="sbuckle"></a>`sbuckle`: whether calculate the buckling strength parameter, where $S\_{\\rm{buckle}}$
-  is defined as $\\sum m_i z_i \\exp(-2i \\phi_i) / \\sum m_i$.
+- <a id="sbuckle"></a>`sbuckle`: whether calculate the buckling strength parameter, where $S\_{\rm{buckle}}$
+  is defined as $\sum m_i z_i \exp(-2i \phi_i) / \sum m_i$.
 - <a id="An"></a>`An`: whether calculate the $A_n$ parameters, where $A_n$ is the $n$-th Fourier component of the
   surface density after projection into the equatorial plane.
 
