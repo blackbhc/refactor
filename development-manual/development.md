@@ -39,7 +39,6 @@ You can remove such flags if you want, which is located in `make-config/flags` f
   - Note: due to the sub-makefiles, the `make` command should always be run in the root directory of the project.
 - `src`: the source code directory, each sub-directory is a module / modules (just a logic unit, not the c++20 module)
   of the project.
-
   - `C_wrapper`: the directory include the public C wrapper APIs of the project.
   - `unit_test`: the directory of unit test wrapper codes, more details in the <a href="#unit_test">Unit Test</a> section.
   - `analysis`: the directory of the core analysis codes.
@@ -48,7 +47,6 @@ You can remove such flags if you want, which is located in `make-config/flags` f
   - `parameter`: parameter file reading and parsing.
   - `engine`: the main virtual analysis engine, which is a wrapper of other modules.
   - `simcodes`: the interface with some simulation software, at now `Gadget4`, `AREPO`, `GIZMO` and `RAMSES` are supported.
-
 - `documentation`: the directory of the developers' documentation and the details of the analysis codes.
 - `test_dir`(optional): the temporary directory for the building and running unit test, which will
   be created by the `make test/mpi_test` command.
@@ -94,9 +92,7 @@ There are 5 steps to add a new unit test:
 
 1. Choose a in-used debug macro or define a new debug macro to control the unit test, the in-used debug
    macros can be found in the `src/unit_test/test.cpp` file.
-
 2. design the unit test functions of a module, follow the unit test convention.
-
 3. For a new module, add a new `c++` file in the `src/test` directory, and define a wrapper function in it
    to call the new unit test functions defined in the step 2. Then include the new `c++` file in the
    `src/unit_test/test.cpp` file analogous to the other modules. You can design your own style to print the
@@ -124,16 +120,11 @@ There are 5 steps to add a new unit test:
 
 1. add a new directory in the `src` directory, with both `*.cpp` and `*.h` files: follow the unit test design,
    you can add a new class or a new function module.
-
 2. add the new directory name into the dependencies of the makefile. (UNFINISHED! by myself)
-
 3. call the new functions/modules/classes in the unit test wrapper codes, and check its correctness.
-
 4. use it in other codes, with cross-module unit test.
-
 5. include the new `*.cpp` file in the `src/C_wrapper/galotfa.h` file, in the end part pf the file that is
    enclosed by the `#ifdef header_only ... #else ... #endif` statement, so that the new functions can work in the header-only case.
-
 6. add a C wrapper function for the new function if you want make it become a public API.
 
 ## Codes Structure <a name="codes_structure"></a><a href="#contents"><font size=4>(content)</font></a>
@@ -215,6 +206,7 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
   - comment prefix: `#` and `;`, string after the prefix will be treated as comments.
 
 - most important methods:
+
   - `trim`: a wrapper of `galotfa::string::trim`, which will further remove the comment part of the string.
   - `split`: a wrapper of `galotfa::string::split`.
   - `line_parser`: get the type of a line, namely a section header or a key-value pair, based on `trim` and `split`.
@@ -222,7 +214,7 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
   - `read`: the main interface used to read the parameter file, based on `line_parser`.
   - `insert_to_table`: insert the parsed key-value pair into the hash table. The hash table is defined with
     string-type key and a `ini::Value`-type value. The key of the hash table = section name +
-    "_" + key name of parameter in the ini file, where the space in the section name will be replaced by `_`.
+    "\_" + key name of parameter in the ini file, where the space in the section name will be replaced by `_`.
 
 ### `src/output`: define the `writer` class
 
@@ -241,7 +233,6 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
   create a hdf5 dataset with the given name, if the group before the final dataset name, take a example:
   `create_dateset("a/b/c/dataset_name", info)` == `create_group("a/b/c")` then `create_dataset("a/b/c", "dataset_name")`.
 - `push(void* ptr, std::string dataset)`: push a array of data to a existing dataset.
-
 - steps to use the `writer` class to organize the hdf5 file:
 
   1. create a writer object with the given path to the output file: `writer(std::string)`.
@@ -317,18 +308,25 @@ the sub-space of the array.
 
   - `writer::~writer()`: the destructor of the class, which will close the hdf5 file and the created hdf5 objects,
     such as dataset and group.
+
   - `writer::create_file(std::string)`.
+
   - `writer::create_group(std::string)`: create a hdf5 group with the given name, can be used to create nested
     groups recursively, e.g. given `group1/group2/group3`, the writer will create `group1` , `group2` and `group3`
     recursively if they do not exist. The group name without a prefix `/` will be treated as a root group.
+
   - `writer::create_dataset(std::string, galotfa::hdf5::size_info&)`: create a hdf5 dataset with the given name, if the string before
     the final dataset name, take a example: `a/b/c/dataset_name`, will be created as group, `a/b/c` here.
+
   - Note: The previous three create function will return 1 if there is some warning, and 0 for success. So never
     ignore the return value of these functions.
+
   - `galota::hdf5::node create_datanode(node& parent, std::string& dataset, galotfa::hdf5::size_info&)`: setup the dataset
     of the parent node with the given name and info. `dataset` string should be the name of dataset only, e.g. for
     `/group1/group2/dataset_name` the given value should be `dataset_name`. The parent node should be a group node.
+
   - `open_file`: open a hdf5 file and return its id, private.
+
   - `push(void* buffer, std::string dataset_name)`: the main interface to push a array of data to a existing dataset,
     the dataset name should be the absolute path of the dataset, e.g. `/group1/group2/dataset_name`. If such
     dataset does not exist, the writer will create it automatically. The data type of the dataset will be restored

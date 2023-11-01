@@ -1,6 +1,6 @@
 `galotfa`: <font size=4>**gal**</font>actic <font size=4>**o**</font>n-<font size=4>**t**</font>he-<font size=4>**f**</font>ly <font size=4>**a**</font>nalysis, is a library for on-the-fly analysis of disk galaxy simulations.
 
-______________________________________________________________________
+---
 
 ## <a id="contents">Contents</a>
 
@@ -9,28 +9,28 @@ ______________________________________________________________________
 - <a href="#scheme">Design scheme</a>
 - <a href="#usage">Usage</a>
 
-______________________________________________________________________
+---
 
 ## Features of `galotfa` <a href="#contents"><font size=4>(contents)</font></a> <a id="feature"></a>
 
 1. Out-of-the-box: in general no need to modify the simulation code, just run some demos with simplest
    steps. If you feel hard to use some part of `galotfa`, please let us know.
-1. User friendly program API and usage guidance: although we hope most functions of `galotfa` can be
+2. User friendly program API and usage guidance: although we hope most functions of `galotfa` can be
    used out-of-the-box, we also provide detailed guidance for users to use `galotfa` in their own customized
    way.
-1. Extensible: easy to add new analysis functions or apply to new simulation code which follows the general
+3. Extensible: easy to add new analysis functions or apply to new simulation code which follows the general
    simulation convention. Besides, although this project is concentrated on disk galaxy simulations, it can
    also be easily extended to other types of simulations, such as cluster simulations, cosmology simulations,
    etc.
-1. Notice us if you need more wonderful features: you-complete-me flavor, you can make this project better.
+4. Notice us if you need more wonderful features: you-complete-me flavor, you can make this project better.
    We are also happy to merge your code into this project if you want.
-1. Low dependency on other libraries: only standard libraries or included in the project.
-1. Fast: use MPI and design to, a level of **~5%?** more CPU time during a run of simulation.
-1. by the hand: `galotfa` repo also provides some extended version of widely used simulation codes,
+5. Low dependency on other libraries: only standard libraries or included in the project.
+6. Fast: use MPI and design to, a level of **~5%?** more CPU time during a run of simulation.
+7. by the hand: `galotfa` repo also provides some extended version of widely used simulation codes,
    with `galotfa` built-in. You can also add `galotfa` in any simulation code by yourself or submit it.
-1. Open: we welcome new participants who are interested in improve this project.
+8. Open: we welcome new participants who are interested in improve this project.
 
-______________________________________________________________________
+---
 
 ## Installation <a href="#contents"><font size=4>(contents)</font></a> <a id="install"></a>
 
@@ -54,9 +54,9 @@ First, you need to check the following dependencies
 
    If you don't have `git`, try `wget -O- https://github.com/blackbhc/galotfa/archive/main.zip | tar xz`.
 
-1. run `cd galotfa`
+2. run `cd galotfa`
 
-1. run `make build mode=release type=header-only`.
+3. run `make build mode=release type=header-only`.
 
    - the `mode` option can be `release` or `debug`, default is `release` which has `-O3` optimization mode.
      `debug` make the compiled library includes debug symbols for debugging which is only useful for developers.
@@ -79,16 +79,16 @@ First, you need to check the following dependencies
      compile the `galotfa` header files. Therefore, to use `galotfa` in a simulation code written in `C`,
      the `type` option should be `static` or `shared`.
 
-1. run `make -p <path/to/install>`:
+4. run `make -p <path/to/install>`:
 
    Create the directory for the installation of `galotfa`, if it already exists, skip this step.
 
-1. run `make install prefix=</path/to/install>`:
+5. run `make install prefix=</path/to/install>`:
 
    Install the `galotfa` to the directory specified by `prefix`, which should be the same as
    the one you specified in the last step.
 
-1. After configure the `CPATH`, `LIBRARY_PATH` and `LD_LIBRARY_PATH` environment variables,
+6. After configure the `CPATH`, `LIBRARY_PATH` and `LD_LIBRARY_PATH` environment variables,
    you can use `galotfa` in your project.:
 
    - (temporary) run `export CPATH=$CPATH:<prefix>/include`, `export LIBRARY_PATH=$LIBRARY_PATH:<prefix>/lib`,
@@ -101,12 +101,12 @@ First, you need to check the following dependencies
      like `/bin/bash` to your terminal. Then run `source ~/.bashrc`/`source ~/.zshrc` to make the changes take effect.
      Then you can use `galotfa` without configure every time.
 
-1. If you want to uninstall `galotfa`, run `make uninstall` in the `galotfa` repo directory.
+7. If you want to uninstall `galotfa`, run `make uninstall` in the `galotfa` repo directory.
 
    If the install path contain `galotfa`, then such directory will be removed completely. Otherwise, only
    the `galotfa` library files under such directory will be removed.
 
-______________________________________________________________________
+---
 
 ## Usage <a href="#contents"><font size=4>(contents)</font></a> <a id="usage"></a>
 
@@ -395,7 +395,7 @@ call `MPI_Init` before using any `galotfa` APIs.
 <font color=red>**Note:**</font> `galotfa` is designed to be used in `MPI` mode, so you need to call `MPI_Init`
 before using any `galotfa` APIs.
 
-______________________________________________________________________
+---
 
 ## Design scheme <a href="#contents"><font size=4>(contents)</font></a> <a id="scheme"></a>
 
