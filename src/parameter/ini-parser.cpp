@@ -1,8 +1,14 @@
+#ifndef __GALOTFA_INI_PARSER_CPP__
+#define __GALOTFA_INI_PARSER_CPP__
 #include "ini-parser.h"
 #include "../tools/prompt.h"
+#include "../tools/string.h"
+#ifdef DO_UNIT_TEST
+#include "../tools/string.cpp"
+#endif
+#include "string.h"
 #include <algorithm>
 #include <stdio.h>
-#include <string.h>
 #include <sys/stat.h>
 
 namespace galotfa {
@@ -122,6 +128,7 @@ ini::Line ini_parser::line_parser( const char* str ) const
             raw_content.erase( 0, raw_content.find_first_of( section_prefix ) + 1 );
             raw_content.erase( raw_content.find_first_of( section_suffix ) );
             std::replace( raw_content.begin(), raw_content.end(), ' ', '_' );
+            std::replace( raw_content.begin(), raw_content.end(), '\t', '_' );
             line.content = raw_content;
             return line;
         }
@@ -192,9 +199,7 @@ ini::Line ini_parser::line_parser( const char* str ) const
 
 inline std::string ini_parser::trim( std::string str ) const
 {
-    str.erase( 0, str.find_first_not_of( blank ) );
-    str.erase( str.find_last_not_of( blank ) + 1 );
-    // remove the possible comments
+    str = galotfa::string::trim( str, blank );
     if ( str.find_first_of( comment_prefix ) != std::string::npos )
     {
         str.erase( str.find_first_of( comment_prefix ) );
@@ -204,50 +209,55 @@ inline std::string ini_parser::trim( std::string str ) const
 
 inline std::vector< std::string > ini_parser::split( std::string str ) const
 {
-    std::vector< std::string > vals;
-    str = this->trim( str );
-    while ( true )
-    {
-        size_t pos = str.find_first_of( value_sep );
-        vals.push_back( str.substr( 0, pos ) );
-        str.erase( 0, pos );
-        str.erase( 0, str.find_first_not_of( value_sep ) );
-        if ( str.find_first_of( value_sep ) == std::string::npos )
-        {
-            vals.push_back( str );
-            break;
-        }
-    }
-    return vals;
+    return galotfa::string::split( str, value_sep );
 }
 
+// macro: get the hash key name, and make sure there is such key
+// it's only  used in the get functions
+#ifndef debug_parameter
+#define SECURE_EXTRACT( section, key )                                                    \
+    std::string sec_name = section;                                                       \
+    std::string key_name = key;                                                           \
+    std::replace( sec_name.begin(), sec_name.end(), ' ', '_' );                           \
+    std::replace( sec_name.begin(), sec_name.end(), '\t', '_' );                          \
+    std::transform( key_name.begin(), key_name.end(), key_name.begin(), ::tolower );      \
+    std::string hash_key_name = sec_name + "_" + key_name;                                \
+    if ( this->ini_table.find( hash_key_name ) == this->ini_table.end() )                 \
+        WARN( "[%s] -> [%s] does not exist in the ini parameter table!", section.c_str(), \
+              key.c_str() );
+#else
+#define SECURE_EXTRACT( section, key )                                                     \
+    std::string sec_name = section;                                                        \
+    std::string key_name = key;                                                            \
+    std::replace( sec_name.begin(), sec_name.end(), ' ', '_' );                            \
+    std::replace( sec_name.begin(), sec_name.end(), '\t', '_' );                           \
+    std::transform( key_name.begin(), key_name.end(), key_name.begin(), ::tolower );       \
+    std::string hash_key_name = sec_name + "_" + key_name;                                 \
+    if ( this->ini_table.find( hash_key_name ) == this->ini_table.end() )                  \
+        ERROR( "[%s] -> [%s] does not exist in the ini parameter table!", section.c_str(), \
+               key.c_str() );
+#endif
 bool ini_parser::get_bool( std::string section, std::string key ) const
 {
-    std::replace( section.begin(), section.end(), ' ', '_' );
-    std::transform( key.begin(), key.end(), key.begin(), ::tolower );
-    std::string hash_key_name = section + "_" + key;
+    SECURE_EXTRACT( section, key );
     if ( this->ini_table[ hash_key_name ].type != ini::ValueType::boolean )
-        ERROR( "[%s] -> [%s] is not boolean type!", section.c_str(), key.c_str() );
+        WARN( "[%s] -> [%s] is not boolean type!", section.c_str(), key.c_str() );
     return this->ini_table[ hash_key_name ].content == "true";
 }
 
 double ini_parser::get_double( std::string section, std::string key ) const
 {
-    std::replace( section.begin(), section.end(), ' ', '_' );
-    std::transform( key.begin(), key.end(), key.begin(), ::tolower );
-    std::string hash_key_name = section + "_" + key;
+    SECURE_EXTRACT( section, key );
     if ( this->ini_table[ hash_key_name ].type != ini::ValueType::number )
-        ERROR( "[%s] -> [%s] is not number type!", section.c_str(), key.c_str() );
+        WARN( "[%s] -> [%s] is not number type!", section.c_str(), key.c_str() );
     return std::stod( this->ini_table[ hash_key_name ].content );
 }
 
 std::vector< double > ini_parser::get_doubles( std::string section, std::string key ) const
 {
-    std::replace( section.begin(), section.end(), ' ', '_' );
-    std::transform( key.begin(), key.end(), key.begin(), ::tolower );
-    std::string hash_key_name = section + "_" + key;
+    SECURE_EXTRACT( section, key );
     if ( this->ini_table[ hash_key_name ].type != ini::ValueType::numbers )
-        ERROR( "[%s] -> [%s] is not numbers type!", section.c_str(), key.c_str() );
+        WARN( "[%s] -> [%s] is not numbers type!", section.c_str(), key.c_str() );
     auto                  vals = this->split( this->ini_table[ hash_key_name ].content );
     std::vector< double > res( vals.size() );
     for ( size_t i = 0; i < vals.size(); ++i )
@@ -259,39 +269,30 @@ std::vector< double > ini_parser::get_doubles( std::string section, std::string 
 
 std::string ini_parser::get_str( std::string section, std::string key ) const
 {
-    std::replace( section.begin(), section.end(), ' ', '_' );
-    std::transform( key.begin(), key.end(), key.begin(), ::tolower );
-    std::string hash_key_name = section + "_" + key;
+    SECURE_EXTRACT( section, key );
     if ( this->ini_table[ hash_key_name ].type != ini::ValueType::string )
-        ERROR( "[%s] -> [%s] is not string type!", section.c_str(), key.c_str() );
+        WARN( "[%s] -> [%s] is not string type!", section.c_str(), key.c_str() );
     return this->ini_table[ hash_key_name ].content;
 }
 
 std::vector< std::string > ini_parser::get_strs( std::string section, std::string key ) const
 {
-    std::replace( section.begin(), section.end(), ' ', '_' );
-    std::transform( key.begin(), key.end(), key.begin(), ::tolower );
-    std::string hash_key_name = section + "_" + key;
+    SECURE_EXTRACT( section, key );
     if ( this->ini_table[ hash_key_name ].type != ini::ValueType::strings )
-        ERROR( "[%s] -> [%s] is not strings type!", section.c_str(), key.c_str() );
+        WARN( "[%s] -> [%s] is not strings type!", section.c_str(), key.c_str() );
     return this->split( this->ini_table[ hash_key_name ].content );
 }
 
+inline bool ini_parser::has( std::string section, std::string key ) const
+{
+    std::replace( section.begin(), section.end(), ' ', '_' );
+    std::replace( section.begin(), section.end(), '\t', '_' );
+    std::transform( key.begin(), key.end(), key.begin(), ::tolower );
+    std::string hash_key_name = section + "_" + key;
+    return this->ini_table.find( hash_key_name ) != this->ini_table.end();
+}
+
 #ifdef debug_parameter
-// macro for check the result of unit test, to make the code more compact
-#define ASSERT( sentence )                                                       \
-    {                                                                            \
-        if ( !( sentence ) )                                                     \
-        {                                                                        \
-            WARN( "The test failed at %d line in file %s", __LINE__, __FILE__ ); \
-            return 1;                                                            \
-        }                                                                        \
-        else                                                                     \
-        {                                                                        \
-            println( "The test passed." );                                       \
-            return 0;                                                            \
-        }                                                                        \
-    }
 
 int ini_parser::test_checksize() const
 {
@@ -390,10 +391,10 @@ int ini_parser::test_lineparser( void ) const
     // illegal lines
     char bad_section_line1[] = "[This is a bad section";
     char bad_section_line2[] = "+[This is a bad section]";
-    char bad_key_value1[]    = " = \n";
-    char bad_key_value2[]    = "1 = \n";
-    char bad_key_value3[]    = " = 12\n";
-    char bad_key_value4[]    = "key1 key2 = 12\n";
+    char bad_key_value1[]    = " = ";
+    char bad_key_value2[]    = "1 = ";
+    char bad_key_value3[]    = " = 12";
+    char bad_key_value4[]    = "key1 key2 = 12";
 
     auto empty_line_res      = line_parser( empty_line );
     auto blank_line_res      = line_parser( blank_line );
@@ -443,7 +444,7 @@ int ini_parser::test_lineparser( void ) const
                    && check_line_equal( key_bool_line_res, expected_key_bool_line_res )
                    && check_line_equal( key_str_line_res, expected_key_str_line_res );
 
-    ASSERT( success );
+    CHECK_RETURN( success );
 }
 
 int ini_parser::test_trim( void ) const
@@ -466,7 +467,7 @@ int ini_parser::test_trim( void ) const
 
     bool success = res1 && res2 && res3 && res4 && res5 && res6;
 
-    ASSERT( success );
+    CHECK_RETURN( success );
 }
 
 int ini_parser::test_split( void ) const
@@ -490,7 +491,7 @@ int ini_parser::test_split( void ) const
 
     bool success = ( res1 == target1 ) && ( res2 == target1 ) && ( res3 == target1 )
                    && ( res4 == target1 ) && ( res5 == target2 );
-    ASSERT( success );
+    CHECK_RETURN( success );
 }
 
 int ini_parser::test_read( void )
@@ -545,10 +546,33 @@ int ini_parser::test_get( void ) const
     auto res4 = get_strs( "TestSec", "strings" );
     auto res5 = get_str( "TestSec", "string" );
 
+    // erase the test data
+    ini_table.erase( "TestSec_boolean" );
+    ini_table.erase( "TestSec_number" );
+    ini_table.erase( "TestSec_numbers" );
+    ini_table.erase( "TestSec_string" );
+    ini_table.erase( "TestSec_strings" );
+
+    println( "Test the case of non-exist key:" );
+    try
+    {
+        get_bool( "TestSec", "non_exist_key" );
+    }
+    catch ( std::runtime_error& e )
+    {
+        println( "It failed as expected, error message: %s", e.what() );
+    }
+    catch ( ... )
+    {
+        println( "It failed unexpectedly!" );
+        return 1;
+    }
+
     bool success = ( res1 == target1 ) && ( res2 == target2 ) && ( res3 == target3 )
                    && ( res4 == target4 ) && ( res5 == target5 );
-    ASSERT( success );
+    CHECK_RETURN( success );
     return 0;
 }
 #endif
 }  // namespace galotfa
+#endif

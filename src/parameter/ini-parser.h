@@ -1,8 +1,8 @@
 /// This file is a naive implementation of a parser for ini files.
 /// Only supports simple key-value pairs: characters and numbers only.
 
-#ifndef __INI_PARSER_H__
-#define __INI_PARSER_H__
+#ifndef __GALOTFA_INI_PARSER_H__
+#define __GALOTFA_INI_PARSER_H__
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -45,6 +45,7 @@ public:  // public methods
     std::vector< double >      get_doubles( std::string section, std::string key ) const;
     std::string                get_str( std::string section, std::string key ) const;
     std::vector< std::string > get_strs( std::string section, std::string key ) const;
+    inline bool                has( std::string section, std::string key ) const;
 #ifdef debug_parameter
     int  test_checksize() const;
     int  test_trim() const;
