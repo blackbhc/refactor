@@ -216,6 +216,8 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
     string-type key and a `ini::Value`-type value. The key of the hash table = section name +
     "\_" + key name of parameter in the ini file, where the space in the section name will be replaced by `_`.
 
+- class `para`: define the default value of some parameters, and update the value according the ini parameter file.
+
 ### `src/output`: define the `writer` class
 
 #### APIs
@@ -246,6 +248,9 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
 
   1. The pushed data array should follow the 1D array convention (see <a href="#convention of data array">Convention for arrays of data</a> )
   2. Make sure that the size of the pushed data array is the same as the size of the dataset otherwise the behavior is undefined.
+     - Although there is a `len` parameter to specify the 1D array size, but the for a C-style array, such
+       parameter is only for check. And the code actually can not detect the size of the array. The cost
+       of the UB is for better performance with raw C-style array.
   3. The name of group and dataset is case sensitive and unique, there can not be
      dataset or group share the same under the same group, e.g. `a/a/a` is legal for either a dataset `a` or a
      subgroup `a` under parent group `a/a`, but under group `a/a/` there can not be a dataset and a subgroup
@@ -327,7 +332,7 @@ the sub-space of the array.
 
   - `open_file`: open a hdf5 file and return its id, private.
 
-  - `push(void* buffer, std::string dataset_name)`: the main interface to push a array of data to a existing dataset,
+  - `push(void* buffer, unsigned int len, std::string dataset_name)`: the main interface to push a array of data to a existing dataset,
     the dataset name should be the absolute path of the dataset, e.g. `/group1/group2/dataset_name`. If such
     dataset does not exist, the writer will create it automatically. The data type of the dataset will be restored
     by `node`, during creation of the dataset.
