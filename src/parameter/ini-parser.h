@@ -43,6 +43,8 @@ public:  // public methods
     bool                       get_bool( std::string section, std::string key ) const;
     double                     get_double( std::string section, std::string key ) const;
     std::vector< double >      get_doubles( std::string section, std::string key ) const;
+    int                        get_int( std::string section, std::string key ) const;
+    std::vector< int >         get_ints( std::string section, std::string key ) const;
     std::string                get_str( std::string section, std::string key ) const;
     std::vector< std::string > get_strs( std::string section, std::string key ) const;
     inline bool                has( std::string section, std::string key ) const;
