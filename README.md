@@ -267,7 +267,7 @@ The model level on-the-fly analysis of the target particles. The most common cas
     in each bin, such as the mean value of some quantity, the number of particles in each bin, etc. The bin number
     is specified by the `image_bins` parameter (see below).
   - For each region type, there will be 3 image matrices by different combination of the 3 axes, e.g. for a
-    `region_shape` = `box`, there will be 3 image matrices for the $x$-$y$ plane, $x$-$z$ plane and $y$-$z$ plane.
+    `region_shape` = `box`, there will be 3 image matrices for the $x-y$ plane, $x-z$ plane and $y-z$ plane.
   - The quantities of the image are specified by the `colors` parameter in the view of color coded (see below).
     (The name `image` may be changed in the future, as its meaning is not so clear.)
 
@@ -295,7 +295,7 @@ The model level on-the-fly analysis of the target particles. The most common cas
 - <a id="sbar"></a>`sbar`: whether calculate the bar strength parameter, where $S\_{bar}$ is defined
   as $A_2/A_0$
 
-- <a id="sbuckle"></a>`sbuckle`: whether calculate the buckling strength parameter, where $S\_{\\buckling}$
+- <a id="sbuckle"></a>`sbuckle`: whether calculate the buckling strength parameter, where $S\_{\\rm{buckling}}$
   is defined as $A_2/A_0$
 
 - <a id="An"></a>`An`: whether calculate the $A_n$ parameters, where $A_n$ is the $n$-th Fourier component of the
