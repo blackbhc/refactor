@@ -391,4 +391,5 @@ the boxes stands for the APIs between such modules. Expect the above modules, `g
 
 ### TODO list
 
-- \[\] add a `galotfa` logo.
+- [x] add a `galotfa` logo.
+- [ ] add a `galotfa` logo.
