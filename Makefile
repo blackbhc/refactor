@@ -7,11 +7,24 @@ prefix = $(HOME)/test/galotfa
 
 # project root directory
 PROJECT_ROOT = ${shell env pwd}
-CXX = ${shell env which mpicxx}
-include ./make-config/flags  		# settings for build flags
-include ./make-config/target		# settings for target
 
 BUILD_DIR = $(PROJECT_ROOT)/build
+
+# C++ compiler: priority: clang++ > icpx > icpc (legacy) > g++
+ifneq ($(shell which clang++), )
+CXX = clang++
+else ifneq ($(shell which icpx), )
+CXX = icpx
+else ifneq ($(shell which icpc), )
+CXX = icpc
+else ifneq ($(shell which g++), )
+CXX = g++
+endif
+
+MPICXX = ${shell which mpicxx} -cxx=$(CXX)
+
+include ./make-config/flags  		# settings for build flags
+include ./make-config/target		# settings for target
 
 # HACK: this is a dummy target related to the build target 
 all: build
@@ -62,7 +75,10 @@ endif
 
 check:
 	@echo "Compiler for building:" $(CXX)
-ifeq ($(CXX),)
+ifeq ($(CXX), )
+	@echo "C++ compiler not found!"
+	@exit 1
+else ifeq ($(MPICXX),)
 	@echo "MPI C++ compiler not found!"
 	@exit 1
 endif

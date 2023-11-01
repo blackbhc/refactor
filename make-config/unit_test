@@ -15,5 +15,5 @@ test_dir/test: $(TEST_SRC) test_dir
 
 test_dir/mpi_test: $(TEST_SRC) test_dir
 	@echo "Building mpi unit test ..."
-	@$(CXX) -DMPI_TEST $(CXXFLAGS) -ggdb $(PROJECT_ROOT)/src/unit_test/test.cpp -lhdf5 -o \
+	@$(MPICXX) -DMPI_TEST $(CXXFLAGS) -ggdb $(PROJECT_ROOT)/src/unit_test/test.cpp -lhdf5 -o \
 		$(PROJECT_ROOT)/test_dir/mpi_test
