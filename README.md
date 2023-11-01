@@ -193,6 +193,9 @@ to see their explanation.
 |            | <a href="#rmg">`rmg`</a>                                     | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#vmg">`vmg`</a>                                     | Boolean    | `off`         | `on` or `off`                                               |
 | `Post`     |                                                              |            |               |                                                             |
+|            | <a href="#switch_post">`switch`</a>                          | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#filename_post">`filename`</a>                      | String     | `post`        | Any valid filename prefix.                                  |
+|            | <a href="#pattern_speed">`pattern_speed`</a>                 | Boolean    | off           | `on` or `off`                                               |
 
 #### Explanation of parameters
 
