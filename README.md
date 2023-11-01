@@ -438,6 +438,7 @@ the boxes stands for the APIs between such modules. Expect the above modules, `g
 
 - [ ] (other) add built-in fork of common simulation codes with `galotfa` built-in.
 - [ ] (other) add potential tracer support into the common simulation codes.
+- [ ] (global) output the used parameters to a separate file: galotfa-used.ini
 - [ ] (model) the bar length calculation.
 - [ ] (particle) the guiding radius calculation.
 - [ ] (particle) the orbital frequency calculation.
