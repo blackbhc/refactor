@@ -53,6 +53,7 @@ First, you need to check the following dependencies
 1. clone the `galotfa` repo with `git`: run `git clone -b main https://github.com/blackbhc/galotfa --depth=1`
 
    If you don't have `git`, try `wget -O- https://github.com/blackbhc/galotfa/archive/main.zip | tar xz`.
+   or `curl -O https://github.com/blackbhc/galotfa/archive/main.zip | tar xz`.
 
 2. run `cd galotfa`
 
