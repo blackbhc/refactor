@@ -6,6 +6,8 @@
 
 #include "../parameter/ini-parser.h"
 #include "../tools/prompt.h"
+void mpi_init_if_need( void );
+void mpi_final_if_need( void );
 
 extern "C" {
 #ifdef define_a_print

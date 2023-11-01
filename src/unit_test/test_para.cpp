@@ -2,6 +2,8 @@
 #ifndef _PARA_TEST_
 #define _PARA_TEST_
 // include the head file of the parameter part.
+#include "../parameter/para.cpp"
+#include "../parameter/para.h"
 #include "../parameter/ini-parser.cpp"
 #include "../parameter/ini-parser.h"
 #include "../tools/prompt.h"
@@ -16,6 +18,7 @@ void test_parameter( void )
     int                 fail    = 0;
     int                 unknown = 0;
     galotfa::ini_parser ini( "./galotfa.ini" );
+    galotfa::para       para( ini );
 
     COUNT( ini.test_checksize() );
     COUNT( ini.test_trim() );
@@ -23,6 +26,7 @@ void test_parameter( void )
     COUNT( ini.test_lineparser() );
     COUNT( ini.test_read() );
     COUNT( ini.test_get() );
+    COUNT( para.test_print() );
 
     SUMMARY( "parameter" );
 }

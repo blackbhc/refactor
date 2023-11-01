@@ -341,9 +341,8 @@ inline hdf5::node writer::create_datanode( hdf5::node& parent, std::string& data
     return datanode;
 }
 
-template < typename T > int writer::push( T* ptr, std::string dataset_name )
+template < typename T > int writer::push( T* ptr, unsigned int len, std::string dataset_name )
 {
-    ( void )ptr;
     // check whether the dataset exists
     if ( this->nodes.find( dataset_name ) == this->nodes.end() )
     {
@@ -355,7 +354,21 @@ template < typename T > int writer::push( T* ptr, std::string dataset_name )
         WARN( "The target is not a dataset: %s", dataset_name.c_str() );
         return 1;
     }
-    else if ( this->stack_counter.find( dataset_name ) == this->stack_counter.end() )
+    else
+    {
+        unsigned int target_len = 1;
+        auto         dims       = this->nodes.at( dataset_name ).get_dim_ext();
+        for ( size_t i = 1; i < dims.size(); ++i )
+            target_len *= dims[ i ];
+        if ( target_len != len )
+        {
+            WARN( "The target dataset has different length (%d) from the input (%d)!", target_len,
+                  len );
+            return 1;
+        }
+    }
+
+    if ( this->stack_counter.find( dataset_name ) == this->stack_counter.end() )
     {
         stack_counter[ dataset_name ] = 1;
         // if it is the first push, initialize the stack counter
@@ -386,11 +399,15 @@ template < typename T > int writer::push( T* ptr, std::string dataset_name )
     offset[ 0 ]                 = stack_counter[ dataset_name ] - 1;
     hid_t memspace              = this->nodes.at( dataset_name ).get_memspace();
 
-    dims[ 0 ]       = stack_counter[ dataset_name ];
-    herr_t status   = H5Dset_extent( dataset_id, dims.data() ); /* extend the dataset */
-    dims[ 0 ]       = 1;  // reset the first dimension to 1 for hyperslab selection
+    dims[ 0 ]     = stack_counter[ dataset_name ];
+    herr_t status = H5Dset_extent( dataset_id, dims.data() ); /* extend the dataset */
+    dims[ 0 ]     = 1;  // reset the first dimension to 1 for hyperslab selection
+
+    // get file space
     hid_t filespace = H5Dget_space( dataset_id );
+    // get the hyperslab, namely a subset of the dataset
     status = H5Sselect_hyperslab( filespace, H5S_SELECT_SET, offset, NULL, dims.data(), NULL );
+    // call the write function, its only a API without flush buffer
     status = H5Dwrite( dataset_id, info->data_type, memspace, filespace, H5P_DEFAULT, ptr );
     H5Sclose( filespace );
 
@@ -748,7 +765,7 @@ int writer::test_create_dataset( void )
 
 int writer::test_push( void )
 {
-    println( "Testing writer::push(T* ptr, std::string dataset_name) ..." );
+    println( "Testing writer::push(T* ptr, unsigned int len, std::string dataset_name) ..." );
     std::string testfile = "test.hdf5";
     std::string testset2 = "/group/data";
 
@@ -774,7 +791,7 @@ int writer::test_push( void )
         int push_failure = 0;
         for ( int i = 0; i < 7; ++i )
         {
-            push_failure += this->push( vec.data(), testset2 );
+            push_failure += this->push( vec.data(), vec.size(), testset2 );
             for ( auto& v : vec )
                 v += 1;
         }
@@ -792,7 +809,7 @@ int writer::test_push( void )
     try
     {
         println( "Try to push into a non-exist dataset, it should raise a warning ..." );
-        int push_failure = this->push( vec.data(), "/group/data2" );
+        int push_failure = this->push( vec.data(), vec.size(), "/group/data2" );
         if ( push_failure != 1 )
             CHECK_RETURN( false );
     }
@@ -831,11 +848,14 @@ int writer::test_push( void )
     std::vector< double > image( 16, 1.1 );
     try
     {
+        int push_failure = 0;
         for ( int i = 0; i < 5; ++i )
         {
             step[ 0 ] += i;
-            this->push( step.data(), "/group/scalar" );
+            push_failure += this->push( step.data(), step.size(), "/group/scalar" );
         }  // push 5 steps
+        if ( push_failure )
+            CHECK_RETURN( false );
 
         for ( int i = 0; i < steps; ++i )
         {
@@ -845,9 +865,11 @@ int writer::test_push( void )
             com[ 2 ] += i;
             for ( auto& pixel : image )
                 pixel *= ( double )( i + 0.1 );
-            this->push( com.data(), "/group/com" );
-            this->push( image.data(), "/group/image" );
+            push_failure += this->push( com.data(), com.size(), "/group/com" );
+            push_failure += this->push( image.data(), image.size(), "/group/image" );
         }
+        if ( push_failure )
+            CHECK_RETURN( false );
     }
     catch ( std::exception& e )
     {
