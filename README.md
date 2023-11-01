@@ -139,7 +139,6 @@ to see their explanation.
 | Section    | Key Name                                                     | Value Type | Default       | Available Values                                            |
 | ---------- | ------------------------------------------------------------ | ---------- | ------------- | ----------------------------------------------------------- |
 | `Global`   |                                                              |            |               |                                                             |
-|            | <a href="#demo">`demo`</a>                                   |            |               |                                                             |
 |            | <a href="#switch">`switch`</a>                               | Boolean    | `on`          |                                                             |
 |            | <a href="#output_dir">`output_dir`</a>                       | String     | `./otfoutput` | Any valid path.                                             |
 |            | <a href="#target_types">`target_types`</a>                   | Integer(s) |               | Based on your IC of simulation                              |
@@ -148,17 +147,51 @@ to see their explanation.
 |            | <a href="#max_iter">`max_iter`</a>                           | Integer    | 25            | $>0$                                                        |
 |            | <a href="#equal_threshold">`equal_threshold`</a>             | Float      | 1e-5          | $>0$, but not too large.                                    |
 |            | <a href="#sim_type">`sim_type`</a>                           | String     | `galaxy`      | Only support `galaxy` at present.                           |
+|            | <a href="#pot_tracer">`pot_tracer`</a>                       | Integer    |               |                                                             |
 | `Pre`      |                                                              |            |               |                                                             |
-|            | <a href="#recenter">`recenter`</a>                           | Boolean    | `on`          |                                                             |
+|            | <a href="#recenter">`recenter`</a>                           | Boolean    | `on`          | `on` or `off`                                               |
 |            | <a href="#region_shape">`region_shape`</a>                   | String     | `sphere`      | `sphere`, `cylinder` or `box`.                              |
 |            | <a href="#ratio">`ratio`</a>                                 | Float      | 1.0           | $>0$                                                        |
-|            | <a href="#size">`region_size`</a>                            | Float      | 1.0           | $>0$                                                        |
-|            | <a href="#recenter_method">`recenter_method`</a>             | String     | `com`         | `com`, `density` or `potential`                             |
-|            | <a href="#align_bar">`align_bar`</a>                         | Boolean    | `off`         |                                                             |
+|            | <a href="#size">`region_size`</a>                            | Float      | 20.0          | $>0$                                                        |
+|            | <a href="#recenter_method">`recenter_method`</a>             | String     | `density`     | `com`, `density` or `potential`                             |
+|            | <a href="#align_bar">`align_bar`</a>                         | Boolean    | `on`          | `on` or `off`                                               |
 | `Model`    |                                                              |            |               |                                                             |
+|            | <a href="#switch_m">`switch`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#filename_m">`filename`</a>                         | String     | `model`       | Any valid filename prefix.                                  |
+|            | <a href="#period_m">`period`</a>                             | Integer    | 10            | $>0$                                                        |
+|            | <a href="#region_shape_m">`region_shape`</a>                 | String     | `cylinder`    | `sphere`, `cylinder` or `box`.                              |
+|            | <a href="#ratio_m">`ratio`</a>                               | Float      | 1.0           | $>0$                                                        |
+|            | <a href="#size_m">`region_size`</a>                          | Float      | 20.0          | $>0$                                                        |
+|            | <a href="#image">`image`</a>                                 | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#image_bins">`image_bins`</a>                       | Integer    | 100           | $>0$                                                        |
+|            | <a href="#colors">`colors`</a>                               | String(s)  |               | see in the <a href="#colors">text</a>                       |
+|            | <a href="#bar_major_axis">`bar_major_axis`</a>               | Boolean    | `off`         | `on` of `off`                                               |
+|            | <a href="#bar_length">`bar_length`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#sbar">`sbar`</a>                                   | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#sbuckle">`sbuckle`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#An">`An`</a>                                       | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#inertia_tensor">`inertia_tensor`</a>               | Boolean    | `off`         | `on` or `off`                                               |
 | `Particle` |                                                              |            |               |                                                             |
+|            | <a href="#switch_p">`switch`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#filename_p">`filename`</a>                         | String     | `particle`    | Any valid filename prefix.                                  |
+|            | <a href="#period_p">`period`</a>                             | Integer    | 10000         | $>0$                                                        |
+|            | <a href="#circularity">`circularity`</a>                     | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#circularity_3d">`circularity_3d`</a>               | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#rg">`rg`</a>                                       | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#freq">`freq`</a>                                   | Boolean    | `off`         | `on` or `off`                                               |
+| `Orbit`    |                                                              |            |               | `on` or `off`                                               |
+|            | <a href="#switch_o">`switch`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#filename_o">`filename`</a>                         | String     | `orbit`       | Any valid filename prefix.                                  |
+|            | <a href="#period_o">`period`</a>                             | Integer    | 1             | $>0$                                                        |
+|            | <a href="#target_id">`target_id`</a>                         | String     |               | Any valid filename.                                         |
 | `Group`    |                                                              |            |               |                                                             |
-| `Orbits`   |                                                              |            |               |                                                             |
+|            | <a href="#switch_g">`switch`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#filename_g">`filename`</a>                         | String     | `group`       | Any valid filename prefix.                                  |
+|            | <a href="#period_g">`period`</a>                             | Integer    | 10            | $>0$                                                        |
+|            | <a href="#group_types">`group_types`</a>                     | String(s)  |               | (future feature)                                            |
+|            | <a href="#ellipticity">`ellipticity`</a>                     | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#rmg">`rmg`</a>                                     | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#vmg">`vmg`</a>                                     | Boolean    | `off`         | `on` or `off`                                               |
 | `Post`     |                                                              |            |               |                                                             |
 
 #### Explanation of parameters
@@ -197,36 +230,28 @@ center of the target particles, calculate the bar major axis (if exist) and alig
   The parameter will significantly affect the result of the on-the-fly analysis that is sensitive to the origin of
   coordinates, such as the bar major axis, the pattern speed, etc. Therefore, it's recommended to always turn on this
   option, unless you know what you are doing.
-
 - <a id="region_shape"></a>`region_shape`: only meaningful when `recenter` = `on`, the shape of the region
   to calculate the center of the target particles, which will affect how the `region_size` is interpreted (see below).
-
   - `region_shape` = `sphere`: the region is a sphere or spheroid if `ratio` $\\neq$ 1, the axis of the spheroid is the
     parallel to the $z$-axis.
   - `region_shape` = `cylinder`: the region is a cylinder with symmetry axis parallel to the $z$-axis.
   - `region_shape` = `box`: the region is a box with sides parallel to the $x$, $y$ and $z$ axis.
-
 - <a id="ratio"></a>`ratio`: only meaningful when `recenter` = `on`, the ratio of the region's characteristic
   lengths, which will affect how the `region_size` is interpreted.
-
 - <a id="size"></a>`region_size`: only meaningful when `recenter` = `on`, the size of the region to calculate
   the center of the target particles, which will
-
   - `region_shape` = `sphere`: the region is a sphere with $R=$ `region_size` if `ratio` = 1. If `ratio` is not 1,
     the sphere will be stretched along the $z$-axis with $R_z=$ `ratio` $\\times$ `region_size`.
   - `region_shape` = `cylinder`: the region is a cylinder with $R=$ `region_size`, and half height $H=$
     `ratio` $\\times$ `region_size`.
   - `region_shape` = `box`: the region is a cube with side length $L=$ `region_size`, and stretched along the
     $z$-axis with $L_z=$ `ratio` $\\times$ `region_size`.
-
 - <a id="recenter_method"></a>`recenter_method`: the method to calculate the center of the target particles,
   with iteration if necessary (see `convergence_type` and `convergence_threshold`).
-
   - `recenter_method` = `com`: the center is defined as the center of mass of the target particles.
   - `recenter_method` = `density`: the center is defined as the pixel of the highest surface density of the target
     particle(s), the size of the pixel is determined by `image_size` in the `Model` section.
   - `recenter_method` = `potential`: future feature.
-
 - <a id="align_bar"></a>`align_bar`: whether rotate the coordinates to align the $x$-axis to the bar major axis,
   this option is only available when the bar is detected. It's may be useful to align the bar major axis to the
   $x$-axis for some analysis or visualization.
@@ -236,35 +261,26 @@ center of the target particles, calculate the bar major axis (if exist) and alig
 The model level on-the-fly analysis of the target particles. The most common case at present is a disk galaxy.
 
 - <a id="switch_m"></a>`switch`: whether to enable the model level analysis or not.
-
+- <a id="filename_m"></a>`filename`: the filename of the output file of the model level analysis, the suffix `.hdf5`
+  will be added automatically so you only need to specify the prefix of the filename.
+- <a id="period_m"></a>`period`: the period of model level analysis, in unit of synchronized time steps in
+  simulation.
 - <a id="region_shape_m"></a>`region_shape`: similar to the `region_shape` in the `Pre` section, but this one is
   used to calculate the model quantifications of the target particles, can get multiple values.
-
   - `region_shape` = `sphere`: the region is a sphere or spheroid if `ratio` $\\neq$ 1, the axis of the spheroid is the
     parallel to the $z$-axis.
   - `region_shape` = `cylinder`: the region is a cylinder with symmetry axis parallel to the $z$-axis.
   - `region_shape` = `box`: the region is a box with sides parallel to the $x$, $y$ and $z$ axis.
-
 - <a id="ratio_m"></a>`ratio`: similar to the `ratio` in the `Pre` section, but this one is used to calculate the
   model quantifications of the target particles.
-
 - <a id="size_m"></a>`region_size`: similar to the `region_size` in the `Pre` section, but this one is used to
-
   - `region_shape` = `sphere`: the region is a sphere with $R=$ `region_size` if `ratio` = 1. If `ratio` $\\neq$ 1, the sphere
     will be stretched along the $z$-axis with $R_z=$ `ratio` $\\times$ `region_size`.
   - `region_shape` = `cylinder`: the region is a cylinder with $R=$ `region_size`, and half height $H=$
     `ratio` $\\times$ `region_size`.
   - `region_shape` = `box`: the region is a cube with side length $L=$ `region_size`, and stretched along the $z$-axis with
     $L_z=$ `ratio` $\\times$ `region_size`.
-
-- <a id="period_m"></a>`period`: the period of model level analysis, in unit of synchronized time steps in
-  simulation.
-
-- <a id="filename_m"></a>`filename`: the filename of the output file of the model level analysis, the suffix `.hdf5`
-  will be added automatically so you only need to specify the prefix of the filename.
-
 - <a id="image"></a>`image`: whether to output the image matrices of the target particles.
-
   - The particles will be divided into bins in each axis (according to the `region_shape`) and do some statistics
     in each bin, such as the mean value of some quantity, the number of particles in each bin, etc. The bin number
     is specified by the `image_bins` parameter (see below).
@@ -272,40 +288,33 @@ The model level on-the-fly analysis of the target particles. The most common cas
     `region_shape` = `box`, there will be 3 image matrices for the $x-y$ plane, $x-z$ plane and $y-z$ plane.
   - The quantities of the image are specified by the `colors` parameter in the view of color coded (see below).
     (The name `image` may be changed in the future, as its meaning is not so clear.)
-
 - <a id="image_bins"></a>`image_bins`: how many bins of the image matrices in each dimension, for the axis that
   may be stretched, the number of bins in such axis is also determined by the `ratio` parameter.
-
 - <a id="colors"></a>`colors`:
-
+  At least one color must be given, if the `image` is enabled, otherwise the program will raise an error.
   - `particle_number`: the number of particles in each bin.
   - `surface_density`: the surface density of the particles in each bin. The unit is $\[M\]/\[L\]^2$, $\[M\]$ and
     $\[L\]$ are the internal unit of mass and length in the simulation, the same below.
   - `mean_velocity`: the mean velocity of the particles in each bin, one component for each axis.
   - `dispersion`: the velocity dispersion of the particles in each bin, one component for each axis.
   - `dispersion_tensor`: the velocity dispersion tensor of the particles in each bin.
-
 - <a id="bar_major_axis"></a>`bar_major_axis`: whether calculate the bar major axis in the target particles,
   if detected a bar, defined as the phase angle of the $m$=2 Fourier component of the surface density after
   projection into the equatorial plane, $\\arg(A_2)$.
-
 - <a id="bar_length"></a>`bar_length`: whether calculate the bar length in the target particles,
   if detected a bar.
-
 - <a id="inerita_tensor"></a>`inertia_tensor`: whether calculate the inertia tensor of the target particles.
-
 - <a id="sbar"></a>`sbar`: whether calculate the bar strength parameter, where $S\_\\rm{bar}$ is defined
   as $A_2/A_0$.
-
 - <a id="sbuckle"></a>`sbuckle`: whether calculate the buckling strength parameter, where $S\_{\\rm{buckle}}$
   is defined as $\\sum m_i z_i \\exp(-2i \\phi_i) / \\sum m_i$.
-
 - <a id="An"></a>`An`: whether calculate the $A_n$ parameters, where $A_n$ is the $n$-th Fourier component of the
   surface density after projection into the equatorial plane.
 
 ##### Particle
 
 - <a id="switch_p"></a>`switch`: whether to enable the particle level analysis or not.
+- <a id="filename_p"></a>`filename`: the filename of the output file of the particle level analysis, the suffix `.hdf5`
 - <a id="period_p"></a>`period`: the period of particle level analysis, in unit of synchronized time steps in
   simulation.
   <font color=red>**Note:**</font> the particle level analysis will output all information of the target particles
@@ -313,11 +322,50 @@ The model level on-the-fly analysis of the target particles. The most common cas
   so the period should not be not be set too small, otherwise the output files will consume too much disk space.
   e.g. `period` = 5000 is a good choice for a 1e5 time steps simulation, 1e5 is a magnitude for a 10Gyr simulation
   in Gadget4 with default units.
-- <a id="filename_p"></a>`filename`: the filename of the output file of the particle level analysis, the suffix `.hdf5`
   will be added automatically so you only need to specify the prefix of the filename.
 - <a id="circularity"></a>`circularity`: whether calculate the circularity of the target particles.
 - <a id="circularity_3d"></a>`circularity_3d`: whether calculate the 3D circularity of the target particles.
 - <a id="rg"></a>`rg`: whether calculate the guiding radius of the target particles. (future feature)
+- <a id="freq"></a>`freq`: whether calculate the orbital frequency of the target particles. (future feature)
+
+##### Orbit
+
+This part is about a trivial target: log the orbital curves of the target particles. For example, trace the orbit
+of stars that contribute to the bar, or the spiral arms, etc.
+
+- <a id="switch_o"></a>`switch`: whether to enable the orbit curve log.
+- <a id="filename_o"></a>`filename`: the filename of the output file of the orbit curve log, the suffix `.hdf5`
+  will be added automatically so you only need to specify the prefix of the filename.
+- <a id="period_o"></a>`period`: the period of orbit curve log, in unit of synchronized time steps in simulation.
+  If there is no too much particles to trace, the period can be set to a small value, e.g. 1, which means log the
+  position of the target particles at every synchronized time step.
+- <a id="target_id"></a>`target_id`: the path to an ASCII file of particles id of the target particle to trace, must
+  be given at least one id if the orbit curve log is enabled, otherwise the program will raise an error. The particle
+  type of this part can be any type of particles in the simulation, not restricted to the target particles specified
+  by the `target_types` parameter in the `Global` section.
+  - The particle id in this file can be separated by any of the following characters: white space, new line,
+    `,`, `-`, `+`, `:` and `&`.
+  - Particle ID that is not exist in the simulation will be ignored, with some warning message.
+
+#### Group (future feature)
+
+This level is designed to do the on-the-fly analysis of particle groups/sets. For example, the different
+stellar populations in a galaxy: binned according their ages, metallicity, etc. Or different type of galaxies
+in cosmology simulations: central and satellite galaxies in a cluster, or elliptical and spiral galaxies based
+on their morphology.
+
+- <a id="switch_g"></a>`switch`: whether to enable the group level analysis or not.
+- <a id="filename_g"></a>`filename`: the filename of the output file of the group level analysis, the suffix `.hdf5`
+  will be added automatically so you only need to specify the prefix of the filename.
+- <a id="period_g"></a>`period`: the period of group level analysis, in unit of synchronized time steps in
+  simulation.
+- <a id="group_types"></a>`group_types`: the type(s) of group particles to do the on-the-fly analysis, must be
+  given at least one type if the group level analysis is enabled, otherwise the program will raise an error.
+  - `age`: divide the particles into different groups by their age.
+  - `metallicity`: divide the particles into different groups by their metallicity.
+- <a id="ellipticity"></a>`ellipticity`: whether calculate the ellipticity of the target particles.
+- <a id="rmg"></a>`rmg`: whether calculate the radial metallicity gradient of the target particles.
+- <a id="vmg"></a>`vmg`: whether calculate the vertical metallicity gradient of the target particles.
 
 #### Output files
 
@@ -336,24 +384,6 @@ before using any `galotfa` APIs.
 ______________________________________________________________________
 
 ## Design scheme <a href="#contents"><font size=4>(contents)</font></a> <a id="scheme"></a>
-
-### Target physical quantities
-
-The physical quantities of interested of `galotfa` are classified into two four types:
-
-1. Model quantifications:
-   - structure properties: center and axis of the disk, bar major axis, strength of the bar $S\_{bar}$, bar length $L\_{bar}$, peanutness $a_6$, axis ratio of the bar, symmetry parameters ($A_0$, $A_2$ ...).
-   - dynamical properties: rotation curves, pattern speed, Toomre $Q$ parameter, velocity dispersion, anisotropies, buckling strength.
-1. Particle quantifications:
-   - orbital properties: angular momentum, energy, guiding radius, epicycle frequency, other orbital frequency, actions, circularity $\\epsilon$,
-     3D circularity $\\epsilon \_{3D}$.
-   - sub-grid physical properties: temperature, SFR, viscosity, acoustic velocity, density, metallicity.
-1. Population level quantifications:
-   Special case of model quantifications, but only for particular stellar population.
-1. Selctital curves:
-   Log exact positions of particular particles at one or several synchronized time bins to trace their exact curves during simulation.
-
-### Basic workflow of `galotfa`
 
 At particular synchronized time steps:
 
@@ -389,7 +419,13 @@ The details of them are illustrated in <a href="#code">Code structure</a>. The c
 the boxes stands for the APIs between such modules. Expect the above modules, `galotfa` also uses a standalone
 `INI` parameter file to control the behaviours of all modules and APIs in the preceding workflow.
 
-### TODO list
+## Future features
 
-- [x] add a `galotfa` logo.
-- [ ] add a `galotfa` logo.
+- [ ] add built-in fork of common simulation codes with `galotfa` built-in.
+- [ ] add potential tracer support into the common simulation codes.
+- [ ] the bar length calculation.
+- [ ] the guiding radius calculation.
+- [ ] the orbital frequency calculation.
+- [ ] the actions calculation.
+- [ ] group based analysis.
+- [ ] orbit curves
