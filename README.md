@@ -153,7 +153,7 @@ to see their explanation.
 |            | <a href="#region_shape">`region_shape`</a>                   | String     | `sphere`      | `sphere`, `cylinder` or `box`.                              |
 |            | <a href="#ratio">`ratio`</a>                                 | Float      | 1.0           | $>0$                                                        |
 |            | <a href="#size">`region_size`</a>                            | Float      | 1.0           | $>0$                                                        |
-|            | <a href="#recenter_method">`recenter_method`</a>             | String     | `com`         | `com`, `density` or `potential` (not yet supported)         |
+|            | <a href="#recenter_method">`recenter_method`</a>             | String     | `com`         | `com`, `density` or `potential`                             |
 |            | <a href="#align_bar">`align_bar`</a>                         | Boolean    | `off`         |                                                             |
 | `Model`    |                                                              |            |               |                                                             |
 | `Particle` |                                                              |            |               |                                                             |
@@ -184,6 +184,8 @@ This section specify some parameters that control the behaviour of `galotfa` on 
   if the threshold=0.001, then two float numbers $a$ and $b$ are considered equal.
 - <a id="sim_type"></a>`sim_type`: the type of simulation, e.g. `galaxy`, `cluster`, `cosmology` and `cosmology_zoom_in`.
   At present, only `galaxy` is supported.
+- <a id="pot_tracer"></a>`pot_tracer`: the particle type id of potential tracer particles, which will be used to
+  calculate the potential of the target particles. (future feature)
 
 ##### Pre
 
@@ -222,8 +224,8 @@ center of the target particles, calculate the bar major axis (if exist) and alig
 
   - `recenter_method` = `com`: the center is defined as the center of mass of the target particles.
   - `recenter_method` = `density`: the center is defined as the pixel of the highest surface density of the target
-    particle(s), the size of the pixel is determined by (???)
-  - `recenter_method` = `potential`: not supported yet.
+    particle(s), the size of the pixel is determined by `image_size` in the `Model` section.
+  - `recenter_method` = `potential`: future feature.
 
 - <a id="align_bar"></a>`align_bar`: whether rotate the coordinates to align the $x$-axis to the bar major axis,
   this option is only available when the bar is detected. It's may be useful to align the bar major axis to the
@@ -292,11 +294,11 @@ The model level on-the-fly analysis of the target particles. The most common cas
 
 - <a id="inerita_tensor"></a>`inertia_tensor`: whether calculate the inertia tensor of the target particles.
 
-- <a id="sbar"></a>`sbar`: whether calculate the bar strength parameter, where $S\_{bar}$ is defined
-  as $A_2/A_0$
+- <a id="sbar"></a>`sbar`: whether calculate the bar strength parameter, where $S\_\\rm{bar}$ is defined
+  as $A_2/A_0$.
 
-- <a id="sbuckle"></a>`sbuckle`: whether calculate the buckling strength parameter, where $S\_{\\rm{buckling}}$
-  is defined as $A_2/A_0$
+- <a id="sbuckle"></a>`sbuckle`: whether calculate the buckling strength parameter, where $S\_{\\rm{buckle}}$
+  is defined as $\\sum m_i z_i \\exp(-2i \\phi_i) / \\sum m_i$.
 
 - <a id="An"></a>`An`: whether calculate the $A_n$ parameters, where $A_n$ is the $n$-th Fourier component of the
   surface density after projection into the equatorial plane.
@@ -306,8 +308,16 @@ The model level on-the-fly analysis of the target particles. The most common cas
 - <a id="switch_p"></a>`switch`: whether to enable the particle level analysis or not.
 - <a id="period_p"></a>`period`: the period of particle level analysis, in unit of synchronized time steps in
   simulation.
+  <font color=red>**Note:**</font> the particle level analysis will output all information of the target particles
+  into a single file at each analysis time step, the size of such output file is comparable to the snapshot file,
+  so the period should not be not be set too small, otherwise the output files will consume too much disk space.
+  e.g. `period` = 5000 is a good choice for a 1e5 time steps simulation, 1e5 is a magnitude for a 10Gyr simulation
+  in Gadget4 with default units.
 - <a id="filename_p"></a>`filename`: the filename of the output file of the particle level analysis, the suffix `.hdf5`
   will be added automatically so you only need to specify the prefix of the filename.
+- <a id="circularity"></a>`circularity`: whether calculate the circularity of the target particles.
+- <a id="circularity_3d"></a>`circularity_3d`: whether calculate the 3D circularity of the target particles.
+- <a id="rg"></a>`rg`: whether calculate the guiding radius of the target particles. (future feature)
 
 #### Output files
 
@@ -332,7 +342,6 @@ ______________________________________________________________________
 The physical quantities of interested of `galotfa` are classified into two four types:
 
 1. Model quantifications:
-   - numerical precision: $\\Delta E$, $\\Delta L$
    - structure properties: center and axis of the disk, bar major axis, strength of the bar $S\_{bar}$, bar length $L\_{bar}$, peanutness $a_6$, axis ratio of the bar, symmetry parameters ($A_0$, $A_2$ ...).
    - dynamical properties: rotation curves, pattern speed, Toomre $Q$ parameter, velocity dispersion, anisotropies, buckling strength.
 1. Particle quantifications:
@@ -379,3 +388,7 @@ Every box is a functional module with independent implementation, which is class
 The details of them are illustrated in <a href="#code">Code structure</a>. The connection lines between
 the boxes stands for the APIs between such modules. Expect the above modules, `galotfa` also uses a standalone
 `INI` parameter file to control the behaviours of all modules and APIs in the preceding workflow.
+
+### TODO list
+
+- \[\] add a `galotfa` logo.
