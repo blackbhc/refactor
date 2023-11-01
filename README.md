@@ -367,6 +367,17 @@ on their morphology.
 - <a id="rmg"></a>`rmg`: whether calculate the radial metallicity gradient of the target particles.
 - <a id="vmg"></a>`vmg`: whether calculate the vertical metallicity gradient of the target particles.
 
+#### Post
+
+This part is designed to do some by-the-hand post analysis, such as calculate the bar pattern speed of the bar.
+
+- <a id="switch_post"></a>`switch`: whether to enable the post analysis or not.
+- <a id="filename_post"></a>`filename`: the filename of the output file of the post analysis, the suffix `.hdf5`
+  will be added automatically so you only need to specify the prefix of the filename.
+- <a id="pattern_speed"></a>`pattern_speed`: calculate the pattern speed of the bar. If this option is enabled,
+  the `bar_major_axis` option in the `Model` section will be automatically enabled.
+- <a id="SFH"></a>`SFH`: calculate the star formation history of the target particles. (future feature)
+
 #### Output files
 
 Due to there may be a case of a restart simulation, `galotfa` will not overwrite any existing file,
@@ -421,11 +432,13 @@ the boxes stands for the APIs between such modules. Expect the above modules, `g
 
 ## Future features
 
-- [ ] add built-in fork of common simulation codes with `galotfa` built-in.
-- [ ] add potential tracer support into the common simulation codes.
-- [ ] the bar length calculation.
-- [ ] the guiding radius calculation.
-- [ ] the orbital frequency calculation.
-- [ ] the actions calculation.
+- [ ] (other) add built-in fork of common simulation codes with `galotfa` built-in.
+- [ ] (other) add potential tracer support into the common simulation codes.
+- [ ] (model) the bar length calculation.
+- [ ] (particle) the guiding radius calculation.
+- [ ] (particle) the orbital frequency calculation.
+- [ ] (particle) the actions calculation.
 - [ ] group based analysis.
 - [ ] orbit curves
+- [ ] (post) pattern speed
+- [ ] (post) star formation history
