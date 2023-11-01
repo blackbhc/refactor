@@ -222,6 +222,15 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
 
 - class `para`: define the default value of some parameters, and update the value according the ini parameter file.
 
+#### Steps to add new parameter into the code
+
+1. Edit the parameter table and explanation in the `README.md` file, during which choose the name, type and
+   default value of the new parameter.
+2. Edit the `para` class in the `src/parameter/default.h` file, add the parameter into the chosen section
+   and default value.
+3. Add a line in the update function (???) to update the value of the new parameter from the ini file.
+4. Use the new parameter in the analysis code.
+
 ### `src/output`: define the `writer` class
 
 #### APIs

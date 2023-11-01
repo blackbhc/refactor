@@ -145,12 +145,12 @@ to see their explanation.
 |            | <a href="#convergence_type">`convergence_type`</a>           | String     | `absolute`    | `absolute` or `relative`.                                   |
 |            | <a href="#convergence_threshold">`convergence_threshold`</a> | Float      | 0.001         | $(0, 1)$ if `convergence_type` = `relative`, otherwise $>0$ |
 |            | <a href="#max_iter">`max_iter`</a>                           | Integer    | 25            | $>0$                                                        |
-|            | <a href="#equal_threshold">`equal_threshold`</a>             | Float      | 1e-5          | $>0$, but not too large.                                    |
+|            | <a href="#equal_threshold">`equal_threshold`</a>             | Float      | 1e-10         | $>0$, but not too large.                                    |
 |            | <a href="#sim_type">`sim_type`</a>                           | String     | `galaxy`      | Only support `galaxy` at present.                           |
 |            | <a href="#pot_tracer">`pot_tracer`</a>                       | Integer    |               |                                                             |
 | `Pre`      |                                                              |            |               |                                                             |
 |            | <a href="#recenter">`recenter`</a>                           | Boolean    | `on`          | `on` or `off`                                               |
-|            | <a href="#region_shape">`region_shape`</a>                   | String     | `sphere`      | `sphere`, `cylinder` or `box`.                              |
+|            | <a href="#region_shape">`region_shape`</a>                   | String     | `cylinder`    | `sphere`, `cylinder` or `box`.                              |
 |            | <a href="#ratio">`ratio`</a>                                 | Float      | 1.0           | $>0$                                                        |
 |            | <a href="#size">`region_size`</a>                            | Float      | 20.0          | $>0$                                                        |
 |            | <a href="#recenter_method">`recenter_method`</a>             | String     | `density`     | `com`, `density` or `potential`                             |
@@ -169,7 +169,7 @@ to see their explanation.
 |            | <a href="#bar_length">`bar_length`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#sbar">`sbar`</a>                                   | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#sbuckle">`sbuckle`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
-|            | <a href="#An">`An`</a>                                       | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#An">`An`</a>                                       | Integer(s) |               | > 0                                                         |
 |            | <a href="#inertia_tensor">`inertia_tensor`</a>               | Boolean    | `off`         | `on` or `off`                                               |
 | `Particle` |                                                              |            |               |                                                             |
 |            | <a href="#switch_p">`switch`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
@@ -183,7 +183,7 @@ to see their explanation.
 |            | <a href="#switch_o">`switch`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#filename_o">`filename`</a>                         | String     | `orbit`       | Any valid filename prefix.                                  |
 |            | <a href="#period_o">`period`</a>                             | Integer    | 1             | $>0$                                                        |
-|            | <a href="#target_id">`target_id`</a>                         | String     |               | Any valid filename.                                         |
+|            | <a href="#idfile">`idfile`</a>                               | String     |               | Any valid filename.                                         |
 | `Group`    |                                                              |            |               |                                                             |
 |            | <a href="#switch_g">`switch`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#filename_g">`filename`</a>                         | String     | `group`       | Any valid filename prefix.                                  |
@@ -217,7 +217,8 @@ This section specify some parameters that control the behaviour of `galotfa` on 
     where $\epsilon$ is the `convergence_threshold`.
 - <a id="max_iter"></a>`max_iter`: the maximum number of iterations during analysis.
 - <a id="equal_threshold"></a>`equal_threshold`: the threshold for equality of two floating point numbers, e.g.
-  if the threshold=0.001, then two float numbers $a$ and $b$ are considered equal.
+  if the threshold=0.001, then two float numbers that $|a-b|<0.001$ are considered equal. Recommended value is
+  $1e-6$ to $1e-40$, and should not less than the lowest precision of the floating point number in your system.
 - <a id="sim_type"></a>`sim_type`: the type of simulation, e.g. `galaxy`, `cluster`, `cosmology` and `cosmology_zoom_in`.
   At present, only `galaxy` is supported.
 - <a id="pot_tracer"></a>`pot_tracer`: the particle type id of potential tracer particles, which will be used to
@@ -342,9 +343,9 @@ of stars that contribute to the bar, or the spiral arms, etc.
 - <a id="period_o"></a>`period`: the period of orbit curve log, in unit of synchronized time steps in simulation.
   If there is no too much particles to trace, the period can be set to a small value, e.g. 1, which means log the
   position of the target particles at every synchronized time step.
-- <a id="target_id"></a>`target_id`: the path to an ASCII file of particles id of the target particle to trace, must
-  be given at least one id if the orbit curve log is enabled, otherwise the program will raise an error. The particle
-  type of this part can be any type of particles in the simulation, not restricted to the target particles specified
+- <a id="idfile"></a>`idfile`: the path to an ASCII file of particles id of the target particle to trace, must
+  be given if the orbit curve log is enabled, otherwise the program will raise an error. The particle type
+  of this part can be any type of particles in the simulation, not restricted to the target particles specified
   by the `particle_types` parameter in the `Global` section.
   - The particle id in this file can be separated by any of the following characters: white space, new line,
     `,`, `-`, `+`, `:` and `&`.
