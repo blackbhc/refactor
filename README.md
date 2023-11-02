@@ -4,10 +4,48 @@
 
 ## <a id="contents">Contents</a>
 
+- <a href="#scheme">Design scheme</a>
 - <a href="#feature">Features of `galotfa`</a>
 - <a href="#install">Installation</a>
-- <a href="#scheme">Design scheme</a>
 - <a href="#usage">Usage</a>
+
+---
+
+## Design scheme <a href="#contents"><font size=4>(contents)</font></a> <a id="scheme"></a>
+
+At particular synchronized time steps:
+
+<a id="workflow"></a>
+
+```mermaid
+graph TB
+Data((Data))
+Pre[Pre-process]
+Model[Model level]
+Par[Particle level]
+Pop[Population level]
+Selct[Particle selection]
+Snap([Expansion snapshot])
+LogMd([Log of model])
+LogOC([Log of orbital curves])
+LogPop([Log of populations])
+
+Data --> Pre
+Pre --> Model
+Pre --> Par
+Pre --> Selct
+Par --> Pop
+Model --> Pop
+Pop --> LogPop
+Par --> Snap
+Selct --> LogOC
+Model --> LogMd
+```
+
+Every box is a functional module with independent implementation, which is class or a part of a class.
+The details of them are illustrated in <a href="#code">Code structure</a>. The connection lines between
+the boxes stands for the APIs between such modules. Expect the above modules, `galotfa` also uses a standalone
+`INI` parameter file to control the behaviours of all modules and APIs in the preceding workflow.
 
 ---
 
@@ -212,13 +250,13 @@ This section specify some parameters that control the behaviour of `galotfa` on 
 - <a id="convergence_type"></a>`convergence_type`: the type of convergence criterion for the on-the-fly analysis.
 - <a id="convergence_threshold"></a>`convergence_threshold`: the threshold for numerical convergence during the
   on-the-fly analysis.
-  - `convergence_type` = `absolute`: the convergence criterion is $\Delta$ $Q\<\epsilon$ for some quantity $Q$,
-    where $\epsilon$ is the `convergence_threshold`.
-  - `convergence_type` = `relative`: the convergence criterion is $\Delta Q / Q \< \epsilon$ for some quantity $Q$,
-    where $\epsilon$ is the `convergence_threshold`.
+  - `convergence_type` = `absolute`: the convergence criterion is $\Delta$ $Q<\epsilon$ for some quantity $Q$,
+    where $\\epsilon$ is the `convergence_threshold`.
+  - `convergence_type` = `relative`: the convergence criterion is $\Delta Q / Q < \epsilon$ for some quantity $Q$,
+    where $\\epsilon$ is the `convergence_threshold`.
 - <a id="max_iter"></a>`max_iter`: the maximum number of iterations during analysis.
 - <a id="equal_threshold"></a>`equal_threshold`: the threshold for equality of two floating point numbers, e.g.
-  if the threshold=0.001, then two float numbers that $|a-b|<0.001$ are considered equal. Recommended value is
+  if the threshold=0.001, then two float numbers that $|a-b|\<0.001$ are considered equal. Recommended value is
   $1e-6$ to $1e-40$, and should not less than the lowest precision of the floating point number in your system.
 - <a id="sim_type"></a>`sim_type`: the type of simulation, e.g. `galaxy`, `cluster`, `cosmology` and `cosmology_zoom_in`.
   At present, only `galaxy` is supported.
@@ -309,9 +347,9 @@ The model level on-the-fly analysis of the target particles. The most common cas
 - <a id="bar_length"></a>`bar_length`: whether calculate the bar length in the target particles,
   if detected a bar.
 - <a id="inerita_tensor"></a>`inertia_tensor`: whether calculate the inertia tensor of the target particles.
-- <a id="sbar"></a>`sbar`: whether calculate the bar strength parameter, where $S\_\rm{bar}$ is defined
+- <a id="sbar"></a>`sbar`: whether calculate the bar strength parameter, where $S_\rm{bar}$ is defined
   as $A_2/A_0$.
-- <a id="sbuckle"></a>`sbuckle`: whether calculate the buckling strength parameter, where $S\_{\rm{buckle}}$
+- <a id="sbuckle"></a>`sbuckle`: whether calculate the buckling strength parameter, where $S_{\rm{buckle}}$
   is defined as $\sum m_i z_i \exp(-2i \phi_i) / \sum m_i$.
 - <a id="An"></a>`An`: whether calculate the $A_n$ parameters, where $A_n$ is the $n$-th Fourier component of the
   surface density after projection into the equatorial plane.
@@ -398,42 +436,6 @@ call `MPI_Init` before using any `galotfa` APIs.
 before using any `galotfa` APIs.
 
 ---
-
-## Design scheme <a href="#contents"><font size=4>(contents)</font></a> <a id="scheme"></a>
-
-At particular synchronized time steps:
-
-<a id="workflow"></a>
-
-```mermaid
-graph TB
-Data((Data))
-Pre[Pre-process]
-Model[Model level]
-Par[Particle level]
-Pop[Population level]
-Selct[Particle selection]
-Snap([Expansion snapshot])
-LogMd([Log of model])
-LogOC([Log of orbital curves])
-LogPop([Log of populations])
-
-Data --> Pre
-Pre --> Model
-Pre --> Par
-Pre --> Selct
-Par --> Pop
-Model --> Pop
-Pop --> LogPop
-Par --> Snap
-Selct --> LogOC
-Model --> LogMd
-```
-
-Every box is a functional module with independent implementation, which is class or a part of a class.
-The details of them are illustrated in <a href="#code">Code structure</a>. The connection lines between
-the boxes stands for the APIs between such modules. Expect the above modules, `galotfa` also uses a standalone
-`INI` parameter file to control the behaviours of all modules and APIs in the preceding workflow.
 
 ## Future features
 
