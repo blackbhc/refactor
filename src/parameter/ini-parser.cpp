@@ -22,9 +22,9 @@ namespace galotfa {
 ini_parser::ini_parser( const char* file_name )
 {
     this->filename = file_name;
-    // #ifndef debug_parameter  // no initialization in debug mode
+#ifndef debug_parameter  // no initialization in debug mode
     this->read( this->filename.c_str() );
-    // #endif
+#endif
 }
 
 void ini_parser::read( const char* file )

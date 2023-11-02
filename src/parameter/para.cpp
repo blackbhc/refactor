@@ -25,8 +25,8 @@ para::para( ini_parser& parser )
     // I know it's ugly, but choose this way for 2 reason:
     // R1. To support the parameters with possible multiple values, it should be a vector, but if
     // there is only 1 value, the ini_parser has no way to know it's a 1-element vector or a single
-    // value,
-    // R2. ugly code but the fast running speed ...
+    // value.
+    // PERF: R2. it's really ugly, but "results-oreinted" programming has the fast running speed ...
 
     // Global section
     update( this->gb, switch, Global, bool );
