@@ -56,6 +56,5 @@ struct para
     int test_print();
 #endif
 };
-
 }  // namespace galotfa
 #endif

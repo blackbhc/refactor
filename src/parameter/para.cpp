@@ -7,17 +7,16 @@
 #include "ini-parser.cpp"
 #endif
 
-#define update( sec_alias, para, sec, type )                       \
-    {                                                              \
-        if ( parser.has( #sec, #para ) )                           \
-            sec_alias##_##para = parser.get_##type( #sec, #para ); \
-    }                                                              \
 // here type is not the internal types but name of APIs of the ini_parser:
 // get_bool, get_int, get_double, get_str, get_ints, get_doubles, get_strs
 // e.g. update( gb, switch, Global, bool ) will be
 // gb_switch = parser.get_bool( "Global", "switch" );
+#define update( sec_alias, para, sec, type )                       \
+    {                                                              \
+        if ( parser.has( #sec, #para ) )                           \
+            sec_alias##_##para = parser.get_##type( #sec, #para ); \
+    }
 
-// TODO: the move constructor of the struct para
 namespace galotfa {
 para::para( ini_parser& parser )
 {
