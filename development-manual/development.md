@@ -7,6 +7,8 @@ and further development.
 Please feel free to raise an issue or give your valuable improvement suggestions for the project
 and the documentations.
 
+---
+
 ## Content <a name="content"></a>
 
 1. <a href="#deps">Dependencies</a>
@@ -15,6 +17,8 @@ and the documentations.
 4. <a href="#unit_test">Unit Test</a>
 5. <a href="#add_new_module">Add New Function Module</a>
 6. <a href="#codes_structure">Codes Structure</a>
+
+---
 
 ## Dependencies <a name="deps"></a><a href="#contents"><font size=4>(content)</font></a>
 
@@ -27,6 +31,8 @@ This project depends on the following tools or libraries:
 - [gsl](https://www.gnu.org/software/gsl/): the GNU Scientific Library.
 - [hdf5](https://www.hdfgroup.org/solutions/hdf5/): the HDF5 library, which is used to store the analysis results.
 - a `MPI` library: `mpich`, `openmpi` or `intel mpi` etc.
+
+---
 
 ## Debug Mode<a name="debug"></a><a href="#contents"><font size=4>(content)</font></a>
 
@@ -53,6 +59,8 @@ You can remove such flags if you want, which is located in `make-config/flags` f
   be created by the `make test/mpi_test` command.
 - `build`(optional): the temporary directory for the building of the project, which will be created by the
   `make` command.
+
+---
 
 ## Unit Test <a name="unit_test"></a><a href="#contents"><font size=4>(content)</font></a>
 
@@ -117,6 +125,8 @@ There are 5 steps to add a new unit test:
 
 5. run `make test` or `make mpi_test` to compile and run the test.
 
+---
+
 ## Add New Function Module <a name="add_new_module"></a><a href="#contents"><font size=4>(content)</font></a>
 
 1. add a new directory in the `src` directory, with both `*.cpp` and `*.h` files: follow the unit test design,
@@ -127,6 +137,8 @@ There are 5 steps to add a new unit test:
 5. include the new `*.cpp` file in the `src/C_wrapper/galotfa.h` file, in the end part pf the file that is
    enclosed by the `#ifdef header_only ... #else ... #endif` statement, so that the new functions can work in the header-only case.
 6. add a C wrapper function for the new function if you want make it become a public API.
+
+---
 
 ## Codes Structure <a name="codes_structure"></a><a href="#contents"><font size=4>(content)</font></a>
 
@@ -184,9 +196,9 @@ For `string.h`, `string.cpp`:
 #### APIs
 
 - `ini_parser(std::string path_to_file)`: the constructor of the class, which will read the parameter file with the given path.
-- `ini_parser::get_xxx()`: the function to extract the value of a key in the parameter file. Support to get boolean, int,
+- `ini_parser.get_xxx()`: the function to extract the value of a key in the parameter file. Support to get boolean, int,
   double, string, and vector of int, double and string.
-- `ini_parser::has()`: check whether a key exist in the parameter file.
+- `ini_parser.has()`: check whether a key exist in the parameter file.
 - structure `para`: the structure to store the value of parameters, and read the parameter file based on the `ini_parser` class.
   - call `para.<sec>_<para>` to use the parameter, where `<sec>` is an alias the section name and `<para>` is the
     parameter name. Alias: `gb` for the global section, `pre` for the pre-process section, `md` for the model section,
@@ -238,7 +250,7 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
 3. Add a line in the update function (???) to update the value of the new parameter from the ini file.
 4. Use the new parameter in the analysis code.
 
-### `src/output`: define the `writer` class
+### `src/output`: the hdf5 `writer` class
 
 #### APIs
 
@@ -248,13 +260,13 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
 - close the hdf5 file: `~writer()`, the destructor will close all resources of the corresponding hdf5 file,
   and you have no need to call a close function manually.
   hdf5 objects, such as dataset and group.
-- `create_group(std::string)`: create a hdf5 group with the given name, can create group hierarchy e.g.
+- `writer.create_group(std::string)`: create a hdf5 group with the given name, can create group hierarchy e.g.
   if given a argument like `group1/group2/group3`, the writer will create `group1` , `group2` and `group3`
   recursively if they do not exist. The group name without a prefix `/` will be treated as a root group.
-- `create_dataset(std::string dataset, hdf5::info)` or `create_dataset(std::string group, std::string datasetm info)`:
+- `writer.create_dataset(std::string dataset, hdf5::info)` or `create_dataset(std::string group, std::string datasetm info)`:
   create a hdf5 dataset with the given name, if the group before the final dataset name, take a example:
-  `create_dateset("a/b/c/dataset_name", info)` == `create_group("a/b/c")` then `create_dataset("a/b/c", "dataset_name")`.
-- `push(void* ptr, std::string dataset)`: push a array of data to a existing dataset.
+  `writer.create_dateset("a/b/c/dataset_name", info)` == `create_group("a/b/c")` then `create_dataset("a/b/c", "dataset_name")`.
+- `writer.push(void* ptr, std::string dataset)`: push a array of data to a existing dataset.
 - steps to use the `writer` class to organize the hdf5 file:
 
   1. create a writer object with the given path to the output file: `writer(std::string)`.
@@ -356,3 +368,24 @@ the sub-space of the array.
     the dataset name should be the absolute path of the dataset, e.g. `/group1/group2/dataset_name`. If such
     dataset does not exist, the writer will create it automatically. The data type of the dataset will be restored
     by `node`, during creation of the dataset.
+
+### `src/engine`: the virtual analysis engine
+
+This part organize the other modules to work together.
+
+#### APIs
+
+`manager.sim_data()`: the API between the manager of the virtual analysis engine and the simulation, to
+transfer the data from the simulation to the virtual analysis engine.
+`manager.push_data()`: the API between the manager of the analysis engine, which push the data and the
+parameter to the virtual analysis engine.
+`manager.collect()`: the API between the manager and the real analysis parts. This function will collect the
+analysis results from different analysis modules.
+`manager.write()`: the API between the manager and the writer class, to write the analysis results to the hdf5 file.
+
+#### Implementation details
+
+- class `manager`:
+  - `galotfa::parameter::para* para`: the pointer to the parameter class, will be initialized in the constructor,
+    based on a temporary `ini_parser` object. The default ini parameter filename is specified at here, which
+    is `galotfa.ini` in the working directory.
