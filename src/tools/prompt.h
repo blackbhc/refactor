@@ -17,25 +17,25 @@
         fprintf( file_ptr, "\n" );        \
     }
 #else
-#define println( ... )                          \
-    {                                           \
-        int rank;                               \
-        MPI_Comm_rank( MPI_COMM_WORLD, &rank ); \
-        if ( rank == 0 )                        \
-        {                                       \
-            printf( __VA_ARGS__ );              \
-            printf( "\n" );                     \
-        }                                       \
+#define println( ... )                           \
+    {                                            \
+        int _rank;                               \
+        MPI_Comm_rank( MPI_COMM_WORLD, &_rank ); \
+        if ( _rank == 0 )                        \
+        {                                        \
+            printf( __VA_ARGS__ );               \
+            printf( "\n" );                      \
+        }                                        \
     }
-#define fprintln( file_ptr, ... )               \
-    {                                           \
-        int rank;                               \
-        MPI_Comm_rank( MPI_COMM_WORLD, &rank ); \
-        if ( rank == 0 )                        \
-        {                                       \
-            fprintf( file_ptr, __VA_ARGS__ );   \
-            fprintf( file_ptr, "\n" );          \
-        }                                       \
+#define fprintln( file_ptr, ... )                \
+    {                                            \
+        int _rank;                               \
+        MPI_Comm_rank( MPI_COMM_WORLD, &_rank ); \
+        if ( _rank == 0 )                        \
+        {                                        \
+            fprintf( file_ptr, __VA_ARGS__ );    \
+            fprintf( file_ptr, "\n" );           \
+        }                                        \
     }
 #endif
 
