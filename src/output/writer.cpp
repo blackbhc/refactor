@@ -14,7 +14,7 @@ namespace galotfa {
 namespace hdf5 {
     node::node( hid_t id, NodeType nodetype )
     {
-        if ( type != NodeType::file )
+        if ( nodetype != NodeType::file )
             ERROR( "The 2 arguments constructor can only create root node for the file handle!" );
         this->self = id;
         this->type = nodetype;
@@ -22,7 +22,7 @@ namespace hdf5 {
 
     node::node( node* parent_ptr, hid_t id, NodeType nodetype )
     {
-        if ( type == NodeType::file )
+        if ( nodetype == NodeType::file )
             ERROR( "The 3 arguments constructor can not create root node for the file handle!" );
         this->self   = id;
         this->type   = nodetype;
@@ -433,7 +433,7 @@ int writer::test_node( void )
     println( "Testing hdf5::node ..." );
     println( "The size of hdf5::node is %lu", sizeof( hdf5::node ) );
     println( "Testing hdf5::node::node( hid_t id, NodeType type ) with non file type, it should "
-             "raise a error ..." );
+             "raise an error ..." );
     try
     {
         auto node = new hdf5::node( -1, hdf5::NodeType::group );
@@ -441,11 +441,11 @@ int writer::test_node( void )
     }
     catch ( std::runtime_error& e )
     {
-        println( "It raise error as expected: %s", e.what() );
+        println( "It raise an error as expected: %s", e.what() );
     }
     catch ( std::exception& e )
     {
-        println( "It raise error unexpectedly: %s", e.what() );
+        println( "It raise an error unexpectedly: %s", e.what() );
         return 2;
     }
 
@@ -454,7 +454,7 @@ int writer::test_node( void )
 
     println( "Testing hdf5::node::node( node* parent_node, hid_t id, NodeType type ) with group "
              "type, it should not "
-             "raise a error ..." );
+             "raise an error ..." );
     try
     {
         galotfa::hdf5::node node2( &node1, -1, hdf5::NodeType::group );
@@ -462,13 +462,13 @@ int writer::test_node( void )
     }
     catch ( std::exception& e )
     {
-        println( "It raise error unexpectedly: %s", e.what() );
+        println( "It raise an error unexpectedly: %s", e.what() );
         return 2;
     }
 
     println( "Testing hdf5::node::node( node* parent_node, hid_t id, NodeType type ) with file "
              "type, it should "
-             "raise a error ..." );
+             "raise an error ..." );
     try
     {
         galotfa::hdf5::node node2( &node1, -1, hdf5::NodeType::file );
@@ -476,12 +476,12 @@ int writer::test_node( void )
     }
     catch ( std::runtime_error& e )
     {
-        println( "It raise error as expected: %s", e.what() );
+        println( "It raise an error as expected: %s", e.what() );
         success = success && true;
     }
     catch ( std::exception& e )
     {
-        println( "It raise error unexpectedly: %s", e.what() );
+        println( "It raise an error unexpectedly: %s", e.what() );
         return 2;
     }
 
@@ -747,7 +747,7 @@ int writer::test_create_dataset( void )
     }
     catch ( std::runtime_error& e )
     {
-        println( "It raise error as expected: %s", e.what() );
+        println( "It raise an error as expected: %s", e.what() );
     }
     catch ( std::exception& e )
     {
@@ -815,7 +815,7 @@ int writer::test_push( void )
     }
     catch ( std::runtime_error& e )
     {
-        println( "It raise error as expected: %s", e.what() );
+        println( "It raise an error as expected: %s", e.what() );
     }
     catch ( std::exception& e )
     {
