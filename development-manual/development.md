@@ -352,7 +352,7 @@ the sub-space of the array.
 
   - `open_file`: open a hdf5 file and return its id, private.
 
-  - `push(void* buffer, unsigned int len, std::string dataset_name)`: the main interface to push a array of data to a existing dataset,
+  - `push(void* buffer, unsigned long len, std::string dataset_name)`: the main interface to push a array of data to a existing dataset,
     the dataset name should be the absolute path of the dataset, e.g. `/group1/group2/dataset_name`. If such
     dataset does not exist, the writer will create it automatically. The data type of the dataset will be restored
     by `node`, during creation of the dataset.
