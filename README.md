@@ -139,7 +139,7 @@ to see their explanation.
 
 | Section    | Key Name                                                     | Value Type | Default       | Available Values                                            |
 | ---------- | ------------------------------------------------------------ | ---------- | ------------- | ----------------------------------------------------------- |
-| `global`   |                                                              |            |               |                                                             |
+| `Global`   |                                                              |            |               |                                                             |
 |            | <a href="#switch">`switch`</a>                               | Boolean    | `on`          |                                                             |
 |            | <a href="#output_dir">`output_dir`</a>                       | String     | `./otfoutput` | Any valid path.                                             |
 |            | <a href="#particle_types">`particle_types`</a>               | Integer(s) |               | Based on your IC of simulation                              |
@@ -149,14 +149,14 @@ to see their explanation.
 |            | <a href="#equal_threshold">`equal_threshold`</a>             | Float      | 1e-10         | $>0$, but not too large.                                    |
 |            | <a href="#sim_type">`sim_type`</a>                           | String     | `galaxy`      | Only support `galaxy` at present.                           |
 |            | <a href="#pot_tracer">`pot_tracer`</a>                       | Integer    |               |                                                             |
-| `pre`      |                                                              |            |               |                                                             |
+| `Pre`      |                                                              |            |               |                                                             |
 |            | <a href="#recenter">`recenter`</a>                           | Boolean    | `on`          | `on` or `off`                                               |
 |            | <a href="#region_shape">`region_shape`</a>                   | String     | `cylinder`    | `sphere`, `cylinder` or `box`.                              |
 |            | <a href="#ratio">`ratio`</a>                                 | Float      | 1.0           | $>0$                                                        |
 |            | <a href="#size">`region_size`</a>                            | Float      | 20.0          | $>0$                                                        |
 |            | <a href="#recenter_method">`recenter_method`</a>             | String     | `density`     | `com`, `density` or `potential`                             |
 |            | <a href="#align_bar">`align_bar`</a>                         | Boolean    | `on`          | `on` or `off`                                               |
-| `model`    |                                                              |            |               |                                                             |
+| `Model`    |                                                              |            |               |                                                             |
 |            | <a href="#switch_m">`switch`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#filename_m">`filename`</a>                         | String     | `model`       | Any valid filename prefix.                                  |
 |            | <a href="#period_m">`period`</a>                             | Integer    | 10            | $>0$                                                        |
@@ -172,7 +172,7 @@ to see their explanation.
 |            | <a href="#sbuckle">`sbuckle`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#An">`An`</a>                                       | Integer(s) |               | > 0                                                         |
 |            | <a href="#inertia_tensor">`inertia_tensor`</a>               | Boolean    | `off`         | `on` or `off`                                               |
-| `particle` |                                                              |            |               |                                                             |
+| `Particle` |                                                              |            |               |                                                             |
 |            | <a href="#switch_p">`switch`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#filename_p">`filename`</a>                         | String     | `particle`    | Any valid filename prefix.                                  |
 |            | <a href="#period_p">`period`</a>                             | Integer    | 10000         | $>0$                                                        |
@@ -180,12 +180,12 @@ to see their explanation.
 |            | <a href="#circularity_3d">`circularity_3d`</a>               | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#rg">`rg`</a>                                       | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#freq">`freq`</a>                                   | Boolean    | `off`         | `on` or `off`                                               |
-| `orbit`    |                                                              |            |               | `on` or `off`                                               |
+| `Orbit`    |                                                              |            |               | `on` or `off`                                               |
 |            | <a href="#switch_o">`switch`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#filename_o">`filename`</a>                         | String     | `orbit`       | Any valid filename prefix.                                  |
 |            | <a href="#period_o">`period`</a>                             | Integer    | 1             | $>0$                                                        |
 |            | <a href="#idfile">`idfile`</a>                               | String     |               | Any valid filename.                                         |
-| `group`    |                                                              |            |               |                                                             |
+| `Group`    |                                                              |            |               |                                                             |
 |            | <a href="#switch_g">`switch`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#filename_g">`filename`</a>                         | String     | `group`       | Any valid filename prefix.                                  |
 |            | <a href="#period_g">`period`</a>                             | Integer    | 10            | $>0$                                                        |
@@ -193,7 +193,7 @@ to see their explanation.
 |            | <a href="#ellipticity">`ellipticity`</a>                     | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#rmg">`rmg`</a>                                     | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#vmg">`vmg`</a>                                     | Boolean    | `off`         | `on` or `off`                                               |
-| `post`     |                                                              |            |               |                                                             |
+| `Post`     |                                                              |            |               |                                                             |
 |            | <a href="#switch_post">`switch`</a>                          | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#filename_post">`filename`</a>                      | String     | `post`        | Any valid filename prefix.                                  |
 |            | <a href="#pattern_speed">`pattern_speed`</a>                 | Boolean    | off           | `on` or `off`                                               |
