@@ -5,7 +5,15 @@ define_a_print = 1
 ifeq ($(mode),release)
     CXXFLAGS += -std=c++11 -O3 -Wall -Wextra
 else ifeq ($(mode),debug)
+ifeq ($(CXX), clang++)
+    CXXFLAGS += -std=c++11 -O3 -Og -Weverything -Werror -fsanitize=undefined,leak,address -Wno-c++98-compat -Wno-c++98-compat-pedantic
+# forbid some aggrrssive warnings
+	CXXFLAGS += -Wno-extra-semi-stmt -Wno-disabled-macro-expansion -Wno-vla-extension -Wno-old-style-cast -Wno-padded -Wno-reserved-macro-identifier
+	CXXFLAGS += -Wno-reserved-identifier -Wno-documentation-unknown-command -Wno-documentation -Wno-documentation-deprecated-sync
+	CXXFLAGS += -Wno-zero-as-null-pointer-constant -Wno-switch-enum -Wno-unsafe-buffer-usage -Wno-unknown-warning-option
+else
     CXXFLAGS += -std=c++11 -O3 -Og -Wall -Wextra -Werror -fsanitize=undefined,leak,address
+endif
 else
     $(shell echo "unknown build mode:" $(mode))
 endif

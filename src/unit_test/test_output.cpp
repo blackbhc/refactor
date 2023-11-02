@@ -1,13 +1,13 @@
 // Call the unit test functions for output part.
-#ifndef _OUTPUT_TEST_
-#define _OUTPUT_TEST_
+#ifndef OUTPUT_TEST
+#define OUTPUT_TEST
 #include "../output/writer.cpp"
 #include "../output/writer.h"
 #include "../tools/prompt.h"
 
 
 // include the head file of the output part.
-void test_output( void )
+static void test_output( void )
 {
     println( "Testing the output part." );
     int             success = 0;

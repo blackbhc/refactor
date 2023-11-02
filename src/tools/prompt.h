@@ -1,5 +1,5 @@
-#ifndef __GALOTFA_PROMPT_H__
-#define __GALOTFA_PROMPT_H__
+#ifndef GALOTFA_PROMPT_H
+#define GALOTFA_PROMPT_H
 #include <stdexcept>
 #include <stdio.h>
 

@@ -1,6 +1,6 @@
 // This file define some functions to manipulate strings.
-#ifndef __GALOTFA_STRING_H__
-#define __GALOTFA_STRING_H__
+#ifndef GALOTFA_STRING_H
+#define GALOTFA_STRING_H
 #include <string>
 #include <vector>
 namespace galotfa {

@@ -1,8 +1,8 @@
 /// This file is a naive implementation of a parser for ini files.
 /// Only supports simple key-value pairs: characters and numbers only.
 
-#ifndef __GALOTFA_INI_PARSER_H__
-#define __GALOTFA_INI_PARSER_H__
+#ifndef GALOTFA_INI_PARSER_H
+#define GALOTFA_INI_PARSER_H
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -25,13 +25,6 @@ namespace ini {
 class ini_parser
 {
 private:  // private members
-    // define the delimiters
-    static const std::string                              blank;
-    static const std::string                              comment_prefix;
-    static const std::string                              section_prefix;
-    static const std::string                              section_suffix;
-    static const std::string                              key_value_sep;
-    static const std::string                              value_sep;
     mutable std::unordered_map< std::string, ini::Value > ini_table;
 
 public:  // public members

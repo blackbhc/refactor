@@ -1,5 +1,5 @@
-#ifndef __GALOTFA_STRING_CPP__
-#define __GALOTFA_STRING_CPP__
+#ifndef GALOTFA_STRING_CPP
+#define GALOTFA_STRING_CPP
 #include "./string.h"
 #include "../tools/prompt.h"
 #include <algorithm>

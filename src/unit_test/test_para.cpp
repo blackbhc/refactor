@@ -1,15 +1,15 @@
 // Call the unit test functions for the parameter part.
-#ifndef _PARA_TEST_
-#define _PARA_TEST_
+#ifndef PARA_TEST
+#define PARA_TEST
 // include the head file of the parameter part.
-#include "../parameter/para.cpp"
-#include "../parameter/para.h"
 #include "../parameter/ini-parser.cpp"
 #include "../parameter/ini-parser.h"
+#include "../parameter/para.cpp"
+#include "../parameter/para.h"
 #include "../tools/prompt.h"
 #include <stdio.h>
 
-void test_parameter( void )
+static void test_parameter( void )
 {
     println( "Test the parameter part." );
 

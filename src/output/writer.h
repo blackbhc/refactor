@@ -1,5 +1,5 @@
-#ifndef __GALOTFA_WRITER_H__
-#define __GALOTFA_WRITER_H__
+#ifndef GALOTFA_WRITER_H
+#define GALOTFA_WRITER_H
 #include "../tools/prompt.h"
 #include <algorithm>
 #include <hdf5.h>
@@ -76,17 +76,17 @@ namespace hdf5 {
         {
             return type == NodeType::dataset;
         }
-        inline void set_property( hid_t& prop )
+        inline void set_property( hid_t& prop_id )
         {
-            this->prop = prop;
+            this->prop = prop_id;
         }
-        inline void set_dataspace( hid_t& space )
+        inline void set_dataspace( hid_t& space_id )
         {
-            this->dataspace = space;
+            this->dataspace = space_id;
         }
-        inline void set_memspace( hid_t& space )
+        inline void set_memspace( hid_t& space_id )
         {
-            this->memspace = space;
+            this->memspace = space_id;
         }
         inline void set_dim_ext( std::vector< hsize_t >& ext )
         {
@@ -96,7 +96,7 @@ namespace hdf5 {
         {
             this->self = id;
         }
-        inline void set_size_info( hdf5::size_info info )
+        inline void set_size_info( hdf5::size_info inforef )
         {
             if ( this->type != NodeType::dataset )
             {
@@ -105,9 +105,9 @@ namespace hdf5 {
             else if ( this->info != nullptr )
                 ERROR( "size_info is already set, try to set it again will cause memory leak!" );
             this->info                = new hdf5::size_info;
-            this->info->dims          = info.dims;
-            ( this->info )->rank      = info.rank;
-            ( this->info )->data_type = info.data_type;
+            this->info->dims          = inforef.dims;
+            ( this->info )->rank      = inforef.rank;
+            ( this->info )->data_type = inforef.data_type;
         }
         inline hdf5::size_info* get_size_info( void ) const
         {
@@ -167,7 +167,7 @@ public:
     int create_dataset( std::string dataset_name, hdf5::size_info& info );
     int add_attribute( std::string node_name, std::string attr_name, hdf5::size_info& info );
     // TODO: to be implemented
-    template < typename T > int push( T* ptr, unsigned int len, std::string dataset_name );
+    template < typename T > int push( T* ptr, unsigned long len, std::string dataset_name );
 #ifdef debug_output
     int test_open_file( void );
     int test_node( void );

@@ -1,6 +1,6 @@
 // The file define the default value of the parameters
-#ifndef __GALOTFA_DEFAULT_H__
-#define __GALOTFA_DEFAULT_H__
+#ifndef GALOTFA_DEFAULT_H
+#define GALOTFA_DEFAULT_H
 #include "ini-parser.h"
 #include <string>
 #include <vector>

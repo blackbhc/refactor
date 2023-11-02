@@ -1,7 +1,7 @@
 #include "../tools/prompt.cpp"
 #include "../tools/prompt.h"
 
-void test_prompt()
+static void test_prompt()
 {
     int success = 0;
     int fail    = 0;

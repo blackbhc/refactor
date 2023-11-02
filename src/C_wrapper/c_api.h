@@ -1,5 +1,5 @@
-#ifndef __GALOTFA_C_API_H__
-#define __GALOTFA_C_API_H__
+#ifndef GALOTFA_C_API_H
+#define GALOTFA_C_API_H
 #ifdef define_a_print
 #include <stdio.h>
 #endif

@@ -1,13 +1,13 @@
 // Call the unit test functions for output part.
-#ifndef _OUTPUT_TEST_
-#define _OUTPUT_TEST_
+#ifndef OUTPUT_TEST
+#define OUTPUT_TEST
 #include "../tools/prompt.h"
 #include "../tools/string.cpp"
 #include "../tools/string.h"
 
 
 // include the head file of the output part.
-void test_string( void )
+static void test_string( void )
 {
     println( "Testing the string part ..." );
     int success = 0;

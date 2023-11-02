@@ -1,5 +1,5 @@
-#ifndef __GALOTFA_DEFAULT_CPP__
-#define __GALOTFA_DEFAULT_CPP__
+#ifndef GALOTFA_DEFAULT_CPP
+#define GALOTFA_DEFAULT_CPP
 #include "para.h"
 #include "../tools/prompt.h"
 #include "ini-parser.h"
@@ -14,8 +14,8 @@
     }                                                              \
 // here type is not the internal types but name of APIs of the ini_parser:
 // get_bool, get_int, get_double, get_str, get_ints, get_doubles, get_strs
-// e.g. update( gb, switch, global, bool ) will be
-// gb_switch = parser.get_bool( "global", "switch" );
+// e.g. update( gb, switch, Global, bool ) will be
+// gb_switch = parser.get_bool( "Global", "switch" );
 
 // TODO: the move constructor of the struct para
 namespace galotfa {
@@ -29,50 +29,50 @@ para::para( ini_parser& parser )
     // value,
     // R2. ugly code but the fast running speed ...
 
-    // global section
-    update( this->gb, switch, global, bool );
-    update( this->gb, output_dir, global, str );
-    update( this->gb, particle_types, global, ints );
-    update( this->gb, convergence_type, global, str );
-    update( this->gb, convergence_threshold, global, double );
-    update( this->gb, max_iter, global, int );
-    update( this->gb, equal_threshold, global, double );
-    update( this->gb, sim_type, global, str );
-    update( this->gb, pot_tracer, global, int );
+    // Global section
+    update( this->gb, switch, Global, bool );
+    update( this->gb, output_dir, Global, str );
+    update( this->gb, particle_types, Global, ints );
+    update( this->gb, convergence_type, Global, str );
+    update( this->gb, convergence_threshold, Global, double );
+    update( this->gb, max_iter, Global, int );
+    update( this->gb, equal_threshold, Global, double );
+    update( this->gb, sim_type, Global, str );
+    update( this->gb, pot_tracer, Global, int );
 
-    // pre section
-    update( this->pre, recenter, pre, bool );
-    update( this->pre, region_shape, pre, str );
-    update( this->pre, ratio, pre, double );
-    update( this->pre, region_size, pre, double );
-    update( this->pre, recenter_method, pre, str );
-    update( this->pre, align_bar, pre, bool );
+    // Pre section
+    update( this->pre, recenter, Pre, bool );
+    update( this->pre, region_shape, Pre, str );
+    update( this->pre, ratio, Pre, double );
+    update( this->pre, region_size, Pre, double );
+    update( this->pre, recenter_method, Pre, str );
+    update( this->pre, align_bar, Pre, bool );
 
-    // model section
-    update( this->md, switch, model, bool );
-    update( this->md, filename, model, str );
-    update( this->md, period, model, int );
-    update( this->md, region_shape, model, str );
-    update( this->md, ratio, model, double );
-    update( this->md, region_size, model, double );
-    update( this->md, image, model, bool );
-    update( this->md, image_bins, model, int );
-    update( this->md, colors, model, strs );
-    update( this->md, bar_major_axis, model, bool );
-    update( this->md, bar_length, model, bool );
-    update( this->md, sbar, model, bool );
-    update( this->md, sbuckle, model, bool );
-    update( this->md, inertia_tensor, model, bool );
-    update( this->md, An, model, ints );
+    // Model section
+    update( this->md, switch, Model, bool );
+    update( this->md, filename, Model, str );
+    update( this->md, period, Model, int );
+    update( this->md, region_shape, Model, str );
+    update( this->md, ratio, Model, double );
+    update( this->md, region_size, Model, double );
+    update( this->md, image, Model, bool );
+    update( this->md, image_bins, Model, int );
+    update( this->md, colors, Model, strs );
+    update( this->md, bar_major_axis, Model, bool );
+    update( this->md, bar_length, Model, bool );
+    update( this->md, sbar, Model, bool );
+    update( this->md, sbuckle, Model, bool );
+    update( this->md, inertia_tensor, Model, bool );
+    update( this->md, An, Model, ints );
 
-    // particle section
-    update( this->ptc, switch, particle, bool );
-    update( this->ptc, filename, particle, str );
-    update( this->ptc, period, particle, int );
-    update( this->ptc, circularity, particle, bool );
-    update( this->ptc, circularity_3d, particle, bool );
-    update( this->ptc, rg, particle, bool );
-    update( this->ptc, freq, particle, bool );
+    // Particle section
+    update( this->ptc, switch, Particle, bool );
+    update( this->ptc, filename, Particle, str );
+    update( this->ptc, period, Particle, int );
+    update( this->ptc, circularity, Particle, bool );
+    update( this->ptc, circularity_3d, Particle, bool );
+    update( this->ptc, rg, Particle, bool );
+    update( this->ptc, freq, Particle, bool );
 
     // orbit section
     update( this->orb, switch, orbit, bool );
@@ -80,19 +80,19 @@ para::para( ini_parser& parser )
     update( this->orb, period, orbit, int );
     update( this->orb, idfile, orbit, str );
 
-    // group section
-    update( this->grp, switch, group, bool );
-    update( this->grp, filename, group, str );
-    update( this->grp, period, group, int );
-    update( this->grp, group_types, group, strs );
-    update( this->grp, ellipticity, group, bool );
-    update( this->grp, rmg, group, bool );
-    update( this->grp, vmg, group, bool );
+    // Group section
+    update( this->grp, switch, Group, bool );
+    update( this->grp, filename, Group, str );
+    update( this->grp, period, Group, int );
+    update( this->grp, group_types, Group, strs );
+    update( this->grp, ellipticity, Group, bool );
+    update( this->grp, rmg, Group, bool );
+    update( this->grp, vmg, Group, bool );
 
-    // post section
-    update( this->post, switch, post, bool );
-    update( this->post, filename, post, str );
-    update( this->post, pattern_speed, post, bool );
+    // Post section
+    update( this->post, switch, Post, bool );
+    update( this->post, filename, Post, str );
+    update( this->post, pattern_speed, Post, bool );
 }
 
 #ifdef debug_parameter
@@ -137,7 +137,7 @@ int para::test_print()
     // value,
     // R2. ugly code but the fast running speed ...
 
-    // global section
+    // Global section
     printi( gb, switch );
     prints( gb, output_dir );
     printis( gb, particle_types );
@@ -148,7 +148,7 @@ int para::test_print()
     prints( gb, sim_type );
     printi( gb, pot_tracer );
 
-    // pre section
+    // Pre section
     printi( pre, recenter );
     prints( pre, region_shape );
     printd( pre, ratio );
@@ -156,7 +156,7 @@ int para::test_print()
     prints( pre, recenter_method );
     printi( pre, align_bar );
 
-    // model section
+    // Model section
     printi( md, switch );
     prints( md, filename );
     printi( md, period );
@@ -173,7 +173,7 @@ int para::test_print()
     printi( md, inertia_tensor );
     printis( md, An );
 
-    // particle section
+    // Particle section
     printi( ptc, switch );
     prints( ptc, filename );
     printi( ptc, period );
@@ -188,7 +188,7 @@ int para::test_print()
     printi( orb, period );
     prints( orb, idfile );
 
-    // group section
+    // Group section
     printi( grp, switch );
     prints( grp, filename );
     printi( grp, period );
@@ -197,7 +197,7 @@ int para::test_print()
     printi( grp, rmg );
     printi( grp, vmg );
 
-    // post section
+    // Post section
     printi( post, switch );
     prints( post, filename );
     printi( post, pattern_speed );

@@ -1,5 +1,5 @@
-#ifndef __GALOTFA_WRITER_CPP__
-#define __GALOTFA_WRITER_CPP__
+#ifndef GALOTFA_WRITER_CPP
+#define GALOTFA_WRITER_CPP
 #include "writer.h"
 #include "../tools/prompt.h"
 #include "../tools/string.h"
@@ -12,21 +12,21 @@
 namespace galotfa {
 
 namespace hdf5 {
-    node::node( hid_t id, NodeType type )
+    node::node( hid_t id, NodeType nodetype )
     {
         if ( type != NodeType::file )
             ERROR( "The 2 arguments constructor can only create root node for the file handle!" );
         this->self = id;
-        this->type = type;
+        this->type = nodetype;
     }
 
-    node::node( node* parent, hid_t id, NodeType type )
+    node::node( node* parent_ptr, hid_t id, NodeType nodetype )
     {
         if ( type == NodeType::file )
             ERROR( "The 3 arguments constructor can not create root node for the file handle!" );
         this->self   = id;
-        this->type   = type;
-        this->parent = parent;
+        this->type   = nodetype;
+        this->parent = parent_ptr;
         parent->add_child( this );
     }
 
@@ -317,13 +317,13 @@ inline hdf5::node writer::create_datanode( hdf5::node& parent, std::string& data
 
     // create property list and set chunk and compression
     hid_t  prop_list = H5Pcreate( H5P_DATASET_CREATE );
-    herr_t status    = H5Pset_chunk( prop_list, info.rank + 1, chunk_dims );
+    herr_t status    = H5Pset_chunk( prop_list, ( int )info.rank + 1, chunk_dims );
     status           = H5Pset_deflate( prop_list, 6 );
     if ( status < 0 )
         ERROR( "Failed to set deflate!" );
 
     // create the zero-size dataspace
-    hid_t dataspace = H5Screate_simple( info.rank + 1, data_dims, max_dims );
+    hid_t dataspace = H5Screate_simple( ( int )info.rank + 1, data_dims, max_dims );
 
     hid_t dataset_id = H5Dcreate2( parent.get_hid(), dataset.c_str(), info.data_type, dataspace,
                                    H5P_DEFAULT, prop_list, H5P_DEFAULT );
@@ -333,15 +333,15 @@ inline hdf5::node writer::create_datanode( hdf5::node& parent, std::string& data
     datanode.set_property( prop_list );
     datanode.set_dataspace( dataspace );
     data_dims[ 0 ] = 1;
-    hid_t memspace = H5Screate_simple( info.rank + 1, data_dims, NULL );
+    hid_t memspace = H5Screate_simple( ( int )info.rank + 1, data_dims, NULL );
     datanode.set_memspace( memspace );
-    std::vector< hsize_t > dim_ext( data_dims, data_dims + info.rank + 1 );
+    std::vector< hsize_t > dim_ext( data_dims, data_dims + ( int )info.rank + 1 );
     datanode.set_dim_ext( dim_ext );
     datanode.set_size_info( info );
     return datanode;
 }
 
-template < typename T > int writer::push( T* ptr, unsigned int len, std::string dataset_name )
+template < typename T > int writer::push( T* ptr, unsigned long len, std::string dataset_name )
 {
     // check whether the dataset exists
     if ( this->nodes.find( dataset_name ) == this->nodes.end() )
@@ -362,7 +362,7 @@ template < typename T > int writer::push( T* ptr, unsigned int len, std::string 
             target_len *= dims[ i ];
         if ( target_len != len )
         {
-            WARN( "The target dataset has different length (%d) from the input (%d)!", target_len,
+            WARN( "The target dataset has different length (%d) from the input (%lu)!", target_len,
                   len );
             return 1;
         }
