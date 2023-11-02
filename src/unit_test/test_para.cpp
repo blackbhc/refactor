@@ -7,9 +7,9 @@
 #include "../parameter/para.cpp"
 #include "../parameter/para.h"
 #include "../tools/prompt.h"
-#include <stdio.h>
+#include <vector>
 
-static void test_parameter( void )
+static std::vector< int > test_parameter( void )
 {
     println( "Test the parameter part." );
 
@@ -29,6 +29,12 @@ static void test_parameter( void )
     COUNT( para.test_print() );
 
     SUMMARY( "parameter" );
+
+    std::vector< int > result = { 0, 0, 0 };
+    result[ 0 ]               = success;
+    result[ 1 ]               = fail;
+    result[ 2 ]               = unknown;
+    return result;
 }
 
 #endif
