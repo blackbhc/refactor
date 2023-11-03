@@ -2,8 +2,8 @@
 #ifndef PARA_TEST
 #define PARA_TEST
 // include the head file of the parameter part.
-#include "../parameter/ini-parser.cpp"
-#include "../parameter/ini-parser.h"
+#include "../parameter/ini_parser.cpp"
+#include "../parameter/ini_parser.h"
 #include "../parameter/para.cpp"
 #include "../parameter/para.h"
 #include "../tools/prompt.h"

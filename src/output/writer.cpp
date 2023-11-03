@@ -426,6 +426,11 @@ template < typename T > int writer::push( T* ptr, unsigned long len, std::string
     return 0;
 }
 
+// ensure the template function is instantiated
+template int writer::push< int >( int* ptr, unsigned long len, std::string dataset_name );
+template int writer::push< double >( double* ptr, unsigned long len, std::string dataset_name );
+template int writer::push< unsigned int >( unsigned int* ptr, unsigned long len,
+                                           std::string dataset_name );
 
 #ifdef debug_output
 int writer::test_node( void )

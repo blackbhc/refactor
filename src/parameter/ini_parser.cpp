@@ -1,8 +1,7 @@
 #ifndef GALOTFA_INI_PARSER_CPP
 #define GALOTFA_INI_PARSER_CPP
-#include "ini-parser.h"
+#include "ini_parser.h"
 #include "../tools/prompt.h"
-#include "../tools/string.h"
 #ifdef DO_UNIT_TEST
 #include "../tools/string.cpp"
 #endif
@@ -10,13 +9,6 @@
 #include <algorithm>
 #include <stdio.h>
 #include <sys/stat.h>
-
-#define BLANK " \t\n\r\f\v"
-#define COMMENT_PREFIX "#;"
-#define SECTION_PREFIX "["
-#define SECTION_SUFFIX "]"
-#define KEY_VALUE_SEP "="
-#define VALUE_SEP " \t,-:+&"
 
 namespace galotfa {
 ini_parser::ini_parser( const char* file_name )
@@ -196,20 +188,6 @@ ini::Line ini_parser::line_parser( const char* str ) const
     return line;
 }
 
-inline std::string ini_parser::trim( std::string str ) const
-{
-    str = galotfa::string::trim( str, BLANK );
-    if ( str.find_first_of( COMMENT_PREFIX ) != std::string::npos )
-    {
-        str.erase( str.find_first_of( COMMENT_PREFIX ) );
-    }
-    return str;
-}
-
-inline std::vector< std::string > ini_parser::split( std::string str ) const
-{
-    return galotfa::string::split( str, VALUE_SEP );
-}
 
 // macro: get the hash key name, and make sure there is such key
 // it's only  used in the get functions
@@ -305,7 +283,7 @@ std::vector< std::string > ini_parser::get_strs( std::string section, std::strin
     return this->split( this->ini_table[ hash_key_name ].content );
 }
 
-inline bool ini_parser::has( std::string section, std::string key ) const
+bool ini_parser::has( std::string section, std::string key ) const
 {
     std::replace( section.begin(), section.end(), ' ', '_' );
     std::replace( section.begin(), section.end(), '\t', '_' );

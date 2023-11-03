@@ -7,7 +7,7 @@ namespace galotfa {
 namespace string {
     std::string                trim( std::string str, std::string blank = " \t\n\r\f\v" );
     std::vector< std::string > split( std::string str, std::string delimiter = " " );
-    inline std::string         replace( std::string str, std::string from, std::string to );
+    std::string                replace( std::string str, std::string from, std::string to );
 }  // namespace string
 }  // namespace galotfa
 

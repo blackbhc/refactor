@@ -48,7 +48,7 @@ std::vector< std::string > string::split( std::string str, std::string delimiter
     return vals;
 }
 
-inline std::string string::replace( std::string str, std::string from, std::string to )
+std::string string::replace( std::string str, std::string from, std::string to )
 {
     if ( from.empty() || to.empty() )
     {

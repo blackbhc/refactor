@@ -2,9 +2,9 @@
 #define GALOTFA_DEFAULT_CPP
 #include "para.h"
 #include "../tools/prompt.h"
-#include "ini-parser.h"
+#include "ini_parser.h"
 #ifdef debug_parameter
-#include "ini-parser.cpp"
+#include "ini_parser.cpp"
 #endif
 
 // here type is not the internal types but name of APIs of the ini_parser:
