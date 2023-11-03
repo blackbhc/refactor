@@ -46,7 +46,7 @@ You can remove such flags if you want, which is located in `make-config/flags` f
   - Note: due to the sub-makefiles, the `make` command should always be run in the root directory of the project.
 - `src`: the source code directory, each sub-directory is a module / modules (just a logic unit, not the c++20 module)
   of the project.
-  - `C_wrapper`: the directory include the public C wrapper APIs of the project.
+  - `galotfa.h`: the C wrapper header file, which is used to provide a public API for the project.
   - `unit_test`: the directory of unit test wrapper codes, more details in the <a href="#unit_test">Unit Test</a> section.
   - `analysis`: the directory of the core analysis codes.
   - `tools`: some utility functions and classes.
@@ -142,7 +142,14 @@ There are 5 steps to add a new unit test:
 
 ## Codes Structure <a name="codes_structure"></a><a href="#contents"><font size=4>(content)</font></a>
 
-### `src/tools`
+### List of modules <a name="list_of_modules"></a>
+
+- <a href="#src_tools">`src/tools`</a>
+- <a href="#src_parameter">`src/parameter`</a>
+- <a href="#src_output">`src/output`</a>
+- <a href="#src_engine">`src/engine`</a>
+
+### `src/tools` <a id="src_tools"></a> <a href="#list_of_modules"><font size=4>(src list)</font></a>
 
 #### APIs
 
@@ -191,7 +198,7 @@ For `string.h`, `string.cpp`:
   - `SUMMARY(<c str of a module name)`: sum the `success`, `fail` and `unknown` variables, then print the results.
     This macro should be used only in the unit test wrapper functions, after all `COUNT(<somthing>)` statement.
 
-### `src/parameter`
+### `src/parameter` <a id="src_parameter"></a> <a href="#list_of_modules"><font size=4>(src list)</font></a>
 
 #### APIs
 
@@ -250,7 +257,7 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
 3. Add a line in the update function (???) to update the value of the new parameter from the ini file.
 4. Use the new parameter in the analysis code.
 
-### `src/output`: the hdf5 `writer` class
+### `src/output`: <a id="src_output"></a> <a href="#list_of_modules"><font size=4>(src list)</font></a>
 
 #### APIs
 
@@ -304,7 +311,7 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
   documentations about this feature, and such feature is not always activated in the hdf5 library, so
   `galotfa` only use a serial mode to write date, which is collected from all processes into the main process.
 
-#### Convention for arrays of data <a name="convention of data array"></a>
+#### Convention for arrays of data
 
 To simplify the functions parameters and better performance, `galotfa` always use 1D C-style array
 to store the analysis results. When store a multi-dimensional array, the array will be stored as different
@@ -362,30 +369,96 @@ the sub-space of the array.
     of the parent node with the given name and info. `dataset` string should be the name of dataset only, e.g. for
     `/group1/group2/dataset_name` the given value should be `dataset_name`. The parent node should be a group node.
 
-  - `open_file`: open a hdf5 file and return its id, private.
+  - `open_file(...)`: open a hdf5 file (add the `.hdf5` suffix to the given filename first) and return its id, private.
 
   - `push(void* buffer, unsigned long len, std::string dataset_name)`: the main interface to push a array of data to a existing dataset,
     the dataset name should be the absolute path of the dataset, e.g. `/group1/group2/dataset_name`. If such
     dataset does not exist, the writer will create it automatically. The data type of the dataset will be restored
     by `node`, during creation of the dataset.
 
-### `src/engine`: the virtual analysis engine
+### `src/engine`: <a id="src_engine"></a><a href="#list_of_modules"><font size=4>(src list)</font></a>
 
 This part organize the other modules to work together.
 
+#### Design philosophy
+
+The so-called virtual analysis engine is designed to be a one-time calculator at required synchronized time steps.
+
+In a black box view: the virtual analysis engine is a calculator associated with a monitor, which will do
+all calculation by itself. All you need to do is to press some buttons (public APIs) on the monitor, then what
+you experienced is just like you are using a calculator. Namely, press `start` button (the constructor) to start
+the engine, press `run_with` button to run the engine process your data every time you get some data
+(from the simulation), and finally press `stop` button (the destructor) to stop the engine, and the machine
+will save the results for you. There are mainly 4 parts of it, a design scheme of the engine (the ini parameter file),
+a printer (writer with hdf5), a calculator and a monitor.
+For the programmer, the so called virtual analysis engine is the 4 parts, but for the user, the virtual analysis
+engine is just the monitor.
+
+In a technical point of view: The virtual analysis engine is a higher level wrapper of other modules,
+which will combine other modules together to finish the on-the-fly analysis.
+
 #### APIs
 
-`manager.sim_data()`: the API between the manager of the virtual analysis engine and the simulation, to
-transfer the data from the simulation to the virtual analysis engine.
-`manager.push_data()`: the API between the manager of the analysis engine, which push the data and the
-parameter to the virtual analysis engine.
-`manager.collect()`: the API between the manager and the real analysis parts. This function will collect the
-analysis results from different analysis modules.
-`manager.write()`: the API between the manager and the writer class, to write the analysis results to the hdf5 file.
+- `monitor.run_with(...)`: the main open API of the monitor class, which can be imagined as a monitor screen
+  of a analysis engine. This API with receive the data from the simulation and call the other APIs to
+  finish the on-the-fly analysis.
+- transfer the data from the simulation to the virtual analysis engine.
+- `monitor.push_data(...)`: the API between the monitor of the analysis engine, which push the data and the
+  parameter to the virtual analysis engine.
+- `monitor.save()`: the API between the monitor and the writer class, to save the analysis results at each step into
+  hdf5 files.
+- `calculator.recv_data(...)`: the API between the companion of the `monitor.push_data(...)` that receive the data
+  from the monitor and the real analysis parts.
+- `calculator.start()`: start up the analysis engine.
+- `calculator.stop()`: stop the analysis engine, which will free some status flags and resources.
+- `calculator.pre_process(...)`: the wrapper of the pre-process part of the analysis engine, which will be
+  called before the main analysis function in each synchronized time step.
+- `calculator.model()`: the wrapper of the model level analysis of the analysis engine.
+- `calculator.particle()`: the wrapper of the particle level analysis part of the analysis engine.
+- `calculator.orbit_curve()`: the wrapper of the orbit level log part of the analysis engine.
+- `calculator.group()`: the wrapper of the group level analysis part of the analysis engine.
+- `calculator.post()`: the wrapper of the post process part of the analysis engine, which will
+  be called after all synchronized time steps.
+- `calculator.run_once`: the API to call the calculator to analysis of the data at one synchronized time step.
+  This function is a wrapper of the previous APIs.
+- `calculator.feedback()`: the wrapper to return a vector of the analysis results' pointers to the monitor,
+  which will be used to write the analysis results into the hdf5 file.
 
 #### Implementation details
 
-- class `manager`:
+- class `monitor`: the virtual analysis engine's monitor.
+
+  - `run_with(...)`: arguments are pointers of the simulation data, which must includes array of particle id (1D),
+    mass (1D), particle type (1D), coordinate (2D), velocity (2D) of particles, and a time stamp variable, a
+    integer to specify the length of the arrays. There is additional argument for the potential tracers'
+    particle type , if the codes support potential tracer feature (see in other section ???).
   - `galotfa::parameter::para* para`: the pointer to the parameter class, will be initialized in the constructor,
     based on a temporary `ini_parser` object. The default ini parameter filename is specified at here, which
     is `galotfa.ini` in the working directory.
+  - `create_writers()`: create the writer objects based on the parameter file.
+
+- class `calculator`: the virtual analysis engine's calculator.
+
+  - constructor: with one argument `galotfa::parameter::para&`, which is a reference to the parameter class.
+  - some container of the analysis results, which will be used to restore the results from different analysis modules.
+  - `recv_data(...)`: the API between the companion of the `monitor.push_data(...)` that receive the data from the monitor
+    and deliver the real analysis parts.
+  - There are two versions of this function, one of which support the potential tracer.
+  - At the end of the function, the `run_once` function will be called to analysis the data at one synchronized
+    time step.
+  - Actually, the `monitor.push_data(...)` function is an inline function that just call this function, to define them
+    as separate functions is just for better readability of the codes.
+  - `start()`: start up the analysis engine, which will allocate the memory for the analysis results and set
+    some status flags.
+  - `stop()`: stop the analysis engine, which will free some status flags and resources.
+  - the analysis wrappers (list in the API section): use the parameters to call the pure functions, which
+    is implemented in the real analysis modules, to finish the on-the-fly analysis, and then update the
+    analysis results that returned by the pure functions.
+  - `run_once(...)`: the API to call the calculator to analysis of the data at one synchronized time step.
+    This function is a wrapper of the previous APIs and will be automatically called by the `recv_data` function.
+  - `feedback(...)`: return the analysis results' pointers to the monitor, due to the limitation of static type, the
+    pointers will be stored in a vector of `void*` type, which will be converted to the real type in the monitor.
+    Keep this in mind when you want to add a new analysis module, and be careful to use the pointers in the vector.
+
+    <font color=red>Note</font>: such pointers' data will be overwritten in the each synchronized time step, so the
+    monitor should save the data immediately after the `feedback` function is called.
