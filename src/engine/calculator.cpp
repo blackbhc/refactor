@@ -126,9 +126,9 @@ inline int calculator::run_once() const
 
 std::vector< void* > calculator::feedback() const
 {
-    std::vector< void* > output_data;
-    output_data.push_back( ( void* )this->output_data );
-    return output_data;
+    std::vector< void* > data_ptrs;
+    data_ptrs.push_back( ( void* )this->output_data );
+    return data_ptrs;
 }
 
 }  // namespace galotfa

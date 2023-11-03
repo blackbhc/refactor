@@ -159,6 +159,7 @@ inline hid_t writer::open_file( std::string path_to_file )
 // 1. convenience of unit test and debug
 // 2. clean code in the public API
 {
+    path_to_file += ".hdf5";
     try
     {
         if ( access( path_to_file.c_str(), F_OK ) == 0 )
@@ -362,8 +363,9 @@ template < typename T > int writer::push( T* ptr, unsigned long len, std::string
             target_len *= dims[ i ];
         if ( target_len != len )
         {
-            WARN( "The target dataset has different length (%d) from the input (%lu)!", target_len,
-                  len );
+            WARN( "The length of the target dataset different (%d) is different from the input "
+                  "(%lu)!",
+                  target_len, len );
             return 1;
         }
     }

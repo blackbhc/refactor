@@ -47,11 +47,10 @@ int monitor::create_writers()
     // parameter file
 
     // TEST: create a test writer
-    auto writer = new galotfa::writer( "test_writer" );
+    auto writer = new galotfa::writer( "test_output" );
     this->writers.push_back( writer );
-    writer->create_group( "test_group" );
-    hdf5::size_info size_info = { H5T_NATIVE_DOUBLE, 1, { 1 } };
-    writer->create_dataset( "test_dataset", size_info );
+    hdf5::size_info size_info = { H5T_NATIVE_DOUBLE, 1, { 3 } };
+    writer->create_dataset( "test_group/test_dataset", size_info );
     return 0;
 }
 
@@ -59,9 +58,16 @@ int monitor::save()
 {
     // this function mock you press a button to save the data on the monitor dashboard
     auto datas = this->engine->feedback();
-    // TEST: it has 1 element to 1 double[3] array
+    // TEST: it has 1 element to a double[3] array
 
-    this->writers[ 0 ]->push( ( double* )datas[ 0 ], 3, "/test_group/test_dataset" );
+    int return_code =
+        this->writers[ 0 ]->push( ( double* )datas[ 0 ], 3, "/test_group/test_dataset" );
+
+    if ( return_code != 0 )
+    {
+        WARN( "Failed to push data to the writer." );
+        return return_code;
+    }
 
     return 0;
 }

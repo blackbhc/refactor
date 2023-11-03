@@ -60,7 +60,13 @@ public:
     inline int run_with call_without_tracer
     {
         push_data no_tracer;
-        this->save();
+        int       return_code = this->save();
+        if ( return_code != 0 )
+        {
+            WARN( "Failed to save the data to the output files." );
+            return return_code;
+        }
+
         return 0;
     };
 
