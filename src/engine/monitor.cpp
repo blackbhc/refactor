@@ -2,6 +2,8 @@
 #define GALOTFA_MONITOR_CPP
 #include "monitor.h"
 #include <hdf5.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 namespace galotfa {
 monitor::monitor( void )
@@ -23,6 +25,21 @@ monitor::monitor( void )
     this->para   = new galotfa::para( ini );
     this->engine = new galotfa::calculator( *( this->para ) );
     this->engine->start();
+    this->init();
+}
+
+void monitor::init()
+{
+    auto out_dir = this->para->glb_output_dir.c_str();
+    if ( access( out_dir, F_OK ) != 0 )
+    {
+        INFO( "The output directory does not exist, create it." );
+        int status = mkdir( out_dir, 0755 );
+        if ( status != 0 )
+        {
+            ERROR( "Failed to create the output directory: %s", out_dir );
+        }
+    }
     if ( this->is_root() )
         this->create_writers();
 }
@@ -67,7 +84,7 @@ monitor::~monitor()
 int monitor::create_writers()
 {
     // NOTE: this function will access the hdf5 files, so it should be called by the root process
-    // TODO: create the writers (a hdf5 file) and its nodes (group and dataset) based on the ini
+    // TODO: create the writers (hdf5 files) and its nodes (group and dataset) based on the ini
     // parameter file
 
     // TEST: create a test writer

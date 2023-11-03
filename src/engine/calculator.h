@@ -28,6 +28,7 @@
     ( unsigned long pot_tracer_type, unsigned long particle_ids[], unsigned int types[],    \
       double masses[], double coordiantes[][ 3 ], double velocities[][ 3 ], double times[], \
       unsigned long particle_number )
+// TODO: use conditional compilation to deal the caller with potential tracer
 
 namespace galotfa {
 class calculator

@@ -55,8 +55,9 @@ private:
         this->engine->recv_data has_tracer;
         return 0;
     };
-    int create_writers();  // create the writers
-    int save( void );      // write the data to the output files
+    int         create_writers();  // create the writers
+    int         save( void );      // write the data to the output files
+    inline void init();
 
     // public methods
 public:
