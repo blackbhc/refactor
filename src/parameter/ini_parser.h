@@ -73,12 +73,12 @@ private:  // private methods
             str.erase( str.find_first_of( COMMENT_PREFIX ) );
         }
         return str;
-    };
+    }
 
     inline std::vector< std::string > split( std::string str ) const
     {
         return galotfa::string::split( str, VALUE_SEP );
-    };
+    }
 
     void insert_to_table( ini::Line                                      line,
                           std::unordered_map< std::string, ini::Value >& hash ) const;

@@ -21,7 +21,9 @@ ini_parser::ini_parser( const char* file_name )
 
 void ini_parser::read( const char* file )
 {
+    println( "Reading in the ini file: %s ... ", file );
     struct stat* st = new struct stat;
+    st->st_size     = 0;
     stat( file, st );
     this->check_filesize( st->st_size );
 
@@ -47,7 +49,6 @@ void ini_parser::read( const char* file )
         }
         else
         {
-            // TODO: call the function to inter the line into the hash table
             this->insert_to_table( this->line_parser( token ), this->ini_table );
         }
         token = strsep( &p_buffer, "\n" );
@@ -56,13 +57,15 @@ void ini_parser::read( const char* file )
     fclose( fp );
     delete st;
     st = nullptr;
+    println( "Done!" );
 }
 
 void ini_parser::insert_to_table( ini::Line                                      line,
                                   std::unordered_map< std::string, ini::Value >& hash ) const
 // remain the second parameter for convenience of unit test
 {
-    std::string section_name = "";
+    // HACK: the section name must be stored in the function, otherwise it will just be ""
+    static std::string section_name = "";
     switch ( line.type )
     {
     case ini::LineType::empty:
