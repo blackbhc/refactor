@@ -160,15 +160,17 @@ simulation internal units, keep this in mind when you use the analysis results.
 
 #### INI parameter file
 
-Note: for INI file, the section name is <font color="red">case sensitive</font>, but the key/value name is case insensitive.
+Note: for INI file, the section name is <font color="red">case sensitive</font>, but the key/value name is case
+insensitive.
 
 - available boolean: case insensitive `true` and `false`, `on` and `off`, `enable` and `disable`, `yes` and `no`.
 - available value type: boolean, string(s), number(s). For numbers, there is no difference between integer and
   float, but the value(s) will be converted to required type of the target parameter.
 - comment prefix: `#` and `;`.
 - supported value separator: white space, `,`, `+`, `:` and `&`. Note: the name of key can not contain these characters.
-- unexpected additional value for a key will be illegal, e.g. `<a key for boolean> = true yes` will make the parser to detect
-  the value of the key as `true yes`, which is in string type and may cause error in the following parsing.
+- unexpected additional value for a key will be illegal, e.g. `<a key for boolean> = true yes` will make
+  the parser to detect the value of the key as `true yes`, which is in string type and may cause error in the
+  following parsing.
 
 #### List of parameters for `galotfa`
 
@@ -242,11 +244,12 @@ to see their explanation.
 
 This section specify some parameters that control the behaviour of `galotfa` on the machine.
 
-- <a id="switch_on"></a>`switch_on`: whether to enable the demo mode or not. If `on`, `galotfa` will only run for a few steps
-  and output some demo files to the `output_dir`. This option is only for test purpose or may be useful for some special cases.
+- <a id="switch_on"></a>`switch_on`: whether to enable the demo mode or not. If `on`, `galotfa` will only run
+  for a few steps and output some demo files to the `output_dir`. This option is only for test purpose or
+  may be useful for some special cases.
 - <a id="output_dir"></a>`output_dir`: the path to store the output files, create it if not exist.
-- <a id="particle_types"></a>`particle_types`: the type(s) of target particles types to do the on-the-fly analysis, must be
-  given at least one type, otherwise the program will raise an error.
+- <a id="particle_types"></a>`particle_types`: the type(s) of target particles types to do the on-the-fly
+  analysis, must be given at least one type, otherwise the program will raise an error.
 - <a id="convergence_type"></a>`convergence_type`: the type of convergence criterion for the on-the-fly analysis.
 - <a id="convergence_threshold"></a>`convergence_threshold`: the threshold for numerical convergence during the
   on-the-fly analysis.
@@ -265,14 +268,15 @@ This section specify some parameters that control the behaviour of `galotfa` on 
 
 ##### Pre
 
-This section is about the pre-processing of the simulation data before some concrete analysis, such as calculate the
-center of the target particles, calculate the bar major axis (if exist) and align the bar major axis to the $x$-axis.
+This section is about the pre-processing of the simulation data before some concrete analysis, such as
+calculate the center of the target particles, calculate the bar major axis (if exist) and align the bar
+major axis to the $x$-axis.
 
 - <a id="recenter"></a>`recenter`: whether to recenter the target particles to the center the target
-  particle(s) or not, note the recenter is only for the on-the-fly analysis, and will not change the simulation data.
-  The parameter will significantly affect the result of the on-the-fly analysis that is sensitive to the origin of
-  coordinates, such as the bar major axis, the pattern speed, etc. Therefore, it's recommended to always turn on this
-  option, unless you know what you are doing.
+  particle(s) or not, note the recenter is only for the on-the-fly analysis, and will not change the simulation
+  data. The parameter will significantly affect the result of the on-the-fly analysis that is sensitive to the
+  origin of coordinates, such as the bar major axis, the pattern speed, etc. Therefore, it's recommended to always
+  turn on this option, unless you know what you are doing.
 - <a id="region_shape"></a>`region_shape`: only meaningful when `recenter` = `on`, the shape of the region
   to calculate the center of the target particles, which will affect how the `region_size` is interpreted (see below).
   - `region_shape` = `sphere`: the region is a sphere or spheroid if `ratio` $\neq$ 1, the axis of the spheroid is the
@@ -304,8 +308,7 @@ center of the target particles, calculate the bar major axis (if exist) and alig
 The model level on-the-fly analysis of the target particles. The most common case at present is a disk galaxy.
 
 - <a id="switch_on_m"></a>`switch_on`: whether to enable the model level analysis or not.
-- <a id="filename_m"></a>`filename`: the filename of the output file of the model level analysis, the suffix `.hdf5`
-  will be added automatically so you only need to specify the prefix of the filename.
+- <a id="filename_m"></a>`filename`: the filename of the output file of the model level analysis.
 - <a id="period_m"></a>`period`: the period of model level analysis, in unit of synchronized time steps in
   simulation.
 - <a id="region_shape_m"></a>`region_shape`: similar to the `region_shape` in the `Pre` section, but this one is
@@ -357,7 +360,7 @@ The model level on-the-fly analysis of the target particles. The most common cas
 ##### Particle
 
 - <a id="switch_on_p"></a>`switch_on`: whether to enable the particle level analysis or not.
-- <a id="filename_p"></a>`filename`: the filename of the output file of the particle level analysis, the suffix `.hdf5`
+- <a id="filename_p"></a>`filename`: the filename of the output file of the particle level analysis.
 - <a id="period_p"></a>`period`: the period of particle level analysis, in unit of synchronized time steps in
   simulation.
   <font color=red>**Note:**</font> the particle level analysis will output all information of the target particles
@@ -377,8 +380,7 @@ This part is about a trivial target: log the orbital curves of the target partic
 of stars that contribute to the bar, or the spiral arms, etc.
 
 - <a id="switch_on_o"></a>`switch_on`: whether to enable the orbit curve log.
-- <a id="filename_o"></a>`filename`: the filename of the output file of the orbit curve log, the suffix `.hdf5`
-  will be added automatically so you only need to specify the prefix of the filename.
+- <a id="filename_o"></a>`filename`: the filename of the output file of the orbit curve log.
 - <a id="period_o"></a>`period`: the period of orbit curve log, in unit of synchronized time steps in simulation.
   If there is no too much particles to trace, the period can be set to a small value, e.g. 1, which means log the
   position of the target particles at every synchronized time step.
@@ -398,8 +400,7 @@ in cosmology simulations: central and satellite galaxies in a cluster, or ellipt
 on their morphology.
 
 - <a id="switch_on_g"></a>`switch_on`: whether to enable the group level analysis or not.
-- <a id="filename_g"></a>`filename`: the filename of the output file of the group level analysis, the suffix `.hdf5`
-  will be added automatically so you only need to specify the prefix of the filename.
+- <a id="filename_g"></a>`filename`: the filename of the output file of the group level analysis.
 - <a id="period_g"></a>`period`: the period of group level analysis, in unit of synchronized time steps in
   simulation.
 - <a id="group_types"></a>`group_types`: the type(s) of group particles to do the on-the-fly analysis, must be
@@ -415,8 +416,7 @@ on their morphology.
 This part is designed to do some by-the-hand post analysis, such as calculate the bar pattern speed of the bar.
 
 - <a id="switch_on_post"></a>`switch_on`: whether to enable the post analysis or not.
-- <a id="filename_post"></a>`filename`: the filename of the output file of the post analysis, the suffix `.hdf5`
-  will be added automatically so you only need to specify the prefix of the filename.
+- <a id="filename_post"></a>`filename`: the filename of the output file of the post analysis.
 - <a id="pattern_speed"></a>`pattern_speed`: calculate the pattern speed of the bar. If this option is enabled,
   the `bar_major_axis` option in the `Model` section will be automatically enabled.
 - <a id="SFH"></a>`SFH`: calculate the star formation history of the target particles. (future feature)
