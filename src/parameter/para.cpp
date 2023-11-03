@@ -53,6 +53,7 @@ para::para( ini_parser& parser )
     // value.
     // PERF: R2. it's really ugly, but "results-oreinted" programming has the fast running speed ...
 
+#ifndef debug_parameter
     // Global section
     update( this->glb, switch_on, Global, bool );
     if ( this->glb_switch_on )
@@ -131,12 +132,21 @@ para::para( ini_parser& parser )
             "\nPlease check and modify your ini "
             "parameter file, may be there are typos such as an initial lowercase section name." );
     }
+#else
+    ( void )parser;  // avoid the warning of unused variable
+#endif
 }
 
 int para::check( void )
 {
     // check the dependencies between the parameters
     int return_code = 0;
+    if ( !this->glb_switch_on )
+    {
+        WARN( "Galotfa is disabled, no any analysis will be performed." );
+        return return_code;
+    }
+
     if ( this->glb_switch_on )  // check the global and pre-process section
     {
         // global part
@@ -344,7 +354,7 @@ int para::test_print()
 {
 
     // Global section
-    printi( glb, switch );
+    printi( glb, switch_on );
     prints( glb, output_dir );
     printis( glb, particle_types );
     prints( glb, convergence_type );
@@ -363,7 +373,7 @@ int para::test_print()
     printi( pre, align_bar );
 
     // Model section
-    printi( md, switch );
+    printi( md, switch_on );
     prints( md, filename );
     printi( md, period );
     prints( md, region_shape );
@@ -377,10 +387,10 @@ int para::test_print()
     printi( md, sbar );
     printi( md, sbuckle );
     printi( md, inertia_tensor );
-    printis( md, an );
+    printis( md, am );
 
     // Particle section
-    printi( ptc, switch );
+    printi( ptc, switch_on );
     prints( ptc, filename );
     printi( ptc, period );
     printi( ptc, circularity );
@@ -389,13 +399,13 @@ int para::test_print()
     printi( ptc, freq );
 
     // orbit section
-    printi( orb, switch );
+    printi( orb, switch_on );
     prints( orb, filename );
     printi( orb, period );
     prints( orb, idfile );
 
     // Group section
-    printi( grp, switch );
+    printi( grp, switch_on );
     prints( grp, filename );
     printi( grp, period );
     printss( grp, group_types );
@@ -404,15 +414,9 @@ int para::test_print()
     printi( grp, vmg );
 
     // Post section
-    printi( post, switch );
+    printi( post, switch_on );
     prints( post, filename );
     printi( post, pattern_speed );
-    CHECK_RETURN( true );
-}
-
-int para::test_check()
-{
-    println( "Test the para::deps() function." );
     CHECK_RETURN( true );
 }
 

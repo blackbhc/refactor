@@ -88,7 +88,7 @@ int monitor::create_writers()
     // parameter file
 
     // TEST: create a test writer
-    auto writer = new galotfa::writer( "test_output" );
+    auto writer = new galotfa::writer( "test_output.hdf5" );
     this->writers.push_back( writer );
     hdf5::size_info size_info = { H5T_NATIVE_DOUBLE, 1, { 3 } };
     writer->create_dataset( "test_group/test_dataset", size_info );

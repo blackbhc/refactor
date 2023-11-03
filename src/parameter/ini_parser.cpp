@@ -13,8 +13,10 @@
 namespace galotfa {
 ini_parser::ini_parser( const char* file_name )
 {
-    this->filename = file_name;
-#ifndef debug_parameter  // no initialization in debug mode
+    this->filename      = file_name;
+    this->_section_name = new std::string;  // a tmp variable which is used to store the section
+                                            // name in insert_to_table()
+#ifndef debug_parameter                     // no initialization in debug mode
     this->read( this->filename.c_str() );
 #endif
 }
@@ -65,20 +67,19 @@ void ini_parser::insert_to_table( ini::Line                                     
 // remain the second parameter for convenience of unit test
 {
     // HACK: the section name must be stored in the function, otherwise it will just be ""
-    static std::string section_name = "";
     switch ( line.type )
     {
     case ini::LineType::empty:
         break;
     case ini::LineType::section:
-        section_name = line.content;
+        *this->_section_name = line.content;
         break;
     case ini::LineType::key_value:
         size_t     pos = line.content.find_first_of( "=" );
         ini::Value value;
-        value.content                                              = line.content.substr( pos + 1 );
-        value.type                                                 = line.value_type;
-        hash[ section_name + "_" + line.content.substr( 0, pos ) ] = value;
+        value.content = line.content.substr( pos + 1 );
+        value.type    = line.value_type;
+        hash[ *this->_section_name + "_" + line.content.substr( 0, pos ) ] = value;
         break;
     }
 }
@@ -488,21 +489,29 @@ int ini_parser::test_split( void ) const
     std::string str1 = " 1,2,3 4";
     std::string str2 = "1 2\t 3 \t\t4";
     std::string str3 = "1+2:3:4";
-    std::string str4 = "1:::-+2\t3-4";
+    std::string str4 = "1:::+2\t3 4";
     std::string str5 = "1.012+string+3&4";
 
     std::vector< std::string > target1 = { "1", "2", "3", "4" };
     std::vector< std::string > target2 = { "1.012", "string", "3", "4" };
 
     auto res1 = split( trim( str1 ) );
+    if ( res1 != target1 )
+        CHECK_RETURN( false );
     auto res2 = split( trim( str2 ) );
+    if ( res2 != target1 )
+        CHECK_RETURN( false );
     auto res3 = split( trim( str3 ) );
+    if ( res3 != target1 )
+        CHECK_RETURN( false );
     auto res4 = split( trim( str4 ) );
+    if ( res4 != target1 )
+        CHECK_RETURN( false );
     auto res5 = split( trim( str5 ) );
+    if ( res5 != target2 )
+        CHECK_RETURN( false );
 
-    bool success = ( res1 == target1 ) && ( res2 == target1 ) && ( res3 == target1 )
-                   && ( res4 == target1 ) && ( res5 == target2 );
-    CHECK_RETURN( success );
+    CHECK_RETURN( true );
 }
 
 int ini_parser::test_read( void )

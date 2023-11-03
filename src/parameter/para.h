@@ -51,11 +51,9 @@ struct para
 
     // constructor and destructor
     para( ini_parser& parser );
-    ~para() = default;
     int check( void );  // the function to check the dependencies between the parameters
 #ifdef debug_parameter
     int test_print();
-    int test_check();
 #endif
 };
 }  // namespace galotfa

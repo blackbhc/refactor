@@ -36,13 +36,18 @@ class ini_parser
 {
 private:  // private members
     mutable std::unordered_map< std::string, ini::Value > ini_table;
+    mutable std::string* _section_name;  // a tmp variable which is used to store the section name
+                                         // in insert_to_table()
 
 public:  // public members
     std::string filename;
 
 public:  // public methods
     ini_parser( const char* filename );
-    ~ini_parser() = default;
+    ~ini_parser()
+    {
+        delete _section_name;
+    }
     bool                       get_bool( std::string section, std::string key ) const;
     double                     get_double( std::string section, std::string key ) const;
     std::vector< double >      get_doubles( std::string section, std::string key ) const;

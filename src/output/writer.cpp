@@ -159,7 +159,6 @@ inline hid_t writer::open_file( std::string path_to_file )
 // 1. convenience of unit test and debug
 // 2. clean code in the public API
 {
-    path_to_file += ".hdf5";
     try
     {
         if ( access( path_to_file.c_str(), F_OK ) == 0 )
