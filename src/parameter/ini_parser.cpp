@@ -221,7 +221,7 @@ bool ini_parser::get_bool( std::string section, std::string key ) const
 {
     SECURE_EXTRACT( section, key );
     if ( this->ini_table[ hash_key_name ].type != ini::ValueType::boolean )
-        WARN( "[%s] -> [%s] is not boolean type!", section.c_str(), key.c_str() );
+        WARN( "[%s] -> [%s] is not boolean!", section.c_str(), key.c_str() );
     return this->ini_table[ hash_key_name ].content == "true";
 }
 
@@ -229,15 +229,16 @@ double ini_parser::get_double( std::string section, std::string key ) const
 {
     SECURE_EXTRACT( section, key );
     if ( this->ini_table[ hash_key_name ].type != ini::ValueType::number )
-        WARN( "[%s] -> [%s] is not number type!", section.c_str(), key.c_str() );
+        WARN( "[%s] -> [%s] is not number!", section.c_str(), key.c_str() );
     return std::stod( this->ini_table[ hash_key_name ].content );
 }
 
 std::vector< double > ini_parser::get_doubles( std::string section, std::string key ) const
 {
     SECURE_EXTRACT( section, key );
-    if ( this->ini_table[ hash_key_name ].type != ini::ValueType::numbers )
-        WARN( "[%s] -> [%s] is not numbers type!", section.c_str(), key.c_str() );
+    if ( this->ini_table[ hash_key_name ].type != ini::ValueType::numbers
+         && this->ini_table[ hash_key_name ].type != ini::ValueType::number )
+        WARN( "[%s] -> [%s] is not number(s)!", section.c_str(), key.c_str() );
     auto                  vals = this->split( this->ini_table[ hash_key_name ].content );
     std::vector< double > res( vals.size() );
     for ( size_t i = 0; i < vals.size(); ++i )
@@ -251,15 +252,16 @@ int ini_parser::get_int( std::string section, std::string key ) const
 {
     SECURE_EXTRACT( section, key );
     if ( this->ini_table[ hash_key_name ].type != ini::ValueType::number )
-        WARN( "[%s] -> [%s] is not number type!", section.c_str(), key.c_str() );
+        WARN( "[%s] -> [%s] is not number!", section.c_str(), key.c_str() );
     return std::stoi( this->ini_table[ hash_key_name ].content );
 }
 
 std::vector< int > ini_parser::get_ints( std::string section, std::string key ) const
 {
     SECURE_EXTRACT( section, key );
-    if ( this->ini_table[ hash_key_name ].type != ini::ValueType::numbers )
-        WARN( "[%s] -> [%s] is not numbers type!", section.c_str(), key.c_str() );
+    if ( this->ini_table[ hash_key_name ].type != ini::ValueType::numbers
+         && this->ini_table[ hash_key_name ].type != ini::ValueType::number )
+        WARN( "[%s] -> [%s] is not number(s)!", section.c_str(), key.c_str() );
     auto               vals = this->split( this->ini_table[ hash_key_name ].content );
     std::vector< int > res( vals.size() );
     for ( size_t i = 0; i < vals.size(); ++i )
@@ -274,15 +276,16 @@ std::string ini_parser::get_str( std::string section, std::string key ) const
 {
     SECURE_EXTRACT( section, key );
     if ( this->ini_table[ hash_key_name ].type != ini::ValueType::string )
-        WARN( "[%s] -> [%s] is not string type!", section.c_str(), key.c_str() );
+        WARN( "[%s] -> [%s] is not string!", section.c_str(), key.c_str() );
     return this->ini_table[ hash_key_name ].content;
 }
 
 std::vector< std::string > ini_parser::get_strs( std::string section, std::string key ) const
 {
     SECURE_EXTRACT( section, key );
-    if ( this->ini_table[ hash_key_name ].type != ini::ValueType::strings )
-        WARN( "[%s] -> [%s] is not strings type!", section.c_str(), key.c_str() );
+    if ( this->ini_table[ hash_key_name ].type != ini::ValueType::strings
+         && this->ini_table[ hash_key_name ].type != ini::ValueType::string )
+        WARN( "[%s] -> [%s] is not string(s)!", section.c_str(), key.c_str() );
     return this->split( this->ini_table[ hash_key_name ].content );
 }
 
