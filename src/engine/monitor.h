@@ -31,11 +31,14 @@ class monitor
 {
     // private members
 private:
-    galotfa::para*                  para   = nullptr;  // pointer to the parameter class
-    galotfa::calculator*            engine = nullptr;
-    std::vector< galotfa::writer* > writers;       // the writers
-    int                             galotfa_rank;  // the global rank of the MPI process
-    int                             galotfa_size;  // the global size of the MPI process
+    galotfa::para*       para   = nullptr;  // pointer to the parameter class
+    galotfa::calculator* engine = nullptr;
+    // array of pointers to the writers: 5 possible output files
+    // model, particle, orbit, group, post
+    // TODO: may by create a separate writer for each possible group classfiication in the future?
+    galotfa::writer* writers[ 5 ];
+    int              galotfa_rank;  // the global rank of the MPI process
+    int              galotfa_size;  // the global size of the MPI process
     // pointer to the analysis engine
     // private methods
 private:
@@ -67,14 +70,16 @@ public:
     // interface of the simulation data: without potential tracer
     inline int run_with call_without_tracer
     {
-        push_data no_tracer;
-        int       return_code = this->save();
-        if ( return_code != 0 )
+        if ( this->para->glb_switch_on )
         {
-            WARN( "Failed to save the data to the output files." );
-            return return_code;
+            push_data no_tracer;
+            int       return_code = this->save();
+            if ( return_code != 0 )
+            {
+                WARN( "Failed to save the data to the output files." );
+                return return_code;
+            }
         }
-
         return 0;
     };
 

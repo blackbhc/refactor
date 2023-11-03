@@ -8,6 +8,11 @@
 namespace galotfa {
 monitor::monitor( void )
 {
+    // set the writers pointers to nullptr
+    for ( int i = 0; i < 5; ++i )
+        this->writers[ i ] = nullptr;
+
+    // check and ensure MPI is initialized
     int  initialized = 0;
     auto status      = MPI_Initialized( &initialized );
     if ( status != MPI_SUCCESS )
@@ -21,27 +26,34 @@ monitor::monitor( void )
     MPI_Comm_rank( MPI_COMM_WORLD, &( this->galotfa_rank ) );
     MPI_Comm_size( MPI_COMM_WORLD, &( this->galotfa_size ) );
 
+    // read the configuration file
     galotfa::ini_parser ini( "./galotfa.ini" );
-    this->para   = new galotfa::para( ini );
-    this->engine = new galotfa::calculator( *( this->para ) );
-    this->engine->start();
-    this->init();
+    this->para = new galotfa::para( ini );
+    if ( this->para->glb_switch_on )
+    {
+        this->init();  // create the output directory and the output files
+        // create and start the virtual engine's calculator
+        this->engine = new galotfa::calculator( *( this->para ) );
+        this->engine->start();
+    }
 }
 
 void monitor::init()
 {
-    auto out_dir = this->para->glb_output_dir.c_str();
-    if ( access( out_dir, F_OK ) != 0 )
-    {
-        INFO( "The output directory does not exist, create it." );
-        int status = mkdir( out_dir, 0755 );
-        if ( status != 0 )
-        {
-            ERROR( "Failed to create the output directory: %s", out_dir );
-        }
-    }
     if ( this->is_root() )
+    {
+        auto out_dir = this->para->glb_output_dir.c_str();
+        if ( access( out_dir, F_OK ) != 0 )
+        {
+            INFO( "The output directory does not exist, create it." );
+            int status = mkdir( out_dir, 0755 );
+            if ( status != 0 )
+            {
+                ERROR( "Failed to create the output directory: %s", out_dir );
+            }
+        }
         this->create_writers();
+    }
 }
 
 monitor::~monitor()
@@ -61,14 +73,14 @@ monitor::~monitor()
         this->engine = nullptr;
     }
 
-    if ( this->writers.size() > 0 )
+    // free the writers pointers
+    for ( int i = 0; i < 5; ++i )
     {
-        for ( auto writer : this->writers )
+        if ( this->writers[ i ] != nullptr )
         {
-            delete writer;
-            writer = nullptr;
+            delete this->writers[ i ];
+            this->writers[ i ] = nullptr;
         }
-        this->writers.clear();
     }
 
     int  initialized = 0;
@@ -77,35 +89,61 @@ monitor::~monitor()
     {
         WARN( "Failed to check MPI initialization status when exit the monitor of galotfa." );
     }
-    else if ( !initialized )
-        MPI_Init( NULL, NULL );
+    else if ( initialized )
+        MPI_Finalize();
 }
 
 int monitor::create_writers()
 {
     // NOTE: this function will access the hdf5 files, so it should be called by the root process
-    // TODO: create the writers (hdf5 files) and its nodes (group and dataset) based on the ini
-    // parameter file
+    // Besides, it should be called only when galotfa is enabled (para->glb_switch_on == true)
 
-    // TEST: create a test writer
-    auto writer = new galotfa::writer( "test_output.hdf5" );
-    this->writers.push_back( writer );
-    hdf5::size_info size_info = { H5T_NATIVE_DOUBLE, 1, { 3 } };
-    writer->create_dataset( "test_group/test_dataset", size_info );
+    // TODO: create the datasets at the same time
+    if ( this->para->md_switch_on )
+    {
+        auto file          = this->para->glb_output_dir + "/" + this->para->md_filename;
+        auto writer        = new galotfa::writer( file.c_str() );
+        this->writers[ 0 ] = writer;
+    }
+    if ( this->para->ptc_switch_on )
+    {
+        auto file          = this->para->glb_output_dir + "/" + this->para->ptc_filename;
+        auto writer        = new galotfa::writer( file.c_str() );
+        this->writers[ 1 ] = writer;
+    }
+    if ( this->para->orb_switch_on )
+    {
+        auto file          = this->para->glb_output_dir + "/" + this->para->orb_filename;
+        auto writer        = new galotfa::writer( file.c_str() );
+        this->writers[ 2 ] = writer;
+    }
+    if ( this->para->grp_switch_on )
+    {
+        auto file          = this->para->glb_output_dir + "/" + this->para->grp_filename;
+        auto writer        = new galotfa::writer( file.c_str() );
+        this->writers[ 3 ] = writer;
+    }
+    if ( this->para->post_switch_on )
+    {
+        auto file          = this->para->glb_output_dir + "/" + this->para->post_filename;
+        auto writer        = new galotfa::writer( file.c_str() );
+        this->writers[ 4 ] = writer;
+    }
+
     return 0;
 }
 
 int monitor::save()
 {
     // this function mock you press a button to save the data on the monitor dashboard
+    // so it should only be called by the run_with() function
     int return_code = 0;
     if ( this->is_root() )
     {
-        auto datas = this->engine->feedback();
-        // TEST: it has 1 element to a double[3] array
-
-        return_code =
-            this->writers[ 0 ]->push( ( double* )datas[ 0 ], 3, "/test_group/test_dataset" );
+        // auto datas = this->engine->feedback();
+        //
+        // return_code =
+        //     this->writers[ 0 ]->push( ( double* )datas[ 0 ], 3, "/test_group/test_dataset" );
 
         if ( return_code != 0 )
             WARN( "Failed to push data to the writer." );
