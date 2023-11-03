@@ -6,11 +6,25 @@
 namespace galotfa {
 monitor::monitor( void )
 {
+    int  initialized = 0;
+    auto status      = MPI_Initialized( &initialized );
+    if ( status != MPI_SUCCESS )
+    {
+        ERROR( "Failed to check MPI initialization status." );
+    }
+    else if ( !initialized )
+        MPI_Init( NULL, NULL );
+
+    // get the rank and size of the MPI process
+    MPI_Comm_rank( MPI_COMM_WORLD, &( this->galotfa_rank ) );
+    MPI_Comm_size( MPI_COMM_WORLD, &( this->galotfa_size ) );
+
     galotfa::ini_parser ini( "./galotfa.ini" );
     this->para   = new galotfa::para( ini );
     this->engine = new galotfa::calculator( *( this->para ) );
     this->engine->start();
-    this->create_writers();
+    if ( this->is_root() )
+        this->create_writers();
 }
 
 monitor::~monitor()
@@ -39,10 +53,20 @@ monitor::~monitor()
         }
         this->writers.clear();
     }
+
+    int  initialized = 0;
+    auto status      = MPI_Initialized( &initialized );
+    if ( status != MPI_SUCCESS )
+    {
+        WARN( "Failed to check MPI initialization status when exit the monitor of galotfa." );
+    }
+    else if ( !initialized )
+        MPI_Init( NULL, NULL );
 }
 
 int monitor::create_writers()
 {
+    // NOTE: this function will access the hdf5 files, so it should be called by the root process
     // TODO: create the writers (a hdf5 file) and its nodes (group and dataset) based on the ini
     // parameter file
 
@@ -57,19 +81,22 @@ int monitor::create_writers()
 int monitor::save()
 {
     // this function mock you press a button to save the data on the monitor dashboard
-    auto datas = this->engine->feedback();
-    // TEST: it has 1 element to a double[3] array
-
-    int return_code =
-        this->writers[ 0 ]->push( ( double* )datas[ 0 ], 3, "/test_group/test_dataset" );
-
-    if ( return_code != 0 )
+    int return_code = 0;
+    if ( this->is_root() )
     {
-        WARN( "Failed to push data to the writer." );
-        return return_code;
+        auto datas = this->engine->feedback();
+        // TEST: it has 1 element to a double[3] array
+
+        return_code =
+            this->writers[ 0 ]->push( ( double* )datas[ 0 ], 3, "/test_group/test_dataset" );
+
+        if ( return_code != 0 )
+            WARN( "Failed to push data to the writer." );
     }
 
-    return 0;
+    MPI_Bcast( &return_code, 1, MPI_INT, 0, MPI_COMM_WORLD );
+    // make all the MPI processes return the same value
+    return return_code;
 }
 
 }  // namespace galotfa

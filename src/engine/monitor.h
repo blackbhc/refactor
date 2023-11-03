@@ -5,6 +5,7 @@
 #include "../parameter/ini_parser.h"
 #include "../parameter/para.h"
 #include "calculator.h"
+#include <mpi.h>
 #include <vector>
 
 // I don't want to write this verbose argument list again and again ...
@@ -32,11 +33,17 @@ class monitor
 private:
     galotfa::para*                  para   = nullptr;  // pointer to the parameter class
     galotfa::calculator*            engine = nullptr;
-    std::vector< galotfa::writer* > writers;  // the writers
+    std::vector< galotfa::writer* > writers;       // the writers
+    int                             galotfa_rank;  // the global rank of the MPI process
+    int                             galotfa_size;  // the global size of the MPI process
     // pointer to the analysis engine
     // private methods
 private:
     // push the data to the analysis engine
+    inline bool is_root() const
+    {
+        return this->galotfa_rank == 0;
+    }
     inline int push_data call_without_tracer const
     {
         this->engine->recv_data no_tracer;
