@@ -166,7 +166,7 @@ Note: for INI file, the section name is <font color="red">case sensitive</font>,
 - available value type: boolean, string(s), number(s). For numbers, there is no difference between integer and
   float, but the value(s) will be converted to required type of the target parameter.
 - comment prefix: `#` and `;`.
-- supported value separator: white space, `,`, `-`, `+`, `:` and `&`. Note: the name of key can not contain these characters.
+- supported value separator: white space, `,`, `+`, `:` and `&`. Note: the name of key can not contain these characters.
 - unexpected additional value for a key will be illegal, e.g. `<a key for boolean> = true yes` will make the parser to detect
   the value of the key as `true yes`, which is in string type and may cause error in the following parsing.
 
@@ -178,7 +178,7 @@ to see their explanation.
 | Section    | Key Name                                                     | Value Type | Default       | Available Values                                            |
 | ---------- | ------------------------------------------------------------ | ---------- | ------------- | ----------------------------------------------------------- |
 | `Global`   |                                                              |            |               |                                                             |
-|            | <a href="#switch">`switch`</a>                               | Boolean    | `on`          |                                                             |
+|            | <a href="#switch_on">`switch_on`</a>                         | Boolean    | `on`          |                                                             |
 |            | <a href="#output_dir">`output_dir`</a>                       | String     | `./otfoutput` | Any valid path.                                             |
 |            | <a href="#particle_types">`particle_types`</a>               | Integer(s) |               | Based on your IC of simulation                              |
 |            | <a href="#convergence_type">`convergence_type`</a>           | String     | `absolute`    | `absolute` or `relative`.                                   |
@@ -195,7 +195,7 @@ to see their explanation.
 |            | <a href="#recenter_method">`recenter_method`</a>             | String     | `density`     | `com`, `density` or `potential`                             |
 |            | <a href="#align_bar">`align_bar`</a>                         | Boolean    | `on`          | `on` or `off`                                               |
 | `Model`    |                                                              |            |               |                                                             |
-|            | <a href="#switch_m">`switch`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#switch_on_m">`switch_on`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#filename_m">`filename`</a>                         | String     | `model`       | Any valid filename prefix.                                  |
 |            | <a href="#period_m">`period`</a>                             | Integer    | 10            | $>0$                                                        |
 |            | <a href="#region_shape_m">`region_shape`</a>                 | String     | `cylinder`    | `sphere`, `cylinder` or `box`.                              |
@@ -211,7 +211,7 @@ to see their explanation.
 |            | <a href="#An">`An`</a>                                       | Integer(s) |               | > 0                                                         |
 |            | <a href="#inertia_tensor">`inertia_tensor`</a>               | Boolean    | `off`         | `on` or `off`                                               |
 | `Particle` |                                                              |            |               |                                                             |
-|            | <a href="#switch_p">`switch`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#switch_on_p">`switch_on`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#filename_p">`filename`</a>                         | String     | `particle`    | Any valid filename prefix.                                  |
 |            | <a href="#period_p">`period`</a>                             | Integer    | 10000         | $>0$                                                        |
 |            | <a href="#circularity">`circularity`</a>                     | Boolean    | `off`         | `on` or `off`                                               |
@@ -219,12 +219,12 @@ to see their explanation.
 |            | <a href="#rg">`rg`</a>                                       | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#freq">`freq`</a>                                   | Boolean    | `off`         | `on` or `off`                                               |
 | `Orbit`    |                                                              |            |               | `on` or `off`                                               |
-|            | <a href="#switch_o">`switch`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#switch_on_o">`switch_on`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#filename_o">`filename`</a>                         | String     | `orbit`       | Any valid filename prefix.                                  |
 |            | <a href="#period_o">`period`</a>                             | Integer    | 1             | $>0$                                                        |
 |            | <a href="#idfile">`idfile`</a>                               | String     |               | Any valid filename.                                         |
 | `Group`    |                                                              |            |               |                                                             |
-|            | <a href="#switch_g">`switch`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#switch_on_g">`switch_on`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#filename_g">`filename`</a>                         | String     | `group`       | Any valid filename prefix.                                  |
 |            | <a href="#period_g">`period`</a>                             | Integer    | 10            | $>0$                                                        |
 |            | <a href="#group_types">`group_types`</a>                     | String(s)  |               | (future feature)                                            |
@@ -232,7 +232,7 @@ to see their explanation.
 |            | <a href="#rmg">`rmg`</a>                                     | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#vmg">`vmg`</a>                                     | Boolean    | `off`         | `on` or `off`                                               |
 | `Post`     |                                                              |            |               |                                                             |
-|            | <a href="#switch_post">`switch`</a>                          | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#switch_on_post">`switch_on`</a>                    | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#filename_post">`filename`</a>                      | String     | `post`        | Any valid filename prefix.                                  |
 |            | <a href="#pattern_speed">`pattern_speed`</a>                 | Boolean    | off           | `on` or `off`                                               |
 
@@ -242,7 +242,7 @@ to see their explanation.
 
 This section specify some parameters that control the behaviour of `galotfa` on the machine.
 
-- <a id="switch"></a>`switch`: whether to enable the demo mode or not. If `on`, `galotfa` will only run for a few steps
+- <a id="switch_on"></a>`switch_on`: whether to enable the demo mode or not. If `on`, `galotfa` will only run for a few steps
   and output some demo files to the `output_dir`. This option is only for test purpose or may be useful for some special cases.
 - <a id="output_dir"></a>`output_dir`: the path to store the output files, create it if not exist.
 - <a id="particle_types"></a>`particle_types`: the type(s) of target particles types to do the on-the-fly analysis, must be
@@ -303,7 +303,7 @@ center of the target particles, calculate the bar major axis (if exist) and alig
 
 The model level on-the-fly analysis of the target particles. The most common case at present is a disk galaxy.
 
-- <a id="switch_m"></a>`switch`: whether to enable the model level analysis or not.
+- <a id="switch_on_m"></a>`switch_on`: whether to enable the model level analysis or not.
 - <a id="filename_m"></a>`filename`: the filename of the output file of the model level analysis, the suffix `.hdf5`
   will be added automatically so you only need to specify the prefix of the filename.
 - <a id="period_m"></a>`period`: the period of model level analysis, in unit of synchronized time steps in
@@ -356,7 +356,7 @@ The model level on-the-fly analysis of the target particles. The most common cas
 
 ##### Particle
 
-- <a id="switch_p"></a>`switch`: whether to enable the particle level analysis or not.
+- <a id="switch_on_p"></a>`switch_on`: whether to enable the particle level analysis or not.
 - <a id="filename_p"></a>`filename`: the filename of the output file of the particle level analysis, the suffix `.hdf5`
 - <a id="period_p"></a>`period`: the period of particle level analysis, in unit of synchronized time steps in
   simulation.
@@ -376,7 +376,7 @@ The model level on-the-fly analysis of the target particles. The most common cas
 This part is about a trivial target: log the orbital curves of the target particles. For example, trace the orbit
 of stars that contribute to the bar, or the spiral arms, etc.
 
-- <a id="switch_o"></a>`switch`: whether to enable the orbit curve log.
+- <a id="switch_on_o"></a>`switch_on`: whether to enable the orbit curve log.
 - <a id="filename_o"></a>`filename`: the filename of the output file of the orbit curve log, the suffix `.hdf5`
   will be added automatically so you only need to specify the prefix of the filename.
 - <a id="period_o"></a>`period`: the period of orbit curve log, in unit of synchronized time steps in simulation.
@@ -397,7 +397,7 @@ stellar populations in a galaxy: binned according their ages, metallicity, etc. 
 in cosmology simulations: central and satellite galaxies in a cluster, or elliptical and spiral galaxies based
 on their morphology.
 
-- <a id="switch_g"></a>`switch`: whether to enable the group level analysis or not.
+- <a id="switch_on_g"></a>`switch_on`: whether to enable the group level analysis or not.
 - <a id="filename_g"></a>`filename`: the filename of the output file of the group level analysis, the suffix `.hdf5`
   will be added automatically so you only need to specify the prefix of the filename.
 - <a id="period_g"></a>`period`: the period of group level analysis, in unit of synchronized time steps in
@@ -414,7 +414,7 @@ on their morphology.
 
 This part is designed to do some by-the-hand post analysis, such as calculate the bar pattern speed of the bar.
 
-- <a id="switch_post"></a>`switch`: whether to enable the post analysis or not.
+- <a id="switch_on_post"></a>`switch_on`: whether to enable the post analysis or not.
 - <a id="filename_post"></a>`filename`: the filename of the output file of the post analysis, the suffix `.hdf5`
   will be added automatically so you only need to specify the prefix of the filename.
 - <a id="pattern_speed"></a>`pattern_speed`: calculate the pattern speed of the bar. If this option is enabled,

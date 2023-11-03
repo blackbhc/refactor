@@ -172,6 +172,9 @@ which will combine other modules together to finish the on-the-fly analysis.
 
 #### APIs
 
+- `monitor.init()`: initialize the monitor, which will create the output directory if it does not exist,
+  then create the writer objects based on the parameter file. This function is aimed to make the constructor
+  of the monitor class more readable.
 - `monitor.run_with(...)`: the main open API of the monitor class, which can be imagined as a monitor screen
   of a analysis engine. This API with receive the data from the simulation and call the other APIs to
   finish the on-the-fly analysis.
@@ -201,6 +204,7 @@ which will combine other modules together to finish the on-the-fly analysis.
 
 - class `monitor`: the virtual analysis engine's monitor.
 
+  - `init()`: create the output directory and open the hdf5 files, only to make the constructor more readable.
   - `run_with(...)`: arguments are pointers of the simulation data, which must includes array of particle id (1D),
     mass (1D), particle type (1D), coordinate (2D), velocity (2D) of particles, and a time stamp variable, a
     integer to specify the length of the arrays. There is additional argument for the potential tracers'
@@ -290,13 +294,16 @@ For `string.h`, `string.cpp`:
 
 #### APIs
 
+- `para::para(ini_parser&)`: the structure of the parameters, which should be initialized with a reference to
+  an instance of the `ini_parser` class.
+- `para::check()`: check the dependencies and conflicts between the parameters before use them.
 - `ini_parser(std::string path_to_file)`: the constructor of the class, which will read the parameter file with the given path.
 - `ini_parser.get_xxx()`: the function to extract the value of a key in the parameter file. Support to get boolean, int,
   double, string, and vector of int, double and string.
 - `ini_parser.has()`: check whether a key exist in the parameter file.
 - structure `para`: the structure to store the value of parameters, and read the parameter file based on the `ini_parser` class.
   - call `para.<sec>_<para>` to use the parameter, where `<sec>` is an alias the section name and `<para>` is the
-    parameter name. Alias: `gb` for the global section, `pre` for the pre-process section, `md` for the model section,
+    parameter name. Alias: `glb` for the global section, `pre` for the pre-process section, `md` for the model section,
     `ptc` for the particle section, `orb` for the orbit section, `grp` for the group section and `post` for the
     post-process section.
 
@@ -330,11 +337,13 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
     "\_" + key name of parameter in the ini file, where the space in the section name will be replaced by `_`.
 
 - class `para`: define the default value of some parameters, and update the value according the ini parameter file.
-  - member prefix indicates their section in the parameter file: `gb` for the global section, `pre` for the
+  - member prefix indicates their section in the parameter file: `glb` for the global section, `pre` for the
     pre-process section, `md` for the model section, `ptc` for the particle section, `orb` for the orbit section,
     `grp` for the group section and `post` for the post-process section.
   - constructor: with a reference to a created `ini_parser` object, then update the value of the parameters
     based on the parameter file (with hard code, the ugly but fast way).
+  - `check()`: check whether there are some conflicts between the parameters, and whether there are some
+    parameters that are lack of. Raise a warning message for each conflict or lack of parameters.
 
 #### Steps to add new parameter into the code
 
@@ -342,8 +351,10 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
    default value of the new parameter.
 2. Edit the `para` class in the `src/parameter/default.h` file, add the parameter into the chosen section
    and default value.
-3. Add a line in the update function (???) to update the value of the new parameter from the ini file.
-4. Use the new parameter in the analysis code.
+3. Add a line in the update function (`para::para(...)`) to update the value of the new parameter from the ini file.
+4. Add a check statement into the check function of `para`(`check()`), to check the possible conflicts and
+   lack of the new parameter.
+5. Use the new parameter in the analysis code.
 
 ### `src/output`: <a id="src_output"></a> <a href="#list_of_modules"><font size=4>(src list)</font></a>
 
