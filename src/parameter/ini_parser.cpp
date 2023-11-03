@@ -84,7 +84,7 @@ void ini_parser::check_filesize( long int size ) const
 {
     if ( size == 0 )
     {
-        ERROR( "The ini file is empty, most common case: the file was not found." );
+        ERROR( "The size of the ini file is 0, most common case: the file was not found." );
     }
     else if ( size >= 1024 * 1024 * 5 && size < 1024 * 1024 * 1024 )
     {
