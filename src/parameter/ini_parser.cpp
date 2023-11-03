@@ -148,11 +148,16 @@ ini::Line ini_parser::line_parser( const char* str ) const
 
         // determine the value type
         std::transform( val.begin(), val.end(), val.begin(), ::tolower );
-        if ( val == "true" || val == "yes" || val == "enable" || val == "on" || val == "false"
-             || val == "no" || val == "disable" || val == "off" )
+        if ( val == "true" || val == "yes" || val == "enable" || val == "on" )
         {
             line.value_type = ini::ValueType::boolean;
             line.content    = key + "=" + "true";
+            return line;
+        }
+        else if ( val == "false" || val == "no" || val == "disable" || val == "off" )
+        {
+            line.value_type = ini::ValueType::boolean;
+            line.content    = key + "=" + "false";
             return line;
         }
         else
