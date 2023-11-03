@@ -3,6 +3,14 @@
 #include <stdexcept>
 #include <stdio.h>
 
+// for normal build mode, always use the mpi vertion prompts
+#ifndef DO_UNIT_TEST
+// if its header only, then other headers will include mpi.h
+#if !defined( GALOTFA_HEADER_ONLY ) && !defined( MPI_INCLUDED )
+#include <mpi.h>
+#endif
+#endif
+
 // print a message for warning
 #ifndef MPI_INCLUDED
 // a single processor version printf
@@ -43,6 +51,11 @@
 #define WARN( ... )                                                        \
     {                                                                      \
         fprintln( stderr, "\033[0;1;33m [WARNING]: \033[0m" __VA_ARGS__ ); \
+    }
+
+#define INFO( ... )                                            \
+    {                                                          \
+        println( "\033[0;1;32m [INFO]: \033[0m" __VA_ARGS__ ); \
     }
 
 // throw a error with a message
