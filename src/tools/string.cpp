@@ -31,7 +31,8 @@ std::vector< std::string > string::split( std::string str, std::string delimiter
         size_t pos = str.find_first_of( delimiter );
         if ( pos == std::string::npos )
         {
-            vals.push_back( str );
+            if ( str != "" )
+                vals.push_back( str );
             break;
         }
         std::string substr = str.substr( 0, pos );
@@ -41,7 +42,8 @@ std::vector< std::string > string::split( std::string str, std::string delimiter
         str.erase( 0, str.find_first_not_of( delimiter ) );
         if ( str.find_first_of( delimiter ) == std::string::npos )
         {
-            vals.push_back( str );
+            if ( str != "" )
+                vals.push_back( str );
             break;
         }
     }
