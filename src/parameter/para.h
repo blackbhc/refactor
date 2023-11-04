@@ -24,7 +24,7 @@ struct para
     int                               glb_pot_tracer = -10086, glb_max_iter = 25;
     std::vector< int >                glb_particle_types;
     std::vector< std::string >        glb_classification;
-    std::vector< std::vector< int > > glb_target_subsets;
+    std::vector< std::vector< int > > glb_target_sets;
     double glb_convergence_threshold = 0.001, glb_equal_threshold = 1e-10;
 
     // pre section parameters
@@ -57,7 +57,7 @@ struct para
     // constructor and destructor
     para( ini_parser& parser );
     int        check( void );  // the function to check the dependencies between the parameters
-    inline int target_subsets_parser();  // parse the multiple target subsets
+    inline int target_sets_parser();  // parse the multiple target sets
 #ifdef debug_parameter
     int test_print();
 #endif

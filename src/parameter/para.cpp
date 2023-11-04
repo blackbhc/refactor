@@ -125,19 +125,19 @@ para::para( ini_parser& parser )
     update( post, filename, Post, str );
     update( post, pattern_speed, Post, bool );
 
-    // parser the analysis subsets if the multiple subsets analysis is enabled
+    // parser the analysis sets if the multiple sets analysis is enabled
     if ( this->glb_multiple )
     {
-        int return_code = this->target_subsets_parser();
+        int return_code = this->target_sets_parser();
         if ( return_code != 0 )
         {
-            ERROR( "Failed to parse the target subsets, please check your ini file." );
+            ERROR( "Failed to parse the target sets, please check your ini file." );
         }
         else
         {
-            INFO( "Get %d subsets for analysis.", ( int )this->glb_target_subsets.size() );
+            INFO( "Get %d sets for analysis.", ( int )this->glb_target_sets.size() );
             int counter = 0;
-            for ( auto& subset : this->glb_target_subsets )
+            for ( auto& subset : this->glb_target_sets )
             {
                 counter += 1;
                 std::string subset_str = "";
@@ -150,9 +150,9 @@ para::para( ini_parser& parser )
     }
     else
     {
-        INFO( "The multiple subsets analysis is disabled." );
-        this->glb_target_subsets.push_back( this->glb_particle_types );
-        // push this into the target subsets, to make the API more convenient
+        INFO( "The multiple sets analysis is disabled." );
+        this->glb_target_sets.push_back( this->glb_particle_types );
+        // push this into the target sets, to make the API more convenient
     }
 
     // check the dependencies between the parameters
@@ -169,7 +169,7 @@ para::para( ini_parser& parser )
 #endif
 }
 
-inline int para::target_subsets_parser()
+inline int para::target_sets_parser()
 {
     try
     {
@@ -179,7 +179,7 @@ inline int para::target_subsets_parser()
             std::vector< int > subset_types;
             for ( auto& str : substrs )
                 subset_types.push_back( std::stoi( str ) );
-            this->glb_target_subsets.push_back( subset_types );
+            this->glb_target_sets.push_back( subset_types );
         }
     }
     catch ( std::exception& e )
@@ -214,10 +214,9 @@ int para::check( void )
             "On-the-fly analysis by galotfa is enabled, but the target particle types for "
             "analysis are not given." );
 
-        IF_THEN_WARN(
-            this->glb_multiple && this->glb_classification.size() == 0,
-            "The multiple subsets analysis is enabled, but the target subsets for analysis are "
-            "not given." );
+        IF_THEN_WARN( this->glb_multiple && this->glb_classification.size() == 0,
+                      "The multiple sets analysis is enabled, but the target sets for analysis are "
+                      "not given." );
 
         auto target_seubset_not_in_particle_types = [ this ]( std::vector< int >& subset ) -> bool {
             for ( auto& type_id : subset )
@@ -230,10 +229,9 @@ int para::check( void )
             return false;
         };
 
-        IF_ONE_THEN_WARN(
-            this->glb_target_subsets, target_seubset_not_in_particle_types,
-            "Try to analysis multiple subsets, but the target subsets' particle types "
-            "are not include in \"particle_types\"." );
+        IF_ONE_THEN_WARN( this->glb_target_sets, target_seubset_not_in_particle_types,
+                          "Try to analysis multiple sets, but the target sets' particle types "
+                          "are not include in \"particle_types\"." );
 
         IF_THEN_WARN( this->glb_convergence_type != "relative"
                           && this->glb_convergence_type != "absolute",
