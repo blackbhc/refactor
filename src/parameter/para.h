@@ -19,12 +19,13 @@ struct para
     int md_period = 10, ptc_period = 10000, orb_period = 1, grp_period = 10;
 
     // other global parameters
-    bool                       glb_multiple         = false;
-    std::string                glb_convergence_type = "absolute", glb_sim_type = "galaxy";
-    int                        glb_pot_tracer = -10086, glb_max_iter = 25;
-    std::vector< int >         glb_particle_types;
-    std::vector< std::string > glb_classification;
-    double                     glb_convergence_threshold = 0.001, glb_equal_threshold = 1e-10;
+    bool                              glb_multiple         = false;
+    std::string                       glb_convergence_type = "absolute", glb_sim_type = "galaxy";
+    int                               glb_pot_tracer = -10086, glb_max_iter = 25;
+    std::vector< int >                glb_particle_types;
+    std::vector< std::string >        glb_classification;
+    std::vector< std::vector< int > > glb_target_subsets;
+    double glb_convergence_threshold = 0.001, glb_equal_threshold = 1e-10;
 
     // pre section parameters
     bool        pre_recenter = true, pre_align_bar = true;
@@ -55,7 +56,8 @@ struct para
 
     // constructor and destructor
     para( ini_parser& parser );
-    int check( void );  // the function to check the dependencies between the parameters
+    int        check( void );  // the function to check the dependencies between the parameters
+    inline int target_subsets_parser();  // parse the multiple target subsets
 #ifdef debug_parameter
     int test_print();
 #endif

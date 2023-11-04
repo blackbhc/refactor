@@ -490,7 +490,7 @@ int ini_parser::test_split( void ) const
     std::string str2 = "1 2\t 3 \t\t4";
     std::string str3 = "1+2:3:4";
     std::string str4 = "1:::+2\t3 4";
-    std::string str5 = "1.012+string+3&4";
+    std::string str5 = "1.012+string+3:4";
 
     std::vector< std::string > target1 = { "1", "2", "3", "4" };
     std::vector< std::string > target2 = { "1.012", "string", "3", "4" };
@@ -521,12 +521,12 @@ int ini_parser::test_read( void )
     {
         this->read( this->filename.c_str() );
         println( "It passed the test." );
-        return 0;
+        CHECK_RETURN( true );
     }
     catch ( std::exception& e )
     {
         WARN( "It failed the test, error message: %s", e.what() );
-        return 1;
+        CHECK_RETURN( false );
     }
 }
 

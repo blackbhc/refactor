@@ -2,6 +2,7 @@
 #define GALOTFA_DEFAULT_CPP
 #include "para.h"
 #include "../tools/prompt.h"
+#include "../tools/string.h"
 #include "ini_parser.h"
 #ifdef debug_parameter
 #include "ini_parser.cpp"
@@ -124,18 +125,69 @@ para::para( ini_parser& parser )
     update( post, filename, Post, str );
     update( post, pattern_speed, Post, bool );
 
+    // parser the analysis subsets if the multiple subsets analysis is enabled
+    if ( this->glb_multiple )
+    {
+        int return_code = this->target_subsets_parser();
+        if ( return_code != 0 )
+        {
+            ERROR( "Failed to parse the target subsets, please check your ini file." );
+        }
+        else
+        {
+            INFO( "Get %d subsets for analysis.", ( int )this->glb_target_subsets.size() );
+            int counter = 0;
+            for ( auto& subset : this->glb_target_subsets )
+            {
+                counter += 1;
+                std::string subset_str = "";
+                for ( auto& type : subset )
+                    subset_str += std::to_string( type ) + "&";
+                subset_str.pop_back();
+                INFO( "Subset %d: %s", counter, subset_str.c_str() );
+            }
+        }
+    }
+    else
+    {
+        INFO( "The multiple subsets analysis is disabled." );
+        this->glb_target_subsets.push_back( this->glb_particle_types );
+        // push this into the target subsets, to make the API more convenient
+    }
+
     // check the dependencies between the parameters
     int return_code = this->check();
     if ( return_code != 0 )
     {
         ERROR(
-            "There are conflicts between the given parameters."
+            "There are conflicts between the parameters specified in the galotfa.ini file."
             "\nPlease check and modify your ini "
             "parameter file, may be there are typos such as an initial lowercase section name." );
     }
 #else
     ( void )parser;  // avoid the warning of unused variable
 #endif
+}
+
+inline int para::target_subsets_parser()
+{
+    try
+    {
+        for ( std::string& subset : this->glb_classification )
+        {
+            auto               substrs = galotfa::string::split( subset, "&\"" );
+            std::vector< int > subset_types;
+            for ( auto& str : substrs )
+                subset_types.push_back( std::stoi( str ) );
+            this->glb_target_subsets.push_back( subset_types );
+        }
+    }
+    catch ( std::exception& e )
+    {
+        WARN( "Get unexpected runtime error: %s", e.what() );
+        return 1;
+    }
+    return 0;
 }
 
 int para::check( void )
@@ -161,6 +213,27 @@ int para::check( void )
             this->glb_particle_types.size() == 0,
             "On-the-fly analysis by galotfa is enabled, but the target particle types for "
             "analysis are not given." );
+
+        IF_THEN_WARN(
+            this->glb_multiple && this->glb_classification.size() == 0,
+            "The multiple subsets analysis is enabled, but the target subsets for analysis are "
+            "not given." );
+
+        auto target_seubset_not_in_particle_types = [ this ]( std::vector< int >& subset ) -> bool {
+            for ( auto& type_id : subset )
+            {
+                if ( std::find( this->glb_particle_types.begin(), this->glb_particle_types.end(),
+                                type_id )
+                     == this->glb_particle_types.end() )
+                    return true;
+            }
+            return false;
+        };
+
+        IF_ONE_THEN_WARN(
+            this->glb_target_subsets, target_seubset_not_in_particle_types,
+            "Try to analysis multiple subsets, but the target subsets' particle types "
+            "are not include in \"particle_types\"." );
 
         IF_THEN_WARN( this->glb_convergence_type != "relative"
                           && this->glb_convergence_type != "absolute",

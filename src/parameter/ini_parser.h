@@ -14,7 +14,7 @@
 #define SECTION_PREFIX "["
 #define SECTION_SUFFIX "]"
 #define KEY_VALUE_SEP "="
-#define VALUE_SEP " \t,:+&"
+#define VALUE_SEP " \t,:+"
 
 namespace galotfa {
 namespace ini {
