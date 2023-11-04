@@ -36,9 +36,12 @@ private:
     // array of pointers to the writers: 5 possible output files
     // model, particle, orbit, group, post
     // TODO: may by create a separate writer for each possible group classfiication in the future?
-    galotfa::writer* writers[ 5 ];
-    int              galotfa_rank;  // the global rank of the MPI process
-    int              galotfa_size;  // the global size of the MPI process
+    galotfa::writer*   writers[ 5 ];
+    int                galotfa_rank;                     // the global rank of the MPI process
+    int                galotfa_size;                     // the global size of the MPI process
+    std::vector< int > include_particle_types;           // TODO: add a function to parser this
+    std::vector< std::vector< int >* > classifications;  // TODO: the result of the classification
+
     // pointer to the analysis engine
     // private methods
 private:
@@ -58,8 +61,13 @@ private:
         this->engine->recv_data has_tracer;
         return 0;
     };
-    int         create_writers();  // create the writers
-    int         save( void );      // write the data to the output files
+    int         create_writers();                 // create the writers
+    inline void create_model_file_datasets();     // create the datasets in the model file
+    inline void create_particle_file_datasets();  // create the datasets in the particle file
+    inline void create_orbit_file_datasets();     // create the datasets in the orbit file
+    inline void create_group_file_datasets();     // create the datasets in the group file
+    inline void create_post_file_datasets();      // create the datasets in the post file
+    int         save( void );                     // write the data to the output files
     inline void init();
 
     // public methods

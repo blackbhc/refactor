@@ -104,6 +104,7 @@ int monitor::create_writers()
         auto file          = this->para->glb_output_dir + "/" + this->para->md_filename;
         auto writer        = new galotfa::writer( file.c_str() );
         this->writers[ 0 ] = writer;
+        this->create_model_file_datasets();
     }
     if ( this->para->ptc_switch_on )
     {
@@ -152,6 +153,14 @@ int monitor::save()
     MPI_Bcast( &return_code, 1, MPI_INT, 0, MPI_COMM_WORLD );
     // make all the MPI processes return the same value
     return return_code;
+}
+
+
+inline void monitor::create_model_file_datasets()
+{
+    // TODO: create datasets based on the enabled target analysis sets
+
+    ;
 }
 
 }  // namespace galotfa
