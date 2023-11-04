@@ -211,7 +211,8 @@ which will combine other modules together to finish the on-the-fly analysis.
 
 - class `monitor`: the virtual analysis engine's monitor.
 
-  - `init()`: create the output directory and open the hdf5 files, only to make the constructor more readable.
+  - `init()`: create the output directory and open the hdf5 files, only to make the constructor more readable, and
+    should be called only in the constructor.
   - `run_with(...)`: arguments are pointers of the simulation data, which must includes array of particle id (1D),
     mass (1D), particle type (1D), coordinate (2D), velocity (2D) of particles, and a time stamp variable, a
     integer to specify the length of the arrays. There is additional argument for the potential tracers'
@@ -220,7 +221,9 @@ which will combine other modules together to finish the on-the-fly analysis.
     based on a temporary `ini_parser` object. The default ini parameter filename is specified at here, which
     is `galotfa.ini` in the working directory.
   - `create_writers()`: create the writer objects based on the parameter file, due to the file lock, this
-    function should be called only in the main process.
+    function should be called only in the main process. To improve the readability of the code, these functions
+    use some other inline functions to create the datasets under corresponding groups/files, based on the given
+    parameters.
 
 - class `calculator`: the virtual analysis engine's calculator.
 
@@ -329,6 +332,7 @@ For the `ini_parser` class:
     parameter name. Alias: `glb` for the global section, `pre` for the pre-process section, `md` for the model section,
     `ptc` for the particle section, `orb` for the orbit section, `grp` for the group section and `post` for the
     post-process section.
+- `target_sets_parser()`: parse the classification of multiple analysis sets.
 
 #### Implementation details
 
@@ -359,21 +363,24 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
     string-type key and a `ini::Value`-type value. The key of the hash table = section name +
     "\_" + key name of parameter in the ini file, where the space in the section name will be replaced by `_`.
 
-- class `para`: define the default value of some parameters, and update the value according the ini parameter file.
+- struct `para`: define the default value of some parameters, and update the value according the ini parameter file.
   - member prefix indicates their section in the parameter file: `glb` for the global section, `pre` for the
     pre-process section, `md` for the model section, `ptc` for the particle section, `orb` for the orbit section,
     `grp` for the group section and `post` for the post-process section.
+  - most members of struct `para` are just a proxy of possible parameters in the ini file, except the
+    `glb_target_sets`, which is parsed from the `particle_types` and `classification` parameters in the ini file.
   - constructor: with a reference to a created `ini_parser` object, then update the value of the parameters
     based on the parameter file (with hard code, the ugly but fast way).
   - `check()`: check whether there are some conflicts between the parameters, and whether there are some
     parameters that are lack of. Raise a warning message for each conflict or lack of parameters.
+  - `target_sets_parser()`: parse the classification of multiple analysis sets.
 
 #### Steps to add new parameter into the code
 
 1. Edit the parameter table and explanation in the `README.md` file, during which choose the name, type and
    default value of the new parameter.
 2. Edit the `para` class in the `src/parameter/default.h` file, add the parameter into the chosen section
-   and default value.
+   and set its default value.
 3. Add a line in the update function (`para::para(...)`) to update the value of the new parameter from the ini file.
 4. Add a check statement into the check function of `para`(`check()`), to check the possible conflicts and
    lack of the new parameter.

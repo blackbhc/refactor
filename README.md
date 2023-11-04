@@ -167,7 +167,7 @@ insensitive.
 - available value type: boolean, string(s), number(s). For numbers, there is no difference between integer and
   float, but the value(s) will be converted to required type of the target parameter.
 - comment prefix: `#` and `;`.
-- supported value separator: white space, `,`, `+`, `:` and `&`. Note: the name of key can not contain these characters.
+- supported value separator: white space, `,`, `+` and `:`. Note: the name of key can not contain these characters.
 - unexpected additional value for a key will be illegal, e.g. `<a key for boolean> = true yes` will make
   the parser to detect the value of the key as `true yes`, which is in string type and may cause error in the
   following parsing.
@@ -182,7 +182,9 @@ to see their explanation.
 | `Global`   |                                                              |            |               |                                                             |
 |            | <a href="#switch_on">`switch_on`</a>                         | Boolean    | `on`          |                                                             |
 |            | <a href="#output_dir">`output_dir`</a>                       | String     | `./otfoutput` | Any valid path.                                             |
-|            | <a href="#particle_types">`particle_types`</a>               | Integer(s) |               | Based on your IC of simulation                              |
+|            | <a href="#particle_types">`particle_types`</a>               | Integer(s) |               | Avaiable particle types of your simulation IC               |
+|            | <a href="#multiple">`multiple`</a>                           | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#classification">`classification`</a>               | Strings    | empty         | see in the <a href="#classification">text</a>               |
 |            | <a href="#convergence_type">`convergence_type`</a>           | String     | `absolute`    | `absolute` or `relative`.                                   |
 |            | <a href="#convergence_threshold">`convergence_threshold`</a> | Float      | 0.001         | $(0, 1)$ if `convergence_type` = `relative`, otherwise $>0$ |
 |            | <a href="#max_iter">`max_iter`</a>                           | Integer    | 25            | $>0$                                                        |
@@ -250,16 +252,34 @@ This section specify some parameters that control the behaviour of `galotfa` on 
 - <a id="output_dir"></a>`output_dir`: the path to store the output files, create it if not exist.
 - <a id="particle_types"></a>`particle_types`: the type(s) of target particles types to do the on-the-fly
   analysis, must be given at least one type, otherwise the program will raise an error.
+- <a id="multiple"></a>`multiple`: whether to treat the more than one target particles as different set,
+  which can be specified by the next parameter `classification`, or treat them as a whole. Default is
+  `multiple` = `on`, that all target particles will be analyzed as a whole.
+- <a id="classification"></a>`classification`: specify how to classify the target particles to different
+  analysis sets.
+  - Must be given if `multiple` = `on`, otherwise the program will raise an error. If `multiple` = `off`,
+    this parameter will be ignored.
+  - The given value should be strings of target types in each subset, where the strings are separated by common
+    delimiter (white space, `,`, `+` and `:`), and in each string, the integer of
+    the target particle types in such subset should be separated by `&`.
+    - If `"1&2" "3" "4&5&6"` is given, then there will be 3 sets, the first subset contains the target particles
+      of type 1 and 2, the second subset contains the target particles of type 3, and the third subset contains
+      the target particles of type 4, 5 and 6.
+    - There should has no space between, before or after the integers in each pair of quotation marks, otherwise
+      the program will raise an error: `"1 & 2" "3" "4 & 5 & 6"` is illegal.
+  - Cross sets are allowed, e.g. `1-2 2-3` is possible, which means the first subset contains the target
+    particles of type 1 and 2, and the second subset contains the target particles of type 2 and 3.
+  - Values should in the range of `particle_types`, otherwise the program will raise an error.
 - <a id="convergence_type"></a>`convergence_type`: the type of convergence criterion for the on-the-fly analysis.
 - <a id="convergence_threshold"></a>`convergence_threshold`: the threshold for numerical convergence during the
   on-the-fly analysis.
   - `convergence_type` = `absolute`: the convergence criterion is $\Delta$ $Q<\epsilon$ for some quantity $Q$,
-    where $\\epsilon$ is the `convergence_threshold`.
+    where $\epsilon$ is the `convergence_threshold`.
   - `convergence_type` = `relative`: the convergence criterion is $\Delta Q / Q < \epsilon$ for some quantity $Q$,
-    where $\\epsilon$ is the `convergence_threshold`.
+    where $\epsilon$ is the `convergence_threshold`.
 - <a id="max_iter"></a>`max_iter`: the maximum number of iterations during analysis.
 - <a id="equal_threshold"></a>`equal_threshold`: the threshold for equality of two floating point numbers, e.g.
-  if the threshold=0.001, then two float numbers that $|a-b|\<0.001$ are considered equal. Recommended value is
+  if the threshold=0.001, then two float numbers that $|a-b|<0.001$ are considered equal. Recommended value is
   $1e-6$ to $1e-40$, and should not less than the lowest precision of the floating point number in your system.
 - <a id="sim_type"></a>`sim_type`: the type of simulation, e.g. `galaxy`, `cluster`, `cosmology` and `cosmology_zoom_in`.
   At present, only `galaxy` is supported.
@@ -339,8 +359,8 @@ The model level on-the-fly analysis of the target particles. The most common cas
 - <a id="colors"></a>`colors`:
   At least one color must be given, if the `image` is enabled, otherwise the program will raise an error.
   - `particle_number`: the number of particles in each bin.
-  - `surface_density`: the surface density of the particles in each bin. The unit is $\[M\]/\[L\]^2$, $\[M\]$ and
-    $\[L\]$ are the internal unit of mass and length in the simulation, the same below.
+  - `surface_density`: the surface density of the particles in each bin. The unit is $[M]/[L]^2$, $[M]$ and
+    $[L]$ are the internal unit of mass and length in the simulation, the same below.
   - `mean_velocity`: the mean velocity of the particles in each bin, one component for each axis.
   - `dispersion`: the velocity dispersion of the particles in each bin, one component for each axis.
   - `dispersion_tensor`: the velocity dispersion tensor of the particles in each bin.
@@ -350,7 +370,7 @@ The model level on-the-fly analysis of the target particles. The most common cas
 - <a id="bar_length"></a>`bar_length`: whether calculate the bar length in the target particles,
   if detected a bar.
 - <a id="inerita_tensor"></a>`inertia_tensor`: whether calculate the inertia tensor of the target particles.
-- <a id="sbar"></a>`sbar`: whether calculate the bar strength parameter, where $S_\rm{bar}$ is defined
+- <a id="sbar"></a>`sbar`: whether calculate the bar strength parameter, where $S_{\rm{bar}}$ is defined
   as $A_2/A_0$.
 - <a id="sbuckle"></a>`sbuckle`: whether calculate the buckling strength parameter, where $S_{\rm{buckle}}$
   is defined as $\sum m_i z_i \exp(-2i \phi_i) / \sum m_i$.
