@@ -10,17 +10,21 @@ struct para
     // the switchs of each part
     bool glb_switch_on = true, md_switch_on = false, ptc_switch_on = false, orb_switch_on = false,
          grp_switch_on = false, post_switch_on = false;
+
     // the file/path of each part
     std::string glb_output_dir = "./otfoutput", md_filename = "model", ptc_filename = "particle",
                 orb_filename = "orbit", grp_filename = "group", post_filename = "post";
+
     // the analysis periods
     int md_period = 10, ptc_period = 10000, orb_period = 1, grp_period = 10;
 
     // other global parameters
-    std::string        glb_convergence_type = "absolute", glb_sim_type = "galaxy";
-    int                glb_pot_tracer = -10086, glb_max_iter = 25;
-    std::vector< int > glb_particle_types;
-    double             glb_convergence_threshold = 0.001, glb_equal_threshold = 1e-10;
+    bool                       glb_multiple         = false;
+    std::string                glb_convergence_type = "absolute", glb_sim_type = "galaxy";
+    int                        glb_pot_tracer = -10086, glb_max_iter = 25;
+    std::vector< int >         glb_particle_types;
+    std::vector< std::string > glb_classification;
+    double                     glb_convergence_threshold = 0.001, glb_equal_threshold = 1e-10;
 
     // pre section parameters
     bool        pre_recenter = true, pre_align_bar = true;

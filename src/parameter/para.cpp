@@ -61,6 +61,8 @@ para::para( ini_parser& parser )
     }
     update( glb, output_dir, Global, str );
     update( glb, particle_types, Global, ints );
+    update( glb, multiple, Global, bool );
+    update( glb, classification, Global, strs );
     update( glb, convergence_type, Global, str );
     update( glb, convergence_threshold, Global, double );
     update( glb, max_iter, Global, int );
