@@ -8,6 +8,8 @@
 #include <mpi.h>
 #include <vector>
 
+using std::vector;
+
 // I don't want to write this verbose argument list again and again ...
 // In summary, the argument list is:
 // id, type, mass, coordinate, velocity, time, particle_number
@@ -36,11 +38,13 @@ private:
     // array of pointers to the writers: 5 possible output files
     // model, particle, orbit, group, post
     // TODO: may by create a separate writer for each possible group classfiication in the future?
-    galotfa::writer*   writers[ 5 ];
-    int                galotfa_rank;                     // the global rank of the MPI process
-    int                galotfa_size;                     // the global size of the MPI process
-    std::vector< int > include_particle_types;           // TODO: add a function to parser this
-    std::vector< std::vector< int >* > classifications;  // TODO: the result of the classification
+    vector< vector< galotfa::writer* > > writers;
+    // each pointer is a 5-element array of possible output files: model, particle, orbit, group,
+    // post Each analysis set will have its own 5 output files
+    int                      galotfa_rank;            // the global rank of the MPI process
+    int                      galotfa_size;            // the global size of the MPI process
+    vector< int >            include_particle_types;  // TODO: add a function to parser this
+    vector< vector< int >* > classifications;         // TODO: the result of the classification
 
     // pointer to the analysis engine
     // private methods
@@ -62,6 +66,7 @@ private:
         return 0;
     };
     int         create_writers();                 // create the writers
+    inline void create_files();                   // create the output files
     inline void create_model_file_datasets();     // create the datasets in the model file
     inline void create_particle_file_datasets();  // create the datasets in the particle file
     inline void create_orbit_file_datasets();     // create the datasets in the orbit file
@@ -95,7 +100,16 @@ public:
     // interface of the simulation data: with potential tracer
     inline int run_with call_with_tracer
     {
-        push_data has_tracer;
+        if ( this->para->glb_switch_on )
+        {
+            push_data has_tracer;
+            int       return_code = this->save();
+            if ( return_code != 0 )
+            {
+                WARN( "Failed to save the data to the output files." );
+                return return_code;
+            }
+        }
         return 0;
     };
 };

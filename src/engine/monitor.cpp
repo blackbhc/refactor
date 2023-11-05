@@ -2,16 +2,13 @@
 #define GALOTFA_MONITOR_CPP
 #include "monitor.h"
 #include <hdf5.h>
+#include <string>
 #include <sys/stat.h>
 #include <unistd.h>
 
 namespace galotfa {
 monitor::monitor( void )
 {
-    // set the writers pointers to nullptr
-    for ( int i = 0; i < 5; ++i )
-        this->writers[ i ] = nullptr;
-
     // check and ensure MPI is initialized
     int  initialized = 0;
     auto status      = MPI_Initialized( &initialized );
@@ -74,14 +71,15 @@ monitor::~monitor()
     }
 
     // free the writers pointers
-    for ( int i = 0; i < 5; ++i )
-    {
-        if ( this->writers[ i ] != nullptr )
-        {
-            delete this->writers[ i ];
-            this->writers[ i ] = nullptr;
-        }
-    }
+    for ( auto& writer_of_single_set : this->writers )
+        for ( auto& w : writer_of_single_set )
+            if ( w != nullptr )
+            {
+                delete w;
+                w = nullptr;
+            }
+    this->writers.clear();
+
 
     int  initialized = 0;
     auto status      = MPI_Initialized( &initialized );
@@ -95,43 +93,87 @@ monitor::~monitor()
 
 int monitor::create_writers()
 {
+    // create the files for each analysis set
+    this->create_files();
+
+    // create the datasets in each file
+    if ( this->para->md_switch_on )
+        this->create_model_file_datasets();
+    if ( this->para->ptc_switch_on )
+        this->create_particle_file_datasets();
+    if ( this->para->orb_switch_on )
+        this->create_orbit_file_datasets();
+    if ( this->para->grp_switch_on )
+        this->create_group_file_datasets();
+    if ( this->para->post_switch_on )
+        this->create_post_file_datasets();
+    return 0;
+}
+
+inline void monitor::create_files()
+{
     // NOTE: this function will access the hdf5 files, so it should be called by the root process
     // Besides, it should be called only when galotfa is enabled (para->glb_switch_on == true)
 
-    // TODO: create the datasets at the same time
-    if ( this->para->md_switch_on )
+    // create the files
+    if ( !this->para->glb_multiple )
+    // single analysis set case
     {
-        auto file          = this->para->glb_output_dir + "/" + this->para->md_filename;
-        auto writer        = new galotfa::writer( file.c_str() );
-        this->writers[ 0 ] = writer;
-        this->create_model_file_datasets();
-    }
-    if ( this->para->ptc_switch_on )
-    {
-        auto file          = this->para->glb_output_dir + "/" + this->para->ptc_filename;
-        auto writer        = new galotfa::writer( file.c_str() );
-        this->writers[ 1 ] = writer;
-    }
-    if ( this->para->orb_switch_on )
-    {
-        auto file          = this->para->glb_output_dir + "/" + this->para->orb_filename;
-        auto writer        = new galotfa::writer( file.c_str() );
-        this->writers[ 2 ] = writer;
-    }
-    if ( this->para->grp_switch_on )
-    {
-        auto file          = this->para->glb_output_dir + "/" + this->para->grp_filename;
-        auto writer        = new galotfa::writer( file.c_str() );
-        this->writers[ 3 ] = writer;
-    }
-    if ( this->para->post_switch_on )
-    {
-        auto file          = this->para->glb_output_dir + "/" + this->para->post_filename;
-        auto writer        = new galotfa::writer( file.c_str() );
-        this->writers[ 4 ] = writer;
-    }
+        std::string file1 = this->para->glb_output_dir + "/" + this->para->md_filename;
+        std::string file2 = this->para->glb_output_dir + "/" + this->para->ptc_filename;
+        std::string file3 = this->para->glb_output_dir + "/" + this->para->orb_filename;
+        std::string file4 = this->para->glb_output_dir + "/" + this->para->grp_filename;
+        std::string file5 = this->para->glb_output_dir + "/" + this->para->post_filename;
 
-    return 0;
+        galotfa::writer *writer1 = nullptr, *writer2 = nullptr, *writer3 = nullptr,
+                        *writer4 = nullptr, *writer5 = nullptr;
+
+        if ( this->para->md_switch_on )
+            writer1 = new galotfa::writer( file1.c_str() );
+        if ( this->para->ptc_switch_on )
+            writer2 = new galotfa::writer( file2.c_str() );
+        if ( this->para->orb_switch_on )
+            writer3 = new galotfa::writer( file3.c_str() );
+        if ( this->para->grp_switch_on )
+            writer4 = new galotfa::writer( file4.c_str() );
+        if ( this->para->post_switch_on )
+            writer5 = new galotfa::writer( file5.c_str() );
+        this->writers.push_back(
+            vector< galotfa::writer* >{ writer1, writer2, writer3, writer4, writer5 } );
+    }
+    else
+    {
+        for ( size_t i = 0; i < this->para->glb_target_sets.size(); ++i )
+        {
+            std::string prefix = "set" + std::to_string( i + 1 ) + "_";
+
+            std::string file1 = this->para->glb_output_dir + "/" + prefix + this->para->md_filename;
+            std::string file2 =
+                this->para->glb_output_dir + "/" + prefix + this->para->ptc_filename;
+            std::string file3 =
+                this->para->glb_output_dir + "/" + prefix + this->para->orb_filename;
+            std::string file4 =
+                this->para->glb_output_dir + "/" + prefix + this->para->grp_filename;
+            std::string file5 =
+                this->para->glb_output_dir + "/" + prefix + this->para->post_filename;
+
+            galotfa::writer *writer1 = nullptr, *writer2 = nullptr, *writer3 = nullptr,
+                            *writer4 = nullptr, *writer5 = nullptr;
+
+            if ( this->para->md_switch_on )
+                writer1 = new galotfa::writer( file1.c_str() );
+            if ( this->para->ptc_switch_on )
+                writer2 = new galotfa::writer( file2.c_str() );
+            if ( this->para->orb_switch_on )
+                writer3 = new galotfa::writer( file3.c_str() );
+            if ( this->para->grp_switch_on )
+                writer4 = new galotfa::writer( file4.c_str() );
+            if ( this->para->post_switch_on )
+                writer5 = new galotfa::writer( file5.c_str() );
+            this->writers.push_back(
+                vector< galotfa::writer* >{ writer1, writer2, writer3, writer4, writer5 } );
+        }
+    }
 }
 
 int monitor::save()
@@ -158,8 +200,69 @@ int monitor::save()
 
 inline void monitor::create_model_file_datasets()
 {
-    // TODO: create datasets based on the enabled target analysis sets
+    // this function should be called only when the model file is enabled
+    // again, it should be called by the root process
+    for ( auto& writers_of_single_set : this->writers )
+    {
+        // the size of the datasets
+        galotfa::hdf5::size_info single_scaler_info = { H5T_NATIVE_INT, 1, { 1 } };  // for scalers
+        // for 3D vectors
+        galotfa::hdf5::size_info single_vector_info = { H5T_NATIVE_INT, 1, { 3 } };
+        // for image matrix
+        size_t                   binnum     = ( size_t )this->para->md_image_bins;
+        galotfa::hdf5::size_info image_info = { H5T_NATIVE_INT, 2, { binnum, binnum } };
+        // for tensor
+        galotfa::hdf5::size_info tensor_info = { H5T_NATIVE_INT, 4, { binnum, binnum, 3, 3 } };
 
+        writers_of_single_set[ 0 ]->create_dataset( "/Times", single_scaler_info );
+        if ( this->para->pre_recenter )
+            writers_of_single_set[ 0 ]->create_dataset( "/Center", single_vector_info );
+        if ( this->para->md_image )
+        {
+            writers_of_single_set[ 0 ]->create_dataset( "/Image/Size", image_info );
+            for ( auto& color : this->para->md_colors )
+                writers_of_single_set[ 0 ]->create_dataset( "/Image/" + color, single_vector_info );
+        }
+        if ( this->para->md_bar_major_axis )
+            writers_of_single_set[ 0 ]->create_dataset( "/Bar/MajorAxis", single_vector_info );
+        if ( this->para->md_bar_length )
+            writers_of_single_set[ 0 ]->create_dataset( "/Bar/Length", single_scaler_info );
+        if ( this->para->md_sbar )
+            writers_of_single_set[ 0 ]->create_dataset( "/Bar/SBar", single_scaler_info );
+        if ( this->para->md_sbuckle )
+            writers_of_single_set[ 0 ]->create_dataset( "/Bar/SBuckle", single_scaler_info );
+        if ( this->para->md_am.size() > 0 )
+            for ( auto& m : this->para->md_am )
+                writers_of_single_set[ 0 ]->create_dataset( "/Bar/A" + std::to_string( m ),
+                                                            single_scaler_info );
+    }
+}
+
+inline void monitor::create_particle_file_datasets()
+{
+    // this function should be called only when the particle file is enabled
+    // again, it should be called by the root process
+    ;
+}
+
+inline void monitor::create_orbit_file_datasets()
+{
+    // this function should be called only when the orbit file is enabled
+    // again, it should be called by the root process
+    ;
+}
+
+inline void monitor::create_group_file_datasets()
+{
+    // this function should be called only when the group file is enabled
+    // again, it should be called by the root process
+    ;
+}
+
+inline void monitor::create_post_file_datasets()
+{
+    // this function should be called only when the post file is enabled
+    // again, it should be called by the root process
     ;
 }
 
