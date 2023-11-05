@@ -221,9 +221,8 @@ which will combine other modules together to finish the on-the-fly analysis.
     based on a temporary `ini_parser` object. The default ini parameter filename is specified at here, which
     is `galotfa.ini` in the working directory.
   - `create_writers()`: create the writer objects based on the parameter file, due to the file lock, this
-    function should be called only in the main process. To improve the readability of the code, these functions
-    use some other inline functions to create the datasets under corresponding groups/files, based on the given
-    parameters.
+    function should be called only in the main process. To improve the readability of the code, this function
+    are split into several inline functions.
 
 - class `calculator`: the virtual analysis engine's calculator.
 
