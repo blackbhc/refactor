@@ -35,17 +35,16 @@ class monitor
 private:
     galotfa::para*       para   = nullptr;  // pointer to the parameter class
     galotfa::calculator* engine = nullptr;
+    unsigned long long   step   = 0;  // the current step of the simulation/analysis
     // array of pointers to the writers: 5 possible output files
     // model, particle, orbit, group, post
-    vector< vector< galotfa::writer* > > writers;
-    // each pointer is a 4-element array of possible output files: model, particle, group,
-    // and post, each analysis set will have its own 4 output files
-    galotfa::writer*         orbit_writer = nullptr;
-    int                      galotfa_rank;  // the global rank of the MPI process
-    int                      galotfa_size;  // the global size of the MPI process
-    vector< int >            include_particle_types;
-    vector< vector< int >* > classifications;
-    vector< unsigned long >  particle_ids;  // the particle ids for orbital curve log
+    // nested vector of the data writers to be written: due to there may be multiple analysis sets
+    vector< vector< galotfa::writer* > > vec_of_writers;
+    int                                  galotfa_rank;  // the global rank of the MPI process
+    int                                  galotfa_size;  // the global size of the MPI process
+    vector< int >                        include_particle_types;
+    vector< vector< int >* >             classifications;
+    vector< unsigned long >              particle_ids;  // the particle ids for orbital curve log
 
     // pointer to the analysis engine
     // private methods
@@ -66,14 +65,15 @@ private:
         this->engine->recv_data has_tracer;
         return 0;
     };
-    int         create_writers();                 // create the writers
-    inline void create_files();                   // create the output files
-    inline void create_model_file_datasets();     // create the datasets in the model file
-    inline void create_particle_file_datasets();  // create the datasets in the particle file
-    inline void create_orbit_file_datasets();     // create the datasets in the orbit file
-    inline void create_group_file_datasets();     // create the datasets in the group file
-    inline void create_post_file_datasets();      // create the datasets in the post file
-    int         save( void );                     // write the data to the output files
+    int         create_writers();              // create the writers
+    inline void create_files();                // create the output files
+    inline void create_model_file_datasets();  // create the datasets in the model file
+    void        create_particle_file_datasets(
+               vector< unsigned long >& particle_ana_nums );  // create the datasets in the particle file
+    inline void create_orbit_file_datasets();  // create the datasets in the orbit file
+    inline void create_group_file_datasets();  // create the datasets in the group file
+    inline void create_post_file_datasets();   // create the datasets in the post file
+    int         save( void );                  // write the data to the output files
     inline void init();
     inline void check_filesize( long int size ) const;
 
@@ -85,26 +85,17 @@ public:
     // interface of the simulation data: without potential tracer
     inline int run_with call_without_tracer
     {
+        ++this->step;
+        if ( this->step == 1 )
+        {
+            // TODO: extract the target particles at here!
+            vector< unsigned long > particle_ana_nums( this->para->ptc_particle_types.size(), 1 );
+            this->create_particle_file_datasets( particle_ana_nums );
+        }
+
         if ( this->para->glb_switch_on )
         {
             push_data no_tracer;
-            int       return_code = this->save();
-            if ( return_code != 0 )
-            {
-                WARN( "Failed to save the data to the output files." );
-                return return_code;
-            }
-        }
-        return 0;
-    };
-
-
-    // interface of the simulation data: with potential tracer
-    inline int run_with call_with_tracer
-    {
-        if ( this->para->glb_switch_on )
-        {
-            push_data has_tracer;
             int       return_code = this->save();
             if ( return_code != 0 )
             {

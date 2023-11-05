@@ -61,9 +61,6 @@ para::para( ini_parser& parser )
         INFO( "The global analysis is enabled." );
     }
     update( glb, output_dir, Global, str );
-    update( glb, particle_types, Global, ints );
-    update( glb, multiple, Global, bool );
-    update( glb, classification, Global, strs );
     update( glb, convergence_type, Global, str );
     update( glb, convergence_threshold, Global, double );
     update( glb, max_iter, Global, int );
@@ -73,6 +70,7 @@ para::para( ini_parser& parser )
 
     // Pre section
     update( pre, recenter, Pre, bool );
+    update( pre, recenter_anchors, Pre, ints );
     update( pre, region_shape, Pre, str );
     update( pre, ratio, Pre, double );
     update( pre, region_size, Pre, double );
@@ -83,6 +81,9 @@ para::para( ini_parser& parser )
     update( md, switch_on, Model, bool );
     update( md, filename, Model, str );
     update( md, period, Model, int );
+    update( md, particle_types, Model, ints );
+    update( md, multiple, Model, bool );
+    update( md, classification, Model, strs );
     update( md, region_shape, Model, str );
     update( md, ratio, Model, double );
     update( md, region_size, Model, double );
@@ -100,6 +101,7 @@ para::para( ini_parser& parser )
     update( ptc, switch_on, Particle, bool );
     update( ptc, filename, Particle, str );
     update( ptc, period, Particle, int );
+    update( ptc, particle_types, Particle, ints );
     update( ptc, circularity, Particle, bool );
     update( ptc, circularity_3d, Particle, bool );
     update( ptc, rg, Particle, bool );
@@ -126,7 +128,7 @@ para::para( ini_parser& parser )
     update( post, pattern_speed, Post, bool );
 
     // parser the analysis sets if the multiple sets analysis is enabled
-    if ( this->glb_multiple )
+    if ( this->md_multiple )
     {
         int return_code = this->target_sets_parser();
         if ( return_code != 0 )
@@ -135,9 +137,9 @@ para::para( ini_parser& parser )
         }
         else
         {
-            INFO( "Get %d sets for analysis.", ( int )this->glb_target_sets.size() );
+            INFO( "Get %d sets for analysis.", ( int )this->md_target_sets.size() );
             int counter = 0;
-            for ( auto& subset : this->glb_target_sets )
+            for ( auto& subset : this->md_target_sets )
             {
                 counter += 1;
                 std::string subset_str = "";
@@ -150,8 +152,8 @@ para::para( ini_parser& parser )
     }
     else
     {
-        INFO( "The multiple sets analysis is disabled." );
-        this->glb_target_sets.push_back( this->glb_particle_types );
+        INFO( "Treating all the particle types as a single set for model analysis." );
+        this->md_target_sets.push_back( this->md_particle_types );
         // push this into the target sets, to make the API more convenient
     }
 
@@ -173,13 +175,13 @@ inline int para::target_sets_parser()
 {
     try
     {
-        for ( std::string& subset : this->glb_classification )
+        for ( std::string& subset : this->md_classification )
         {
             auto               substrs = galotfa::string::split( subset, "&\"" );
             std::vector< int > subset_types;
             for ( auto& str : substrs )
                 subset_types.push_back( std::stoi( str ) );
-            this->glb_target_sets.push_back( subset_types );
+            this->md_target_sets.push_back( subset_types );
         }
     }
     catch ( std::exception& e )
@@ -209,30 +211,6 @@ int para::check( void )
                       "On-the-fly analysis by galotfa is enabled, but no any analysis part is "
                       "activated." )
 
-        IF_THEN_WARN(
-            this->glb_particle_types.size() == 0,
-            "On-the-fly analysis by galotfa is enabled, but the target particle types for "
-            "analysis are not given." );
-
-        IF_THEN_WARN( this->glb_multiple && this->glb_classification.size() == 0,
-                      "The multiple sets analysis is enabled, but the target sets for analysis are "
-                      "not given." );
-
-        auto target_seubset_not_in_particle_types = [ this ]( std::vector< int >& subset ) -> bool {
-            for ( auto& type_id : subset )
-            {
-                if ( std::find( this->glb_particle_types.begin(), this->glb_particle_types.end(),
-                                type_id )
-                     == this->glb_particle_types.end() )
-                    return true;
-            }
-            return false;
-        };
-
-        IF_ONE_THEN_WARN( this->glb_target_sets, target_seubset_not_in_particle_types,
-                          "Try to analysis multiple sets, but the target sets' particle types "
-                          "are not include in \"particle_types\"." );
-
         IF_THEN_WARN( this->glb_convergence_type != "relative"
                           && this->glb_convergence_type != "absolute",
                       "The convergence type is unknown: %s."
@@ -261,6 +239,10 @@ int para::check( void )
         // pre-process part
         if ( this->pre_recenter )
         {
+            IF_THEN_WARN( this->pre_recenter_anchors.size() == 0,
+                          "Recenter system before anlysis is enabled, but the  recenter_anchor is "
+                          "not given." );
+
             IF_THEN_WARN( this->pre_region_shape != "sphere" && this->pre_region_shape != "cylinder"
                               && this->pre_region_shape != "box",
                           "The region shape for pre-process is not supported, given: %s."
@@ -295,6 +277,29 @@ int para::check( void )
     {
         IF_THEN_WARN( this->md_period <= 0,
                       "The period of the model analysis is non-positive, which is not allowed." );
+
+        IF_THEN_WARN( this->md_particle_types.size() == 0,
+                      "Model level analysis is enabled, but the target particle types for model "
+                      "analysis are not given." );
+
+        IF_THEN_WARN( this->md_multiple && this->md_classification.size() == 0,
+                      "The multiple sets analysis is enabled, but the target sets for analysis are "
+                      "not given." );
+
+        auto target_seubset_not_in_particle_types = [ this ]( std::vector< int >& subset ) -> bool {
+            for ( auto& type_id : subset )
+            {
+                if ( std::find( this->md_particle_types.begin(), this->md_particle_types.end(),
+                                type_id )
+                     == this->md_particle_types.end() )
+                    return true;
+            }
+            return false;
+        };
+
+        IF_ONE_THEN_WARN( this->md_target_sets, target_seubset_not_in_particle_types,
+                          "Try to analysis multiple sets, but the target sets' particle types "
+                          "are not include in \"particle_types\"." );
 
         IF_THEN_WARN( this->md_region_shape != "sphere" && this->md_region_shape != "cylinder"
                           && this->md_region_shape != "box",
@@ -339,19 +344,26 @@ int para::check( void )
     }
 
     // check the particle section
-    IF_THEN_WARN( this->ptc_switch_on && this->ptc_period <= 0,
-                  "The period of the particle analysis is non-positive, which is not allowed, "
-                  "given value: %d",
-                  this->ptc_period );
-    if ( this->ptc_switch_on && this->ptc_period < 1000 )
+    if ( this->ptc_switch_on )
     {
-        INFO( "\033[0;31mDangerous behavior!\033[0m"
-              "\nThe period of the particle analysis is too small (%d), "
-              "which may produce many snapshots."
-              "\nThis is not wrong, but make sure you know what you are doing.",
-              this->ptc_period );
-    }
+        IF_THEN_WARN( this->ptc_period <= 0,
+                      "The period of the particle analysis is non-positive, which is not allowed, "
+                      "given value: %d",
+                      this->ptc_period );
 
+        IF_THEN_WARN( this->ptc_particle_types.size() == 0,
+                      "Particle level analysis is enabled, but the target particle types for "
+                      "particle analysis are not given." );
+
+        if ( this->ptc_period < 1000 )
+        {
+            INFO( "\033[0;31mDangerous behavior!\033[0m"
+                  "\nThe period of the particle analysis is too small (%d), "
+                  "which may produce many snapshots."
+                  "\nThis is not wrong, but make sure you know what you are doing.",
+                  this->ptc_period );
+        }
+    }
     // check the orbit section
     if ( this->orb_switch_on )
     {

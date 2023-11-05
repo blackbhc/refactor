@@ -4,6 +4,7 @@
 #include "ini_parser.h"
 #include <string>
 #include <vector>
+using std::vector;
 namespace galotfa {
 struct para
 {
@@ -19,37 +20,39 @@ struct para
     int md_period = 10, ptc_period = 10000, orb_period = 1, grp_period = 10;
 
     // other global parameters
-    bool                              glb_multiple         = false;
-    std::string                       glb_convergence_type = "absolute", glb_sim_type = "galaxy";
-    int                               glb_pot_tracer = -10086, glb_max_iter = 25;
-    std::vector< int >                glb_particle_types;
-    std::vector< std::string >        glb_classification;
-    std::vector< std::vector< int > > glb_target_sets;
-    double glb_convergence_threshold = 0.001, glb_equal_threshold = 1e-10;
+    std::string glb_convergence_type = "absolute", glb_sim_type = "galaxy";
+    int         glb_pot_tracer = -10086, glb_max_iter = 25;
+    double      glb_convergence_threshold = 0.001, glb_equal_threshold = 1e-10;
 
     // pre section parameters
-    bool        pre_recenter = true, pre_align_bar = true;
-    double      pre_region_size = 20, pre_ratio = 1;
-    std::string pre_region_shape = "cylinder", pre_recenter_method = "density";
+    bool          pre_recenter = true, pre_align_bar = true;
+    double        pre_region_size = 20, pre_ratio = 1;
+    std::string   pre_region_shape = "cylinder", pre_recenter_method = "density";
+    vector< int > pre_recenter_anchors;
 
     // other model section parameters
     bool md_image = false, md_bar_major_axis = false, md_bar_length = false, md_sbar = false,
          md_sbuckle = false, md_inertia_tensor = false;
-    int                        md_image_bins  = 100;
-    double                     md_region_size = 20, md_ratio = 1;
-    std::string                md_region_shape = "cylinder";
-    std::vector< int >         md_am;  // An, lowercase for ini key
-    std::vector< std::string > md_colors;
+    bool                    md_multiple = false;
+    vector< int >           md_particle_types;
+    vector< std::string >   md_classification;
+    vector< vector< int > > md_target_sets;
+    int                     md_image_bins  = 100;
+    double                  md_region_size = 20, md_ratio = 1;
+    std::string             md_region_shape = "cylinder";
+    vector< int >           md_am;  // An, lowercase for ini key
+    vector< std::string >   md_colors;
 
     // other particle section parameters
     bool ptc_circularity = false, ptc_circularity_3d = false, ptc_rg = false, ptc_freq = false;
+    vector< int > ptc_particle_types;
 
     // other orbit section parameters
     std::string orb_idfile;
 
     // other group section parameters
-    bool                       grp_vmg = false, grp_rmg = false, grp_ellipticity = false;
-    std::vector< std::string > grp_group_types;
+    bool                  grp_vmg = false, grp_rmg = false, grp_ellipticity = false;
+    vector< std::string > grp_group_types;
 
     // other post section parameters
     bool post_pattern_speed = false;
