@@ -30,7 +30,7 @@ void ini_parser::read( const char* file )
     this->check_filesize( st->st_size );
 
     // read the file into one buffer
-    FILE* fp = fopen( file, "rb" );
+    FILE* fp = fopen( file, "r" );
     if ( fp == nullptr )
     {
         delete st;

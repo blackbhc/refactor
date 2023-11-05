@@ -37,14 +37,15 @@ private:
     galotfa::calculator* engine = nullptr;
     // array of pointers to the writers: 5 possible output files
     // model, particle, orbit, group, post
-    // TODO: may by create a separate writer for each possible group classfiication in the future?
     vector< vector< galotfa::writer* > > writers;
-    // each pointer is a 5-element array of possible output files: model, particle, orbit, group,
-    // post Each analysis set will have its own 5 output files
-    int                      galotfa_rank;            // the global rank of the MPI process
-    int                      galotfa_size;            // the global size of the MPI process
-    vector< int >            include_particle_types;  // TODO: add a function to parser this
-    vector< vector< int >* > classifications;         // TODO: the result of the classification
+    // each pointer is a 4-element array of possible output files: model, particle, group,
+    // and post, each analysis set will have its own 4 output files
+    galotfa::writer*         orbit_writer = nullptr;
+    int                      galotfa_rank;  // the global rank of the MPI process
+    int                      galotfa_size;  // the global size of the MPI process
+    vector< int >            include_particle_types;
+    vector< vector< int >* > classifications;
+    vector< unsigned long >  particle_ids;  // the particle ids for orbital curve log
 
     // pointer to the analysis engine
     // private methods
@@ -74,6 +75,7 @@ private:
     inline void create_post_file_datasets();      // create the datasets in the post file
     int         save( void );                     // write the data to the output files
     inline void init();
+    inline void check_filesize( long int size ) const;
 
     // public methods
 public:

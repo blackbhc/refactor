@@ -2,6 +2,7 @@
 #define GALOTFA_MONITOR_CPP
 #include "monitor.h"
 #include <hdf5.h>
+#include <stdio.h>
 #include <string>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -80,6 +81,13 @@ monitor::~monitor()
             }
     this->writers.clear();
 
+    // free the orbit writer pointer
+    if ( this->orbit_writer != nullptr )
+    {
+        delete this->orbit_writer;
+        this->orbit_writer = nullptr;
+    }
+
 
     int  initialized = 0;
     auto status      = MPI_Initialized( &initialized );
@@ -121,25 +129,21 @@ inline void monitor::create_files()
     {
         std::string file1 = this->para->glb_output_dir + "/" + this->para->md_filename;
         std::string file2 = this->para->glb_output_dir + "/" + this->para->ptc_filename;
-        std::string file3 = this->para->glb_output_dir + "/" + this->para->orb_filename;
-        std::string file4 = this->para->glb_output_dir + "/" + this->para->grp_filename;
-        std::string file5 = this->para->glb_output_dir + "/" + this->para->post_filename;
+        std::string file3 = this->para->glb_output_dir + "/" + this->para->grp_filename;
+        std::string file4 = this->para->glb_output_dir + "/" + this->para->post_filename;
 
         galotfa::writer *writer1 = nullptr, *writer2 = nullptr, *writer3 = nullptr,
-                        *writer4 = nullptr, *writer5 = nullptr;
+                        *writer4 = nullptr;
 
         if ( this->para->md_switch_on )
             writer1 = new galotfa::writer( file1.c_str() );
         if ( this->para->ptc_switch_on )
             writer2 = new galotfa::writer( file2.c_str() );
-        if ( this->para->orb_switch_on )
-            writer3 = new galotfa::writer( file3.c_str() );
         if ( this->para->grp_switch_on )
-            writer4 = new galotfa::writer( file4.c_str() );
+            writer3 = new galotfa::writer( file3.c_str() );
         if ( this->para->post_switch_on )
-            writer5 = new galotfa::writer( file5.c_str() );
-        this->writers.push_back(
-            vector< galotfa::writer* >{ writer1, writer2, writer3, writer4, writer5 } );
+            writer4 = new galotfa::writer( file4.c_str() );
+        this->writers.push_back( vector< galotfa::writer* >{ writer1, writer2, writer3, writer4 } );
     }
     else
     {
@@ -151,28 +155,31 @@ inline void monitor::create_files()
             std::string file2 =
                 this->para->glb_output_dir + "/" + prefix + this->para->ptc_filename;
             std::string file3 =
-                this->para->glb_output_dir + "/" + prefix + this->para->orb_filename;
-            std::string file4 =
                 this->para->glb_output_dir + "/" + prefix + this->para->grp_filename;
-            std::string file5 =
+            std::string file4 =
                 this->para->glb_output_dir + "/" + prefix + this->para->post_filename;
 
             galotfa::writer *writer1 = nullptr, *writer2 = nullptr, *writer3 = nullptr,
-                            *writer4 = nullptr, *writer5 = nullptr;
+                            *writer4 = nullptr;
 
             if ( this->para->md_switch_on )
                 writer1 = new galotfa::writer( file1.c_str() );
             if ( this->para->ptc_switch_on )
                 writer2 = new galotfa::writer( file2.c_str() );
-            if ( this->para->orb_switch_on )
-                writer3 = new galotfa::writer( file3.c_str() );
             if ( this->para->grp_switch_on )
-                writer4 = new galotfa::writer( file4.c_str() );
+                writer3 = new galotfa::writer( file3.c_str() );
             if ( this->para->post_switch_on )
-                writer5 = new galotfa::writer( file5.c_str() );
+                writer4 = new galotfa::writer( file4.c_str() );
             this->writers.push_back(
-                vector< galotfa::writer* >{ writer1, writer2, writer3, writer4, writer5 } );
+                vector< galotfa::writer* >{ writer1, writer2, writer3, writer4 } );
         }
+    }
+
+    if ( this->para->orb_switch_on )
+    {
+        std::string      file   = this->para->glb_output_dir + "/" + this->para->orb_filename;
+        galotfa::writer* writer = new galotfa::writer( file.c_str() );
+        this->orbit_writer      = writer;
     }
 }
 
@@ -202,6 +209,8 @@ inline void monitor::create_model_file_datasets()
 {
     // this function should be called only when the model file is enabled
     // again, it should be called by the root process
+    // TODO: specify different target analysis sets (and target particle types) for different
+    // analysis level
     for ( auto& writers_of_single_set : this->writers )
     {
         // the size of the datasets
@@ -242,14 +251,81 @@ inline void monitor::create_particle_file_datasets()
 {
     // this function should be called only when the particle file is enabled
     // again, it should be called by the root process
-    ;
+    for ( auto& writers_of_single_set : this->writers )
+    {
+        // writers_of_single_set[ 1 ]->create_dataset( "/Times", single_scaler_info );
+        // TODO: get the runtime quantitiy: the particle number
+        // TODO: for the above feature, try to extract the target particles in the monitor class
+    }
 }
 
 inline void monitor::create_orbit_file_datasets()
 {
     // this function should be called only when the orbit file is enabled
     // again, it should be called by the root process
-    ;
+    FILE* idfile = fopen( this->para->orb_idfile.c_str(), "r" );
+    if ( idfile == nullptr )
+        ERROR( "The file %s does not exist!\n", this->para->orb_idfile.c_str() );
+
+    struct stat* st = new struct stat;
+    st->st_size     = 0;
+    stat( this->para->orb_idfile.c_str(), st );
+    try
+    {
+        this->check_filesize( st->st_size );
+    }
+    catch ( const std::exception& e )
+    {
+        delete st;
+        fclose( idfile );
+        ERROR( "%s", e.what() );
+    }
+
+    char buffer[ st->st_size + 1 ];
+    buffer[ st->st_size ] = '\0';
+    char* p_buffer        = buffer;
+    fread( p_buffer, ( size_t )st->st_size, 1, idfile );
+    std::string           id_string = buffer;
+    vector< std::string > ids       = galotfa::string::split( id_string, " \t\n" );
+    for ( auto& id_str : ids )
+    {
+        this->particle_ids.push_back( std::stoul( id_str ) );
+    }
+
+    for ( auto& target_id : this->particle_ids )
+    {
+        // TODO: support more available orbit types, such as recentered, aligned and corotating
+        galotfa::hdf5::size_info single_vector_info = { H5T_NATIVE_DOUBLE, 1, { 3 } };
+        // this->orbit_writer->create_group( "/Orbit" + std::to_string( target_id ) );
+        this->orbit_writer->create_dataset(
+            "/Particle" + std::to_string( target_id ) + "/Position",
+            single_vector_info );  // create the dataset for each particle
+        this->orbit_writer->create_dataset(
+            "/Particle" + std::to_string( target_id ) + "/Velocity",
+            single_vector_info );  // create the dataset for each particle
+    }
+
+    delete st;
+    fclose( idfile );
+}
+
+inline void monitor::check_filesize( long int size ) const
+// The same as ini_parser::check_filesize()
+{
+    if ( size == 0 )
+    {
+        ERROR( "The size of the id list file is 0, most common case: the file was not found." );
+    }
+    else if ( size >= 1024 * 1024 * 5 && size < 1024 * 1024 * 1024 )
+    {
+        WARN( "The id list file is too big: size = %ld MB.", size / 1024 / 1024 );
+    }
+    else if ( size >= 1024 * 1024 * 1024 )
+    {
+        ERROR( " The id list file is too big: size = %ld MB\nPlease check whether the your file is "
+               "correct!",
+               size / 1024 / 1024 );
+    }
 }
 
 inline void monitor::create_group_file_datasets()

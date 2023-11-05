@@ -204,10 +204,9 @@ int writer::create_group( std::string group_name )
     for ( size_t i = 0; i < strings.size(); ++i )
     {
         std::string this_path;
+        this_path = parent_path + "/" + strings[ i ];
         if ( i == 0 )
-            this_path = parent_path + strings[ i ];
-        else
-            this_path = parent_path + "/" + strings[ i ];
+            this_path.erase( 0, 1 );  // remove the additional first "/"
 
         if ( this->nodes.find( this_path ) != this->nodes.end() )  // if the link exists
         {
@@ -218,6 +217,7 @@ int writer::create_group( std::string group_name )
             }
             else  // if not the last element, go to the next element
             {
+                parent_path = this_path;  // update the parent path
                 continue;
             }
         }
@@ -232,8 +232,8 @@ int writer::create_group( std::string group_name )
                 this_path,
                 hdf5::node( &this->nodes.at( parent_path ), group_id, hdf5::NodeType::group ) );
             this->nodes.insert( std::move( pair ) );
+            parent_path = this_path;
         }
-        parent_path = this_path;
     }
     return 0;
 }
