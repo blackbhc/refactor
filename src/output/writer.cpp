@@ -48,9 +48,9 @@ namespace hdf5 {
 
     void node::close( void )
     {
-        // for ( auto& child : this->children )
-        //     child->close();
-        // this->children.clear();
+        for ( auto& child : this->children )
+            child->close();
+        this->children.clear();
 
         // if the attribute, property or dataspace is not created, the handle is -1
         // if created, close it
