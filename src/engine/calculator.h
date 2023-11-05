@@ -19,16 +19,6 @@
 // In summary, the argument list is:
 // id, type, mass, coordinate, velocity, time, particle_number
 // and an optional potential tracer type
-#define call_without_tracer                                                \
-    ( unsigned long particle_ids[], unsigned int types[], double masses[], \
-      double coordiantes[][ 3 ], double velocities[][ 3 ], double times[], \
-      unsigned long particle_number )
-
-#define call_with_tracer                                                                    \
-    ( unsigned long pot_tracer_type, unsigned long particle_ids[], unsigned int types[],    \
-      double masses[], double coordiantes[][ 3 ], double velocities[][ 3 ], double times[], \
-      unsigned long particle_number )
-// TODO: use conditional compilation to deal the caller with potential tracer
 
 namespace galotfa {
 class calculator
@@ -63,10 +53,12 @@ public:
     int        stop() const;
     inline int run_once() const;  // a wrapper of the analysis modules
     // receive data without potential tracer
-    int recv_data call_without_tracer const;
+    int recv_data( void ) const;
     // receive data with potential tracer
-    int recv_data        call_with_tracer const;
+    int                  recv_data_without_tracer( void ) const;
     std::vector< void* > feedback() const;
+    bool                 is_target_of_pre() const;
+    bool                 is_target_of_md() const;
 };
 
 }  // namespace galotfa
