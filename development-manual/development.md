@@ -367,7 +367,8 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
     pre-process section, `md` for the model section, `ptc` for the particle section, `orb` for the orbit section,
     `grp` for the group section and `post` for the post-process section.
   - most members of struct `para` are just a proxy of possible parameters in the ini file, except the
-    `glb_target_sets`, which is parsed from the `particle_types` and `classification` parameters in the ini file.
+    `md_target_sets`, which is parsed from the `particle_types` and `classification` parameters from
+    model section of the ini file.
   - constructor: with a reference to a created `ini_parser` object, then update the value of the parameters
     based on the parameter file (with hard code, the ugly but fast way).
   - `check()`: check whether there are some conflicts between the parameters, and whether there are some
@@ -376,9 +377,9 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
 
 #### Steps to add new parameter into the code
 
-1. Edit the parameter table and explanation in the `README.md` file, during which choose the name, type and
-   default value of the new parameter.
-2. Edit the `para` class in the `src/parameter/default.h` file, add the parameter into the chosen section
+1. Edit the parameter table and explanations of it in the `README.md` file, before which choose the name,
+   type and default value of the new parameter.
+2. Edit the `para` class in the `src/parameter/para.h` file, add the parameter into the chosen section
    and set its default value.
 3. Add a line in the update function (`para::para(...)`) to update the value of the new parameter from the ini file.
 4. Add a check statement into the check function of `para`(`check()`), to check the possible conflicts and

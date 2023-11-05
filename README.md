@@ -182,9 +182,6 @@ to see their explanation.
 | `Global`   |                                                              |            |               |                                                             |
 |            | <a href="#switch_on">`switch_on`</a>                         | Boolean    | `on`          |                                                             |
 |            | <a href="#output_dir">`output_dir`</a>                       | String     | `./otfoutput` | Any valid path.                                             |
-|            | <a href="#particle_types">`particle_types`</a>               | Integer(s) |               | Avaiable particle types of your simulation IC               |
-|            | <a href="#multiple">`multiple`</a>                           | Boolean    | `off`         | `on` or `off`                                               |
-|            | <a href="#classification">`classification`</a>               | Strings    | empty         | see in the <a href="#classification">text</a>               |
 |            | <a href="#convergence_type">`convergence_type`</a>           | String     | `absolute`    | `absolute` or `relative`.                                   |
 |            | <a href="#convergence_threshold">`convergence_threshold`</a> | Float      | 0.001         | $(0, 1)$ if `convergence_type` = `relative`, otherwise $>0$ |
 |            | <a href="#max_iter">`max_iter`</a>                           | Integer    | 25            | $>0$                                                        |
@@ -193,17 +190,21 @@ to see their explanation.
 |            | <a href="#pot_tracer">`pot_tracer`</a>                       | Integer    |               |                                                             |
 | `Pre`      |                                                              |            |               |                                                             |
 |            | <a href="#recenter">`recenter`</a>                           | Boolean    | `on`          | `on` or `off`                                               |
+|            | <a href="#recenter_anchors">`recenter_anchors`</a>           | Integer(s) |               | Avaiable particle types of your simulation IC               |
 |            | <a href="#region_shape">`region_shape`</a>                   | String     | `cylinder`    | `sphere`, `cylinder` or `box`.                              |
 |            | <a href="#ratio">`ratio`</a>                                 | Float      | 1.0           | $>0$                                                        |
 |            | <a href="#size">`region_size`</a>                            | Float      | 20.0          | $>0$                                                        |
 |            | <a href="#recenter_method">`recenter_method`</a>             | String     | `density`     | `com`, `density` or `potential`                             |
-|            | <a href="#align_bar">`align_bar`</a>                         | Boolean    | `on`          | `on` or `off`                                               |
 | `Model`    |                                                              |            |               |                                                             |
 |            | <a href="#switch_on_m">`switch_on`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#filename_m">`filename`</a>                         | String     | `model`       | Any valid filename prefix.                                  |
 |            | <a href="#period_m">`period`</a>                             | Integer    | 10            | $>0$                                                        |
+|            | <a href="#particle_types">`particle_types`</a>               | Integer(s) |               | Avaiable particle types of your simulation IC               |
+|            | <a href="#multiple">`multiple`</a>                           | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#classification">`classification`</a>               | Strings    | empty         | see in the <a href="#classification">text</a>               |
 |            | <a href="#region_shape_m">`region_shape`</a>                 | String     | `cylinder`    | `sphere`, `cylinder` or `box`.                              |
 |            | <a href="#ratio_m">`ratio`</a>                               | Float      | 1.0           | $>0$                                                        |
+|            | <a href="#align_bar">`align_bar`</a>                         | Boolean    | `on`          | `on` or `off`                                               |
 |            | <a href="#size_m">`region_size`</a>                          | Float      | 20.0          | $>0$                                                        |
 |            | <a href="#image">`image`</a>                                 | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#image_bins">`image_bins`</a>                       | Integer    | 100           | $>0$                                                        |
@@ -218,6 +219,7 @@ to see their explanation.
 |            | <a href="#switch_on_p">`switch_on`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#filename_p">`filename`</a>                         | String     | `particle`    | Any valid filename prefix.                                  |
 |            | <a href="#period_p">`period`</a>                             | Integer    | 10000         | $>0$                                                        |
+|            | <a href="#particle_types">`particle_types`</a>               | Integer(s) |               | Avaiable particle types of your simulation IC               |
 |            | <a href="#circularity">`circularity`</a>                     | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#circularity_3d">`circularity_3d`</a>               | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#rg">`rg`</a>                                       | Boolean    | `off`         | `on` or `off`                                               |
@@ -250,26 +252,6 @@ This section specify some parameters that control the behaviour of `galotfa` on 
   for a few steps and output some demo files to the `output_dir`. This option is only for test purpose or
   may be useful for some special cases.
 - <a id="output_dir"></a>`output_dir`: the path to store the output files, create it if not exist.
-- <a id="particle_types"></a>`particle_types`: the type(s) of target particles types to do the on-the-fly
-  analysis, must be given at least one type, otherwise the program will raise an error.
-- <a id="multiple"></a>`multiple`: whether to treat the more than one target particles as different set,
-  which can be specified by the next parameter `classification`, or treat them as a whole. Default is
-  `multiple` = `on`, that all target particles will be analyzed as a whole.
-- <a id="classification"></a>`classification`: specify how to classify the target particles to different
-  analysis sets.
-  - Must be given if `multiple` = `on`, otherwise the program will raise an error. If `multiple` = `off`,
-    this parameter will be ignored.
-  - The given value should be strings of target types in each subset, where the strings are separated by common
-    delimiter (white space, `,`, `+` and `:`), and in each string, the integer of
-    the target particle types in such subset should be separated by `&`.
-    - If `"1&2" "3" "4&5&6"` is given, then there will be 3 sets, the first subset contains the target particles
-      of type 1 and 2, the second subset contains the target particles of type 3, and the third subset contains
-      the target particles of type 4, 5 and 6.
-    - There should has no space between, before or after the integers in each pair of quotation marks, otherwise
-      the program will raise an error: `"1 & 2" "3" "4 & 5 & 6"` is illegal.
-  - Cross sets are allowed, e.g. `1-2 2-3` is possible, which means the first subset contains the target
-    particles of type 1 and 2, and the second subset contains the target particles of type 2 and 3.
-  - Values should in the range of `particle_types`, otherwise the program will raise an error.
 - <a id="convergence_type"></a>`convergence_type`: the type of convergence criterion for the on-the-fly analysis.
 - <a id="convergence_threshold"></a>`convergence_threshold`: the threshold for numerical convergence during the
   on-the-fly analysis.
@@ -297,6 +279,10 @@ major axis to the $x$-axis.
   data. The parameter will significantly affect the result of the on-the-fly analysis that is sensitive to the
   origin of coordinates, such as the bar major axis, the pattern speed, etc. Therefore, it's recommended to always
   turn on this option, unless you know what you are doing.
+- <a id="recenter_anchors"></a>`recenter_anchors`: the particle type id(s) which are used to calculate the
+  center of the system, if `recenter` = `on` then this parameter must be given at least one type, otherwise
+  the program will raise an error. For example, the particle type of disk particles is 2, then you can set
+  `recenter_anchors` = `2` to use the disk particles to calculate the center of the system.
 - <a id="region_shape"></a>`region_shape`: only meaningful when `recenter` = `on`, the shape of the region
   to calculate the center of the target particles, which will affect how the `region_size` is interpreted (see below).
   - `region_shape` = `sphere`: the region is a sphere or spheroid if `ratio` $\neq$ 1, the axis of the spheroid is the
@@ -331,6 +317,26 @@ The model level on-the-fly analysis of the target particles. The most common cas
 - <a id="filename_m"></a>`filename`: the filename of the output file of the model level analysis.
 - <a id="period_m"></a>`period`: the period of model level analysis, in unit of synchronized time steps in
   simulation.
+- <a id="particle_types"></a>`particle_types`: the type(s) of target particles types to do the on-the-fly
+  analysis, must be given at least one type, otherwise the program will raise an error.
+- <a id="multiple"></a>`multiple`: whether to treat the more than one target particles as different set,
+  which can be specified by the next parameter `classification`, or treat them as a whole. Default is
+  `multiple` = `on`, that all target particles will be analyzed as a whole.
+- <a id="classification"></a>`classification`: specify how to classify the target particles to different
+  analysis sets.
+  - Must be given if `multiple` = `on`, otherwise the program will raise an error. If `multiple` = `off`,
+    this parameter will be ignored.
+  - The given value should be strings of target types in each subset, where the strings are separated by common
+    delimiter (white space, `,`, `+` and `:`), and in each string, the integer of
+    the target particle types in such subset should be separated by `&`.
+    - If `"1&2" "3" "4&5&6"` is given, then there will be 3 sets, the first subset contains the target particles
+      of type 1 and 2, the second subset contains the target particles of type 3, and the third subset contains
+      the target particles of type 4, 5 and 6.
+    - There should has no space between, before or after the integers in each pair of quotation marks, otherwise
+      the program will raise an error: `"1 & 2" "3" "4 & 5 & 6"` is illegal.
+  - Cross sets are allowed, e.g. `1-2 2-3` is possible, which means the first subset contains the target
+    particles of type 1 and 2, and the second subset contains the target particles of type 2 and 3.
+  - Values should in the range of `particle_types`, otherwise the program will raise an error.
 - <a id="region_shape_m"></a>`region_shape`: similar to the `region_shape` in the `Pre` section, but this one is
   used to calculate the model quantifications of the target particles, can get multiple values.
   - `region_shape` = `sphere`: the region is a sphere or spheroid if `ratio` $\neq$ 1, the axis of the spheroid is the
@@ -389,6 +395,9 @@ The model level on-the-fly analysis of the target particles. The most common cas
   e.g. `period` = 5000 is a good choice for a 1e5 time steps simulation, 1e5 is a magnitude for a 10Gyr simulation
   in Gadget4 with default units.
   will be added automatically so you only need to specify the prefix of the filename.
+- <a id="particle_types"></a>`particle_types`: the type(s) of particle to do the particle level analysis,
+  must be given at least one type if `switch_on` is `True` for particle level analysis, otherwise the program
+  will raise an error.
 - <a id="circularity"></a>`circularity`: whether calculate the circularity of the target particles.
 - <a id="circularity_3d"></a>`circularity_3d`: whether calculate the 3D circularity of the target particles.
 - <a id="rg"></a>`rg`: whether calculate the guiding radius of the target particles. (future feature)
@@ -462,11 +471,12 @@ before using any `galotfa` APIs.
 - [ ] (other) add built-in fork of common simulation codes with `galotfa` built-in.
 - [ ] (other) add potential tracer support into the common simulation codes.
 - [ ] (global) output the used parameters to a separate file: galotfa-used.ini
+- [ ] (global) specify different target particle types (and possible multiple analysis sets) in different analysis level.
 - [ ] (model) the bar length calculation.
 - [ ] (particle) the guiding radius calculation.
 - [ ] (particle) the orbital frequency calculation.
 - [ ] (particle) the actions calculation.
 - [ ] group based analysis.
-- [ ] orbit curves
+- [ ] orbit curves: raw, recentered, aligned, corotating, etc.
 - [ ] (post) pattern speed
 - [ ] (post) star formation history
