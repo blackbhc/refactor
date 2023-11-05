@@ -159,10 +159,10 @@ para::para( ini_parser& parser )
     int return_code = this->check();
     if ( return_code != 0 )
     {
-        ERROR(
-            "There are conflicts between the parameters specified in the galotfa.ini file."
-            "\nPlease check and modify your ini "
-            "parameter file, may be there are typos such as an initial lowercase section name." );
+        ERROR( "There are conflicts between the parameters specified in the galotfa.ini file."
+               "\nPlease check and modify your ini "
+               "parameter file, may be there are typos such as an initial lowercase section "
+               "name." );
     }
 #else
     ( void )parser;  // avoid the warning of unused variable

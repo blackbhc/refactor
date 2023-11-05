@@ -145,6 +145,7 @@ ini::Line ini_parser::line_parser( const char* str ) const
         {
             ERROR( "Get an invalid line in ini file:\n%s", str );
         }
+        transform( key.begin(), key.end(), key.begin(), ::tolower );
         line.content = key + "=" + val;
 
         // determine the value type
