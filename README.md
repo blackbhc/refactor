@@ -4,10 +4,48 @@
 
 ## <a id="contents">Contents</a>
 
+- <a href="#scheme">Design scheme</a>
 - <a href="#feature">Features of `galotfa`</a>
 - <a href="#install">Installation</a>
-- <a href="#scheme">Design scheme</a>
 - <a href="#usage">Usage</a>
+
+---
+
+## Design scheme <a href="#contents"><font size=4>(contents)</font></a> <a id="scheme"></a>
+
+At particular synchronized time steps:
+
+<a id="workflow"></a>
+
+```mermaid
+graph TB
+Data((Data))
+Pre[Pre-process]
+Model[Model level]
+Par[Particle level]
+Pop[Population level]
+Selct[Particle selection]
+Snap([Expansion snapshot])
+LogMd([Log of model])
+LogOC([Log of orbital curves])
+LogPop([Log of populations])
+
+Data --> Pre
+Pre --> Model
+Pre --> Par
+Pre --> Selct
+Par --> Pop
+Model --> Pop
+Pop --> LogPop
+Par --> Snap
+Selct --> LogOC
+Model --> LogMd
+```
+
+Every box is a functional module with independent implementation, which is class or a part of a class.
+The details of them are illustrated in <a href="#code">Code structure</a>. The connection lines between
+the boxes stands for the APIs between such modules. Expect the above modules, `galotfa` also uses a standalone
+`INI` parameter file to control the behaviours of all modules and APIs in the preceding workflow.
 
 ---
 
@@ -52,7 +90,8 @@ First, you need to check the following dependencies
 
 1. clone the `galotfa` repo with `git`: run `git clone -b main https://github.com/blackbhc/galotfa --depth=1`
 
-   If you don't have `git`, try `wget -O- https://github.com/blackbhc/galotfa/archive/main.zip | tar xz`.
+   If you don't have `git`, try `wget -O- https://github.com/blackbhc/galotfa/archive/main.tar.gz | tar xzv`.
+   or `curl -O https://github.com/blackbhc/galotfa/archive/main.tar.gz && tar xzv mian.tar.gz`.
 
 2. run `cd galotfa`
 
@@ -121,15 +160,17 @@ simulation internal units, keep this in mind when you use the analysis results.
 
 #### INI parameter file
 
-Note: for INI file, the section name is <font color="red">case sensitive</font>, but the key/value name is case insensitive.
+Note: for INI file, the section name is <font color="red">case sensitive</font>, but the key/value name is case
+insensitive.
 
 - available boolean: case insensitive `true` and `false`, `on` and `off`, `enable` and `disable`, `yes` and `no`.
 - available value type: boolean, string(s), number(s). For numbers, there is no difference between integer and
   float, but the value(s) will be converted to required type of the target parameter.
 - comment prefix: `#` and `;`.
-- supported value separator: white space, `,`, `-`, `+`, `:` and `&`. Note: the name of key can not contain these characters.
-- unexpected additional value for a key will be illegal, e.g. `<a key for boolean> = true yes` will make the parser to detect
-  the value of the key as `true yes`, which is in string type and may cause error in the following parsing.
+- supported value separator: white space, `,`, `+` and `:`. Note: the name of key can not contain these characters.
+- unexpected additional value for a key will be illegal, e.g. `<a key for boolean> = true yes` will make
+  the parser to detect the value of the key as `true yes`, which is in string type and may cause error in the
+  following parsing.
 
 #### List of parameters for `galotfa`
 
@@ -138,29 +179,32 @@ to see their explanation.
 
 | Section    | Key Name                                                     | Value Type | Default       | Available Values                                            |
 | ---------- | ------------------------------------------------------------ | ---------- | ------------- | ----------------------------------------------------------- |
-| `global`   |                                                              |            |               |                                                             |
-|            | <a href="#switch">`switch`</a>                               | Boolean    | `on`          |                                                             |
+| `Global`   |                                                              |            |               |                                                             |
+|            | <a href="#switch_on">`switch_on`</a>                         | Boolean    | `on`          |                                                             |
 |            | <a href="#output_dir">`output_dir`</a>                       | String     | `./otfoutput` | Any valid path.                                             |
-|            | <a href="#particle_types">`particle_types`</a>               | Integer(s) |               | Based on your IC of simulation                              |
 |            | <a href="#convergence_type">`convergence_type`</a>           | String     | `absolute`    | `absolute` or `relative`.                                   |
 |            | <a href="#convergence_threshold">`convergence_threshold`</a> | Float      | 0.001         | $(0, 1)$ if `convergence_type` = `relative`, otherwise $>0$ |
 |            | <a href="#max_iter">`max_iter`</a>                           | Integer    | 25            | $>0$                                                        |
 |            | <a href="#equal_threshold">`equal_threshold`</a>             | Float      | 1e-10         | $>0$, but not too large.                                    |
 |            | <a href="#sim_type">`sim_type`</a>                           | String     | `galaxy`      | Only support `galaxy` at present.                           |
 |            | <a href="#pot_tracer">`pot_tracer`</a>                       | Integer    |               |                                                             |
-| `pre`      |                                                              |            |               |                                                             |
+| `Pre`      |                                                              |            |               |                                                             |
 |            | <a href="#recenter">`recenter`</a>                           | Boolean    | `on`          | `on` or `off`                                               |
+|            | <a href="#recenter_anchors">`recenter_anchors`</a>           | Integer(s) |               | Avaiable particle types of your simulation IC               |
 |            | <a href="#region_shape">`region_shape`</a>                   | String     | `cylinder`    | `sphere`, `cylinder` or `box`.                              |
 |            | <a href="#ratio">`ratio`</a>                                 | Float      | 1.0           | $>0$                                                        |
 |            | <a href="#size">`region_size`</a>                            | Float      | 20.0          | $>0$                                                        |
 |            | <a href="#recenter_method">`recenter_method`</a>             | String     | `density`     | `com`, `density` or `potential`                             |
-|            | <a href="#align_bar">`align_bar`</a>                         | Boolean    | `on`          | `on` or `off`                                               |
-| `model`    |                                                              |            |               |                                                             |
-|            | <a href="#switch_m">`switch`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
+| `Model`    |                                                              |            |               |                                                             |
+|            | <a href="#switch_on_m">`switch_on`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#filename_m">`filename`</a>                         | String     | `model`       | Any valid filename prefix.                                  |
 |            | <a href="#period_m">`period`</a>                             | Integer    | 10            | $>0$                                                        |
+|            | <a href="#particle_types">`particle_types`</a>               | Integer(s) |               | Avaiable particle types of your simulation IC               |
+|            | <a href="#multiple">`multiple`</a>                           | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#classification">`classification`</a>               | Strings    | empty         | see in the <a href="#classification">text</a>               |
 |            | <a href="#region_shape_m">`region_shape`</a>                 | String     | `cylinder`    | `sphere`, `cylinder` or `box`.                              |
 |            | <a href="#ratio_m">`ratio`</a>                               | Float      | 1.0           | $>0$                                                        |
+|            | <a href="#align_bar">`align_bar`</a>                         | Boolean    | `on`          | `on` or `off`                                               |
 |            | <a href="#size_m">`region_size`</a>                          | Float      | 20.0          | $>0$                                                        |
 |            | <a href="#image">`image`</a>                                 | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#image_bins">`image_bins`</a>                       | Integer    | 100           | $>0$                                                        |
@@ -171,29 +215,30 @@ to see their explanation.
 |            | <a href="#sbuckle">`sbuckle`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#An">`An`</a>                                       | Integer(s) |               | > 0                                                         |
 |            | <a href="#inertia_tensor">`inertia_tensor`</a>               | Boolean    | `off`         | `on` or `off`                                               |
-| `particle` |                                                              |            |               |                                                             |
-|            | <a href="#switch_p">`switch`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
+| `Particle` |                                                              |            |               |                                                             |
+|            | <a href="#switch_on_p">`switch_on`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#filename_p">`filename`</a>                         | String     | `particle`    | Any valid filename prefix.                                  |
 |            | <a href="#period_p">`period`</a>                             | Integer    | 10000         | $>0$                                                        |
+|            | <a href="#particle_types">`particle_types`</a>               | Integer(s) |               | Avaiable particle types of your simulation IC               |
 |            | <a href="#circularity">`circularity`</a>                     | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#circularity_3d">`circularity_3d`</a>               | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#rg">`rg`</a>                                       | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#freq">`freq`</a>                                   | Boolean    | `off`         | `on` or `off`                                               |
-| `orbit`    |                                                              |            |               | `on` or `off`                                               |
-|            | <a href="#switch_o">`switch`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
+| `Orbit`    |                                                              |            |               | `on` or `off`                                               |
+|            | <a href="#switch_on_o">`switch_on`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#filename_o">`filename`</a>                         | String     | `orbit`       | Any valid filename prefix.                                  |
 |            | <a href="#period_o">`period`</a>                             | Integer    | 1             | $>0$                                                        |
 |            | <a href="#idfile">`idfile`</a>                               | String     |               | Any valid filename.                                         |
-| `group`    |                                                              |            |               |                                                             |
-|            | <a href="#switch_g">`switch`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
+| `Group`    |                                                              |            |               |                                                             |
+|            | <a href="#switch_on_g">`switch_on`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#filename_g">`filename`</a>                         | String     | `group`       | Any valid filename prefix.                                  |
 |            | <a href="#period_g">`period`</a>                             | Integer    | 10            | $>0$                                                        |
 |            | <a href="#group_types">`group_types`</a>                     | String(s)  |               | (future feature)                                            |
 |            | <a href="#ellipticity">`ellipticity`</a>                     | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#rmg">`rmg`</a>                                     | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#vmg">`vmg`</a>                                     | Boolean    | `off`         | `on` or `off`                                               |
-| `post`     |                                                              |            |               |                                                             |
-|            | <a href="#switch_post">`switch`</a>                          | Boolean    | `off`         | `on` or `off`                                               |
+| `Post`     |                                                              |            |               |                                                             |
+|            | <a href="#switch_on_post">`switch_on`</a>                    | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#filename_post">`filename`</a>                      | String     | `post`        | Any valid filename prefix.                                  |
 |            | <a href="#pattern_speed">`pattern_speed`</a>                 | Boolean    | off           | `on` or `off`                                               |
 
@@ -203,17 +248,16 @@ to see their explanation.
 
 This section specify some parameters that control the behaviour of `galotfa` on the machine.
 
-- <a id="switch"></a>`switch`: whether to enable the demo mode or not. If `on`, `galotfa` will only run for a few steps
-  and output some demo files to the `output_dir`. This option is only for test purpose or may be useful for some special cases.
+- <a id="switch_on"></a>`switch_on`: whether to enable the demo mode or not. If `on`, `galotfa` will only run
+  for a few steps and output some demo files to the `output_dir`. This option is only for test purpose or
+  may be useful for some special cases.
 - <a id="output_dir"></a>`output_dir`: the path to store the output files, create it if not exist.
-- <a id="particle_types"></a>`particle_types`: the type(s) of target particles types to do the on-the-fly analysis, must be
-  given at least one type, otherwise the program will raise an error.
 - <a id="convergence_type"></a>`convergence_type`: the type of convergence criterion for the on-the-fly analysis.
 - <a id="convergence_threshold"></a>`convergence_threshold`: the threshold for numerical convergence during the
   on-the-fly analysis.
-  - `convergence_type` = `absolute`: the convergence criterion is $\Delta$ $Q\<\epsilon$ for some quantity $Q$,
+  - `convergence_type` = `absolute`: the convergence criterion is $\Delta$ $Q<\epsilon$ for some quantity $Q$,
     where $\epsilon$ is the `convergence_threshold`.
-  - `convergence_type` = `relative`: the convergence criterion is $\Delta Q / Q \< \epsilon$ for some quantity $Q$,
+  - `convergence_type` = `relative`: the convergence criterion is $\Delta Q / Q < \epsilon$ for some quantity $Q$,
     where $\epsilon$ is the `convergence_threshold`.
 - <a id="max_iter"></a>`max_iter`: the maximum number of iterations during analysis.
 - <a id="equal_threshold"></a>`equal_threshold`: the threshold for equality of two floating point numbers, e.g.
@@ -226,14 +270,19 @@ This section specify some parameters that control the behaviour of `galotfa` on 
 
 ##### Pre
 
-This section is about the pre-processing of the simulation data before some concrete analysis, such as calculate the
-center of the target particles, calculate the bar major axis (if exist) and align the bar major axis to the $x$-axis.
+This section is about the pre-processing of the simulation data before some concrete analysis, such as
+calculate the center of the target particles, calculate the bar major axis (if exist) and align the bar
+major axis to the $x$-axis.
 
 - <a id="recenter"></a>`recenter`: whether to recenter the target particles to the center the target
-  particle(s) or not, note the recenter is only for the on-the-fly analysis, and will not change the simulation data.
-  The parameter will significantly affect the result of the on-the-fly analysis that is sensitive to the origin of
-  coordinates, such as the bar major axis, the pattern speed, etc. Therefore, it's recommended to always turn on this
-  option, unless you know what you are doing.
+  particle(s) or not, note the recenter is only for the on-the-fly analysis, and will not change the simulation
+  data. The parameter will significantly affect the result of the on-the-fly analysis that is sensitive to the
+  origin of coordinates, such as the bar major axis, the pattern speed, etc. Therefore, it's recommended to always
+  turn on this option, unless you know what you are doing.
+- <a id="recenter_anchors"></a>`recenter_anchors`: the particle type id(s) which are used to calculate the
+  center of the system, if `recenter` = `on` then this parameter must be given at least one type, otherwise
+  the program will raise an error. For example, the particle type of disk particles is 2, then you can set
+  `recenter_anchors` = `2` to use the disk particles to calculate the center of the system.
 - <a id="region_shape"></a>`region_shape`: only meaningful when `recenter` = `on`, the shape of the region
   to calculate the center of the target particles, which will affect how the `region_size` is interpreted (see below).
   - `region_shape` = `sphere`: the region is a sphere or spheroid if `ratio` $\neq$ 1, the axis of the spheroid is the
@@ -264,11 +313,30 @@ center of the target particles, calculate the bar major axis (if exist) and alig
 
 The model level on-the-fly analysis of the target particles. The most common case at present is a disk galaxy.
 
-- <a id="switch_m"></a>`switch`: whether to enable the model level analysis or not.
-- <a id="filename_m"></a>`filename`: the filename of the output file of the model level analysis, the suffix `.hdf5`
-  will be added automatically so you only need to specify the prefix of the filename.
+- <a id="switch_on_m"></a>`switch_on`: whether to enable the model level analysis or not.
+- <a id="filename_m"></a>`filename`: the filename of the output file of the model level analysis.
 - <a id="period_m"></a>`period`: the period of model level analysis, in unit of synchronized time steps in
   simulation.
+- <a id="particle_types"></a>`particle_types`: the type(s) of target particles types to do the on-the-fly
+  analysis, must be given at least one type, otherwise the program will raise an error.
+- <a id="multiple"></a>`multiple`: whether to treat the more than one target particles as different set,
+  which can be specified by the next parameter `classification`, or treat them as a whole. Default is
+  `multiple` = `on`, that all target particles will be analyzed as a whole.
+- <a id="classification"></a>`classification`: specify how to classify the target particles to different
+  analysis sets.
+  - Must be given if `multiple` = `on`, otherwise the program will raise an error. If `multiple` = `off`,
+    this parameter will be ignored.
+  - The given value should be strings of target types in each subset, where the strings are separated by common
+    delimiter (white space, `,`, `+` and `:`), and in each string, the integer of
+    the target particle types in such subset should be separated by `&`.
+    - If `"1&2" "3" "4&5&6"` is given, then there will be 3 sets, the first subset contains the target particles
+      of type 1 and 2, the second subset contains the target particles of type 3, and the third subset contains
+      the target particles of type 4, 5 and 6.
+    - There should has no space between, before or after the integers in each pair of quotation marks, otherwise
+      the program will raise an error: `"1 & 2" "3" "4 & 5 & 6"` is illegal.
+  - Cross sets are allowed, e.g. `1-2 2-3` is possible, which means the first subset contains the target
+    particles of type 1 and 2, and the second subset contains the target particles of type 2 and 3.
+  - Values should in the range of `particle_types`, otherwise the program will raise an error.
 - <a id="region_shape_m"></a>`region_shape`: similar to the `region_shape` in the `Pre` section, but this one is
   used to calculate the model quantifications of the target particles, can get multiple values.
   - `region_shape` = `sphere`: the region is a sphere or spheroid if `ratio` $\neq$ 1, the axis of the spheroid is the
@@ -297,8 +365,8 @@ The model level on-the-fly analysis of the target particles. The most common cas
 - <a id="colors"></a>`colors`:
   At least one color must be given, if the `image` is enabled, otherwise the program will raise an error.
   - `particle_number`: the number of particles in each bin.
-  - `surface_density`: the surface density of the particles in each bin. The unit is $\[M\]/\[L\]^2$, $\[M\]$ and
-    $\[L\]$ are the internal unit of mass and length in the simulation, the same below.
+  - `surface_density`: the surface density of the particles in each bin. The unit is $[M]/[L]^2$, $[M]$ and
+    $[L]$ are the internal unit of mass and length in the simulation, the same below.
   - `mean_velocity`: the mean velocity of the particles in each bin, one component for each axis.
   - `dispersion`: the velocity dispersion of the particles in each bin, one component for each axis.
   - `dispersion_tensor`: the velocity dispersion tensor of the particles in each bin.
@@ -308,17 +376,17 @@ The model level on-the-fly analysis of the target particles. The most common cas
 - <a id="bar_length"></a>`bar_length`: whether calculate the bar length in the target particles,
   if detected a bar.
 - <a id="inerita_tensor"></a>`inertia_tensor`: whether calculate the inertia tensor of the target particles.
-- <a id="sbar"></a>`sbar`: whether calculate the bar strength parameter, where $S\_\rm{bar}$ is defined
+- <a id="sbar"></a>`sbar`: whether calculate the bar strength parameter, where $S_{\rm{bar}}$ is defined
   as $A_2/A_0$.
-- <a id="sbuckle"></a>`sbuckle`: whether calculate the buckling strength parameter, where $S\_{\rm{buckle}}$
+- <a id="sbuckle"></a>`sbuckle`: whether calculate the buckling strength parameter, where $S_{\rm{buckle}}$
   is defined as $\sum m_i z_i \exp(-2i \phi_i) / \sum m_i$.
 - <a id="An"></a>`An`: whether calculate the $A_n$ parameters, where $A_n$ is the $n$-th Fourier component of the
   surface density after projection into the equatorial plane.
 
 ##### Particle
 
-- <a id="switch_p"></a>`switch`: whether to enable the particle level analysis or not.
-- <a id="filename_p"></a>`filename`: the filename of the output file of the particle level analysis, the suffix `.hdf5`
+- <a id="switch_on_p"></a>`switch_on`: whether to enable the particle level analysis or not.
+- <a id="filename_p"></a>`filename`: the filename of the output file of the particle level analysis.
 - <a id="period_p"></a>`period`: the period of particle level analysis, in unit of synchronized time steps in
   simulation.
   <font color=red>**Note:**</font> the particle level analysis will output all information of the target particles
@@ -327,6 +395,9 @@ The model level on-the-fly analysis of the target particles. The most common cas
   e.g. `period` = 5000 is a good choice for a 1e5 time steps simulation, 1e5 is a magnitude for a 10Gyr simulation
   in Gadget4 with default units.
   will be added automatically so you only need to specify the prefix of the filename.
+- <a id="particle_types"></a>`particle_types`: the type(s) of particle to do the particle level analysis,
+  must be given at least one type if `switch_on` is `True` for particle level analysis, otherwise the program
+  will raise an error.
 - <a id="circularity"></a>`circularity`: whether calculate the circularity of the target particles.
 - <a id="circularity_3d"></a>`circularity_3d`: whether calculate the 3D circularity of the target particles.
 - <a id="rg"></a>`rg`: whether calculate the guiding radius of the target particles. (future feature)
@@ -337,9 +408,8 @@ The model level on-the-fly analysis of the target particles. The most common cas
 This part is about a trivial target: log the orbital curves of the target particles. For example, trace the orbit
 of stars that contribute to the bar, or the spiral arms, etc.
 
-- <a id="switch_o"></a>`switch`: whether to enable the orbit curve log.
-- <a id="filename_o"></a>`filename`: the filename of the output file of the orbit curve log, the suffix `.hdf5`
-  will be added automatically so you only need to specify the prefix of the filename.
+- <a id="switch_on_o"></a>`switch_on`: whether to enable the orbit curve log.
+- <a id="filename_o"></a>`filename`: the filename of the output file of the orbit curve log.
 - <a id="period_o"></a>`period`: the period of orbit curve log, in unit of synchronized time steps in simulation.
   If there is no too much particles to trace, the period can be set to a small value, e.g. 1, which means log the
   position of the target particles at every synchronized time step.
@@ -358,9 +428,8 @@ stellar populations in a galaxy: binned according their ages, metallicity, etc. 
 in cosmology simulations: central and satellite galaxies in a cluster, or elliptical and spiral galaxies based
 on their morphology.
 
-- <a id="switch_g"></a>`switch`: whether to enable the group level analysis or not.
-- <a id="filename_g"></a>`filename`: the filename of the output file of the group level analysis, the suffix `.hdf5`
-  will be added automatically so you only need to specify the prefix of the filename.
+- <a id="switch_on_g"></a>`switch_on`: whether to enable the group level analysis or not.
+- <a id="filename_g"></a>`filename`: the filename of the output file of the group level analysis.
 - <a id="period_g"></a>`period`: the period of group level analysis, in unit of synchronized time steps in
   simulation.
 - <a id="group_types"></a>`group_types`: the type(s) of group particles to do the on-the-fly analysis, must be
@@ -375,9 +444,8 @@ on their morphology.
 
 This part is designed to do some by-the-hand post analysis, such as calculate the bar pattern speed of the bar.
 
-- <a id="switch_post"></a>`switch`: whether to enable the post analysis or not.
-- <a id="filename_post"></a>`filename`: the filename of the output file of the post analysis, the suffix `.hdf5`
-  will be added automatically so you only need to specify the prefix of the filename.
+- <a id="switch_on_post"></a>`switch_on`: whether to enable the post analysis or not.
+- <a id="filename_post"></a>`filename`: the filename of the output file of the post analysis.
 - <a id="pattern_speed"></a>`pattern_speed`: calculate the pattern speed of the bar. If this option is enabled,
   the `bar_major_axis` option in the `Model` section will be automatically enabled.
 - <a id="SFH"></a>`SFH`: calculate the star formation history of the target particles. (future feature)
@@ -398,52 +466,17 @@ before using any `galotfa` APIs.
 
 ---
 
-## Design scheme <a href="#contents"><font size=4>(contents)</font></a> <a id="scheme"></a>
-
-At particular synchronized time steps:
-
-<a id="workflow"></a>
-
-```mermaid
-graph TB
-Data((Data))
-Pre[Pre-process]
-Model[Model level]
-Par[Particle level]
-Pop[Population level]
-Selct[Particle selection]
-Snap([Expansion snapshot])
-LogMd([Log of model])
-LogOC([Log of orbital curves])
-LogPop([Log of populations])
-
-Data --> Pre
-Pre --> Model
-Pre --> Par
-Pre --> Selct
-Par --> Pop
-Model --> Pop
-Pop --> LogPop
-Par --> Snap
-Selct --> LogOC
-Model --> LogMd
-```
-
-Every box is a functional module with independent implementation, which is class or a part of a class.
-The details of them are illustrated in <a href="#code">Code structure</a>. The connection lines between
-the boxes stands for the APIs between such modules. Expect the above modules, `galotfa` also uses a standalone
-`INI` parameter file to control the behaviours of all modules and APIs in the preceding workflow.
-
 ## Future features
 
 - [ ] (other) add built-in fork of common simulation codes with `galotfa` built-in.
 - [ ] (other) add potential tracer support into the common simulation codes.
 - [ ] (global) output the used parameters to a separate file: galotfa-used.ini
+- [ ] (global) specify different target particle types (and possible multiple analysis sets) in different analysis level.
 - [ ] (model) the bar length calculation.
 - [ ] (particle) the guiding radius calculation.
 - [ ] (particle) the orbital frequency calculation.
 - [ ] (particle) the actions calculation.
 - [ ] group based analysis.
-- [ ] orbit curves
+- [ ] orbit curves: raw, recentered, aligned, corotating, etc.
 - [ ] (post) pattern speed
 - [ ] (post) star formation history

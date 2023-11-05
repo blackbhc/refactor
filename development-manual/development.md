@@ -7,6 +7,8 @@ and further development.
 Please feel free to raise an issue or give your valuable improvement suggestions for the project
 and the documentations.
 
+---
+
 ## Content <a name="content"></a>
 
 1. <a href="#deps">Dependencies</a>
@@ -16,42 +18,51 @@ and the documentations.
 5. <a href="#add_new_module">Add New Function Module</a>
 6. <a href="#codes_structure">Codes Structure</a>
 
+---
+
 ## Dependencies <a name="deps"></a><a href="#contents"><font size=4>(content)</font></a>
 
 This project depends on the following tools or libraries:
 
 - [make](https://www.gnu.org/software/make/): the main build tool of the project.
-- a c++ compiler which supports C++11: recommended ones are g++>=4.8.5 or clang++>=3.4, or icpx
+- a c++ compiler with full support of C++11: recommended ones are g++>=4.8.5 or clang++>=3.9.1, or any icpx
   (the intel llvm-based compiler).
+- For the default Makefile of the project, the priority of the compilers: clang++ > icpx > icpc > g++.
 - [gsl](https://www.gnu.org/software/gsl/): the GNU Scientific Library.
 - [hdf5](https://www.hdfgroup.org/solutions/hdf5/): the HDF5 library, which is used to store the analysis results.
 - a `MPI` library: `mpich`, `openmpi` or `intel mpi` etc.
 
+---
+
 ## Debug Mode<a name="debug"></a><a href="#contents"><font size=4>(content)</font></a>
 
-`galotfa` will enable the `-fsanitize=address,leak,undefined` check in the debug mode, which will check the address
-leak and undefined behavior of the codes. Such check will slow down the codes, and may cause some tedious error.
-You can remove such flags if you want, which is located in `make-config/flags` file.
+`galotfa` will enable the `-fsanitize=address,leak,undefined` check in the debug mode, which will check the
+address leak and undefined behavior of the codes. Such check will slow down the codes, and may cause
+some tedious error. You can remove such flags if you want, which is located in `make-config/flags` file.
 
 ## Project Frame <a name="files"></a><a href="#contents"><font size=4>(content)</font></a>
 
 - `Makefile`: the main makefile of the project, with some sub-makefiles in the `make-config` directory.
   - Note: due to the sub-makefiles, the `make` command should always be run in the root directory of the project.
-- `src`: the source code directory, each sub-directory is a module / modules (just a logic unit, not the c++20 module)
-  of the project.
-  - `C_wrapper`: the directory include the public C wrapper APIs of the project.
-  - `unit_test`: the directory of unit test wrapper codes, more details in the <a href="#unit_test">Unit Test</a> section.
+- `src`: the source code directory, each sub-directory is a module / modules (just a logic unit, not the
+  C++20 module) of the project.
+  - `galotfa.h`: the C wrapper header file, which is used to provide a public API for the project.
+  - `unit_test`: the directory of unit test wrapper codes, more details in the <a href="#unit_test">Unit Test</a>
+    section.
   - `analysis`: the directory of the core analysis codes.
   - `tools`: some utility functions and classes.
   - `output`: functions for analysis results output.
   - `parameter`: parameter file reading and parsing.
   - `engine`: the main virtual analysis engine, which is a wrapper of other modules.
-  - `simcodes`: the interface with some simulation software, at now `Gadget4`, `AREPO`, `GIZMO` and `RAMSES` are supported.
+  - `simcodes`: the interface with some simulation software, at now `Gadget4`, `AREPO`, `GIZMO` and `RAMSES`
+    are supported.
 - `documentation`: the directory of the developers' documentation and the details of the analysis codes.
 - `test_dir`(optional): the temporary directory for the building and running unit test, which will
   be created by the `make test/mpi_test` command.
 - `build`(optional): the temporary directory for the building of the project, which will be created by the
   `make` command.
+
+---
 
 ## Unit Test <a name="unit_test"></a><a href="#contents"><font size=4>(content)</font></a>
 
@@ -116,6 +127,8 @@ There are 5 steps to add a new unit test:
 
 5. run `make test` or `make mpi_test` to compile and run the test.
 
+---
+
 ## Add New Function Module <a name="add_new_module"></a><a href="#contents"><font size=4>(content)</font></a>
 
 1. add a new directory in the `src` directory, with both `*.cpp` and `*.h` files: follow the unit test design,
@@ -127,22 +140,146 @@ There are 5 steps to add a new unit test:
    enclosed by the `#ifdef header_only ... #else ... #endif` statement, so that the new functions can work in the header-only case.
 6. add a C wrapper function for the new function if you want make it become a public API.
 
+---
+
 ## Codes Structure <a name="codes_structure"></a><a href="#contents"><font size=4>(content)</font></a>
 
-### `src/tools`
+### List of modules <a name="list_of_modules"></a>
 
-#### APIs
+- <a href="#src_engine">`src/engine`</a>
+- <a href="#src_tools">`src/tools`</a>
+- <a href="#src_parameter">`src/parameter`</a>
+- <a href="#src_output">`src/output`</a>
+
+### `src/engine`: <a id="src_engine"></a><a href="#list_of_modules"><font size=4>(src list)</font></a>
+
+This part organize the other modules to work together.
+
+#### Design philosophy
+
+The so-called virtual analysis engine is designed to be a one-time calculator at required synchronized time steps.
+
+In a black box view: the virtual analysis engine is a calculator associated with a monitor, which will do
+all calculation by itself. All you need to do is to press some buttons (public APIs) on the monitor, then what
+you experienced is just like you are using a calculator. Namely, press `start` button (the constructor) to start
+the engine, press `run_with` button to run the engine process your data every time you get some data
+(from the simulation), and finally press `stop` button (the destructor) to stop the engine, and the machine
+will save the results for you. There are mainly 4 parts of it, a design scheme of the engine (the ini
+parameter file), a printer (writer with hdf5), a calculator and a monitor.
+For the programmer, the so called virtual analysis engine is the 4 parts, but for the user, the virtual analysis
+engine is just the monitor.
+
+In a technical point of view: The virtual analysis engine is a higher level wrapper of other modules,
+which will combine other modules together to finish the on-the-fly analysis.
+
+#### Public APIs
+
+- `monitor.run_with(...)`: the main open API of the monitor class, which can be imagined as a monitor screen
+  of a analysis engine. This API with receive the data from the simulation and call the other APIs to
+  finish the on-the-fly analysis.
+- `calculator.run_once`: the API to call the calculator to analysis of the data at one synchronized time step.
+  This function is a wrapper of the previous APIs.
+- `calculator.feedback()`: the wrapper to return a vector of the analysis results' pointers to the monitor,
+  which will be used to write the analysis results into the hdf5 file.
+- `calculator.recv_data(...)`: the API between the companion of the `monitor.push_data(...)` that receive the data
+  from the monitor and the real analysis parts.
+- `calculator.is_active()`: return the value of the status flag, which indicate whether the calculator is
+  active or not.
+
+#### Other important APIs
+
+- `monitor.init()`: initialize the monitor, which will create the output directory if it does not exist,
+  then create the writer objects based on the parameter file. This function is aimed to make the constructor
+  of the monitor class more readable.
+- transfer the data from the simulation to the virtual analysis engine.
+- `monitor.push_data(...)`: the API between the monitor of the analysis engine, which push the data and the
+  parameter to the virtual analysis engine.
+- `monitor.save()`: the API between the monitor and the writer class, to save the analysis results at each step into
+  hdf5 files.
+- `calculator.start()`: start up the analysis engine.
+- `calculator.stop()`: stop the analysis engine, which will free some status flags and resources.
+- `calculator.pre_process(...)`: the wrapper of the pre-process part of the analysis engine, which will be
+  called before the main analysis function in each synchronized time step.
+- `calculator.model()`: the wrapper of the model level analysis of the analysis engine.
+- `calculator.particle()`: the wrapper of the particle level analysis part of the analysis engine.
+- `calculator.orbit_curve()`: the wrapper of the orbit level log part of the analysis engine.
+- `calculator.group()`: the wrapper of the group level analysis part of the analysis engine.
+- `calculator.post()`: the wrapper of the post process part of the analysis engine, which will
+  be called after all synchronized time steps.
+
+#### Implementation details
+
+- class `monitor`: the virtual analysis engine's monitor.
+
+  - `init()`: create the output directory and open the hdf5 files, only to make the constructor more readable, and
+    should be called only in the constructor.
+  - `run_with(...)`: arguments are pointers of the simulation data, which must includes array of particle id (1D),
+    mass (1D), particle type (1D), coordinate (2D), velocity (2D) of particles, and a time stamp variable, a
+    integer to specify the length of the arrays. There is additional argument for the potential tracers'
+    particle type , if the codes support potential tracer feature (see in other section ???).
+  - `galotfa::parameter::para* para`: the pointer to the parameter class, will be initialized in the constructor,
+    based on a temporary `ini_parser` object. The default ini parameter filename is specified at here, which
+    is `galotfa.ini` in the working directory.
+  - `create_writers()`: create the writer objects based on the parameter file, due to the file lock, this
+    function should be called only in the main process. To improve the readability of the code, this function
+    are split into several inline functions.
+
+- class `calculator`: the virtual analysis engine's calculator.
+
+  - constructor: with one argument `galotfa::parameter::para&`, which is a reference to the parameter class.
+  - some container of the analysis results, which will be used to restore the results from different analysis modules.
+  - `recv_data(...)`: the API between the companion of the `monitor.push_data(...)` that receive the data from
+    the monitor and deliver the real analysis parts.
+  - There are two versions of this function, one of which support the potential tracer.
+  - At the end of the function, the `run_once` function will be called to analysis the data at one synchronized
+    time step.
+  - Actually, the `monitor.push_data(...)` function is an inline function that just call this function,
+    to define them as separate functions is just for better readability of the codes.
+  - `start()`: start up the analysis engine, which will allocate the memory for the analysis results and set
+    some status flags.
+  - `stop()`: stop the analysis engine, which will free some status flags and resources.
+  - the analysis wrappers (list in the API section): use the parameters to call the pure functions, which
+    is implemented in the real analysis modules, to finish the on-the-fly analysis, and then update the
+    analysis results that returned by the pure functions.
+  - `run_once(...)`: the API to call the calculator to analysis of the data at one synchronized time step.
+    This function is a wrapper of the previous APIs and will be automatically called by the `recv_data` function.
+  - `feedback(...)`: return the analysis results' pointers to the monitor, due to the limitation of static
+    type, the pointers will be stored in a vector of `void*` type, which will be converted to the real type
+    in the monitor. Keep this in mind when you want to add a new analysis module, and be careful to use the
+    pointers in the vector.
+
+    <font color=red>Note</font>: such pointers' data will be overwritten in the each synchronized time step, so the
+    monitor should save the data immediately after the `feedback` function is called.
+
+### `src/tools` <a id="src_tools"></a> <a href="#list_of_modules"><font size=4>(src list)</font></a>
+
+#### Public APIs
 
 For `prompt.h`, `prompt.cpp`:
-
-<font color=red>Note: to used the following macro in MPI mode, you need to include the `mpi.h` before include `prompt.h`,
-otherwise `CPP` can not distinguish the `MPI` environment.</font>
 
 - `println`: macro, print a message with a next line symbol, which will only print the message in the
   root process if the program is running in MPI mode.
 - `fprintln`: macro, similar as `println` but aims to simplify `fprintf`.
+- `INFO`: print a information message, based on the `println` macro.
 - `WARN`: print a warning message to `stderr`, based on the `fprintln` macro.
 - `ERROR`: print a error message to `stderr`, based on the `fprintln` macro.
+
+For `string.h`, `string.cpp`:
+
+- `std::string trim(std::string str, std::string blank)`: remove the leading and trailing blank characters
+  in the string `str`. The default blank characters are `" \t\n\r\f\v"`.
+- `std::vector<std::string> split(std::string str, std::string delim)`: split the string `str` into a
+  vector of strings based on the delimiters in `delim`. The default delimiter is `" "`.
+- `std::string replace(std::string str, std::string old_str, std::string new_str)`: replace the `old_str` in the
+  string `str` with the `new_str`.
+
+#### Other important APIs
+
+For `prompt.h`, `prompt.cpp`:
+
+<font color=red>Note: to used the following macro in MPI mode, you need to include the `mpi.h` before
+include `prompt.h`, otherwise `CPP` can not distinguish the `MPI` environment.</font>
+
 - `CHECK_RETURN(status_flag)`: check the status flag of a boolean value, return 0 for success and 1 for failure.
   If it's failure, print a warning message to the line, file and function where the macro is called.
   This is designed to be used in the unit test functions (the true test function, not the wrappers) to
@@ -151,15 +288,6 @@ otherwise `CPP` can not distinguish the `MPI` environment.</font>
   unit test section.
 - `SUMMARY(<c str of a module name>)`: should be called after all `COUNT(<somthing>)` statement, which will
   print the summary of the unit test results with the given module name.
-
-For `string.h`, `string.cpp`:
-
-- `std::string trim(std::string str, std::string blank)`: remove the leading and trailing blank characters in the
-  string `str`. The default blank characters are `" \t\n\r\f\v"`.
-- `std::vector<std::string> split(std::string str, std::string delim)`: split the string `str` into a vector of strings
-  based on the delimiters in `delim`. The default delimiter is `" "`.
-- `std::string replace(std::string str, std::string old_str, std::string new_str)`: replace the `old_str` in the
-  string `str` with the `new_str`.
 
 #### Implementation details
 
@@ -172,25 +300,38 @@ For `string.h`, `string.cpp`:
   - `WARN`: print a warning message, based on the `fprintln` macro.
   - `ERROR`: print a error message, based on the `fprintln` macro.
   - `COUNT(<call a unit test function>)`: the function to check the result of a unit test, then increase
-    the int variable `success`, `fail` and `unknown` correspondingly, in the local environment where the macro is called.
-    This macro should be used only in the unit test wrapper functions, where the unit test functions will
-    return 0 for success, 1 for failure and other value for unknown.
+    the int variable `success`, `fail` and `unknown` correspondingly, in the local environment where the
+    macro is called. This macro should be used only in the unit test wrapper functions, where the unit
+    test functions will return 0 for success, 1 for failure and other value for unknown.
   - `SUMMARY(<c str of a module name)`: sum the `success`, `fail` and `unknown` variables, then print the results.
     This macro should be used only in the unit test wrapper functions, after all `COUNT(<somthing>)` statement.
 
-### `src/parameter`
+### `src/parameter` <a id="src_parameter"></a> <a href="#list_of_modules"><font size=4>(src list)</font></a>
 
-#### APIs
+#### Public APIs
 
-- `ini_parser(std::string path_to_file)`: the constructor of the class, which will read the parameter file with the given path.
-- `ini_parser::get_xxx()`: the function to extract the value of a key in the parameter file. Support to get boolean, int,
-  double, string, and vector of int, double and string.
-- `ini_parser::has()`: check whether a key exist in the parameter file.
-- structure `para`: the structure to store the value of parameters, and read the parameter file based on the `ini_parser` class.
+For the `para` struct, which is based on the `ini_parser` class:
+
+- `para::para(ini_parser&)`: the structure of the parameters, which should be initialized with a reference to
+  an instance of the `ini_parser` class.
+- `para::check()`: check the dependencies and conflicts between the parameters before use them.
+
+For the `ini_parser` class:
+
+- `ini_parser(std::string path_to_file)`: the constructor of the class, which will read the parameter
+  file with the given path.
+- `ini_parser.get_xxx()`: the function to extract the value of a key in the parameter file. Support
+  to get boolean, int, double, string, and vector of int, double and string.
+- `ini_parser.has()`: check whether a key exist in the parameter file.
+
+#### Other important APIs
+
+- struct `para`: the structure to store the value of parameters, and read the parameter file based on the `ini_parser` class.
   - call `para.<sec>_<para>` to use the parameter, where `<sec>` is an alias the section name and `<para>` is the
-    parameter name. Alias: `gb` for the global section, `pre` for the pre-process section, `md` for the model section,
+    parameter name. Alias: `glb` for the global section, `pre` for the pre-process section, `md` for the model section,
     `ptc` for the particle section, `orb` for the orbit section, `grp` for the group section and `post` for the
     post-process section.
+- `target_sets_parser()`: parse the classification of multiple analysis sets.
 
 #### Implementation details
 
@@ -221,52 +362,67 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
     string-type key and a `ini::Value`-type value. The key of the hash table = section name +
     "\_" + key name of parameter in the ini file, where the space in the section name will be replaced by `_`.
 
-- class `para`: define the default value of some parameters, and update the value according the ini parameter file.
-  - member prefix indicates their section in the parameter file: `gb` for the global section, `pre` for the
+- struct `para`: define the default value of some parameters, and update the value according the ini parameter file.
+  - member prefix indicates their section in the parameter file: `glb` for the global section, `pre` for the
     pre-process section, `md` for the model section, `ptc` for the particle section, `orb` for the orbit section,
     `grp` for the group section and `post` for the post-process section.
+  - most members of struct `para` are just a proxy of possible parameters in the ini file, except the
+    `md_target_sets`, which is parsed from the `particle_types` and `classification` parameters from
+    model section of the ini file.
   - constructor: with a reference to a created `ini_parser` object, then update the value of the parameters
     based on the parameter file (with hard code, the ugly but fast way).
+  - `check()`: check whether there are some conflicts between the parameters, and whether there are some
+    parameters that are lack of. Raise a warning message for each conflict or lack of parameters.
+  - `target_sets_parser()`: parse the classification of multiple analysis sets.
 
 #### Steps to add new parameter into the code
 
-1. Edit the parameter table and explanation in the `README.md` file, during which choose the name, type and
-   default value of the new parameter.
-2. Edit the `para` class in the `src/parameter/default.h` file, add the parameter into the chosen section
-   and default value.
-3. Add a line in the update function (???) to update the value of the new parameter from the ini file.
-4. Use the new parameter in the analysis code.
+1. Edit the parameter table and explanations of it in the `README.md` file, before which choose the name,
+   type and default value of the new parameter.
+2. Edit the `para` class in the `src/parameter/para.h` file, add the parameter into the chosen section
+   and set its default value.
+3. Add a line in the update function (`para::para(...)`) to update the value of the new parameter from the ini file.
+4. Add a check statement into the check function of `para`(`check()`), to check the possible conflicts and
+   lack of the new parameter.
+5. Use the new parameter in the analysis code.
 
-### `src/output`: define the `writer` class
+### `src/output`: <a id="src_output"></a> <a href="#list_of_modules"><font size=4>(src list)</font></a>
 
-#### APIs
+#### Public APIs
 
 - constructor: `writer(std::string)`, create a writer object with the given path to the output file.
   If there is a file with the same name, the writer will create a new file with a `-n` suffix that start from 1,
   where `n` is the smallest integer that make the new file name not exist.
+- `writer.create_group(std::string)`: create a hdf5 group with the given name, can create group hierarchy e.g.
+  if given a argument like `group1/group2/group3`, the writer will create `group1` , `group2` and `group3`
+  recursively if they do not exist. The group name without a prefix `/` will be treated as a root group.
+- `writer.create_dataset(std::string dataset, hdf5::info)` or `create_dataset(std::string group, std::string datasetm info)`:
+  create a hdf5 dataset with the given name, if the group before the final dataset name, take a example:
+  `writer.create_dateset("a/b/c/dataset_name", info)` == `create_group("a/b/c")` then `create_dataset("a/b/c", "dataset_name")`.
+- `writer.push(void* ptr, std::string dataset)`: push a array of data to a existing dataset.
+
+#### Other important APIs
+
 - close the hdf5 file: `~writer()`, the destructor will close all resources of the corresponding hdf5 file,
   and you have no need to call a close function manually.
   hdf5 objects, such as dataset and group.
-- `create_group(std::string)`: create a hdf5 group with the given name, can create group hierarchy e.g.
-  if given a argument like `group1/group2/group3`, the writer will create `group1` , `group2` and `group3`
-  recursively if they do not exist. The group name without a prefix `/` will be treated as a root group.
-- `create_dataset(std::string dataset, hdf5::info)` or `create_dataset(std::string group, std::string datasetm info)`:
-  create a hdf5 dataset with the given name, if the group before the final dataset name, take a example:
-  `create_dateset("a/b/c/dataset_name", info)` == `create_group("a/b/c")` then `create_dataset("a/b/c", "dataset_name")`.
-- `push(void* ptr, std::string dataset)`: push a array of data to a existing dataset.
-- steps to use the `writer` class to organize the hdf5 file:
 
-  1. create a writer object with the given path to the output file: `writer(std::string)`.
-  2. create an `galotfa::hdf5::info` object that specify the info of the dataset: data type, rank and dimension.
-  3. create a dataset with the given name and info: `writer::create_dataset(std::string dataset, hdf5::info)`
-  4. push the data array to the dataset when needed: `writer::push(void* ptr, std::string dataset)`.
-  5. After all steps, the `writer` will organize the resources of the hdf5 file automatically, there is no need to close
-     anything manually.
+#### Usage
+
+Steps to use the `writer` class to organize the hdf5 file:
+
+1. create a writer object with the given path to the output file: `writer(std::string)`.
+2. create an `galotfa::hdf5::info` object that specify the info of the dataset: data type, rank and dimension.
+3. create a dataset with the given name and info: `writer::create_dataset(std::string dataset, hdf5::info)`
+4. push the data array to the dataset when needed: `writer::push(void* ptr, std::string dataset)`.
+5. After all steps, the `writer` will organize the resources of the hdf5 file automatically, there is no need
+   to close anything manually.
 
 - <font color=red>NOTE</font>:
 
   1. The pushed data array should follow the 1D array convention (see <a href="#convention of data array">Convention for arrays of data</a> )
-  2. Make sure that the size of the pushed data array is the same as the size of the dataset otherwise the behavior is undefined.
+  2. Make sure that the size of the pushed data array is the same as the size of the dataset otherwise the
+     behavior is undefined.
      - Although there is a `len` parameter to specify the 1D array size, but the for a C-style array, such
        parameter is only for check. And the code actually can not detect the size of the array. The cost
        of the UB is for better performance with raw C-style array.
@@ -280,7 +436,8 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
 #### Convention of the data output
 
 - `galotfa` use `hdf5` for data output, where different analysis modules will be stored in different files.
-- For better performance, `galotfa` will store the analysis results with chunked dataset and compress them to save space.
+- For better performance, `galotfa` will store the analysis results with chunked dataset and compress them
+  to save space.
 - `galotfa` will use a virtual stack in the main process to store the analysis results, and output the data
   to the hdf5 file when the stack is full or the simulation is finished. This strategy is due to the
   uncertainty of how many synchronized time steps will be analyzed during a simulation.
@@ -291,14 +448,14 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
   documentations about this feature, and such feature is not always activated in the hdf5 library, so
   `galotfa` only use a serial mode to write date, which is collected from all processes into the main process.
 
-#### Convention for arrays of data <a name="convention of data array"></a>
+#### Convention for arrays of data
 
 To simplify the functions parameters and better performance, `galotfa` always use 1D C-style array
 to store the analysis results. When store a multi-dimensional array, the array will be stored as different
-block in such 1D array, follow the row major convention. For example, a 2D array `a[i][j]` will be stored as `a[i*N+j]`,
-where `N` is the length of the second dimension of the array. The analogy is also true for higher
-dimensional array, e.g. `i*N + j*M + k`, where the block size multiplied by the index is the size of
-the sub-space of the array.
+block in such 1D array, follow the row major convention. For example, a 2D array `a[i][j]` will be stored
+as `a[i*N+j]`, where `N` is the length of the second dimension of the array. The analogy is also true
+for higher dimensional array, e.g. `i*N + j*M + k`, where the block size multiplied by the index is the
+size of the sub-space of the array.
 
 #### Implementation details
 
@@ -318,10 +475,8 @@ the sub-space of the array.
 
 - `writer(std::string)`: the class for data output, which require a string to specify the path to the output
   file for initialization. This function can only be used in the main process, due to the hdf5 file lock.
-
   - `nodes`: the hash map with string-type key, and `galotfa::hdf5::node`-type value, the key is the absolute
     path of the node, e.g. `/group1/group2/dataset_name` and `/` for the file.
-
     - Note: due to there is no default constructor for the `node` class, to call a `node` object in the hash map,
       you need to use the `at` method.
     - The key must start with `/` and end without `/`.
@@ -329,29 +484,25 @@ the sub-space of the array.
       is cleaned only in the destructor of the writer. (This is due to `nodes` use string-type key and
       there is no any tree structure in the hash map, so it's hard to clean the tree structure of the individual
       node).
-
   - `writer::~writer()`: the destructor of the class, which will close the hdf5 file and the created hdf5 objects,
     such as dataset and group.
-
-  - `writer::create_file(std::string)`.
-
+  - `writer::create_file(std::string)`: call `open_file(...)` to open the hdf5 file, and create a file node
+    with the given name. This function should
+    be called only in the main process, due to the hdf5 file lock.
   - `writer::create_group(std::string)`: create a hdf5 group with the given name, can be used to create nested
     groups recursively, e.g. given `group1/group2/group3`, the writer will create `group1` , `group2` and `group3`
     recursively if they do not exist. The group name without a prefix `/` will be treated as a root group.
-
-  - `writer::create_dataset(std::string, galotfa::hdf5::size_info&)`: create a hdf5 dataset with the given name, if the string before
-    the final dataset name, take a example: `a/b/c/dataset_name`, will be created as group, `a/b/c` here.
-
+  - `writer::create_dataset(std::string, galotfa::hdf5::size_info&)`: create a hdf5 dataset with the given
+    name, if the string before the final dataset name, take a example: `a/b/c/dataset_name`, will be created
+    as group, `a/b/c` here.
   - Note: The previous three create function will return 1 if there is some warning, and 0 for success. So never
     ignore the return value of these functions.
-
-  - `galota::hdf5::node create_datanode(node& parent, std::string& dataset, galotfa::hdf5::size_info&)`: setup the dataset
-    of the parent node with the given name and info. `dataset` string should be the name of dataset only, e.g. for
-    `/group1/group2/dataset_name` the given value should be `dataset_name`. The parent node should be a group node.
-
-  - `open_file`: open a hdf5 file and return its id, private.
-
-  - `push(void* buffer, unsigned int len, std::string dataset_name)`: the main interface to push a array of data to a existing dataset,
-    the dataset name should be the absolute path of the dataset, e.g. `/group1/group2/dataset_name`. If such
-    dataset does not exist, the writer will create it automatically. The data type of the dataset will be restored
-    by `node`, during creation of the dataset.
+  - `galota::hdf5::node create_datanode(node& parent, std::string& dataset, galotfa::hdf5::size_info&)`: setup the
+    dataset of the parent node with the given name and info. `dataset` string should be the name of dataset
+    only, e.g. for `/group1/group2/dataset_name` the given value should be `dataset_name`. The parent node
+    should be a group node.
+  - `open_file(...)`: open a hdf5 file and return its id, private.
+  - `push(void* buffer, unsigned long len, std::string dataset_name)`: a template function, the main interface
+    to push a array of data to a existing dataset, the dataset name should be the absolute path of the dataset,
+    e.g. `/group1/group2/dataset_name`. If such dataset does not exist, the writer will create it automatically.
+    The data type of the dataset will be restored by `node`, during creation of the dataset.
