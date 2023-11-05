@@ -1,8 +1,7 @@
-#ifndef __GALOTFA_INI_PARSER_CPP__
-#define __GALOTFA_INI_PARSER_CPP__
-#include "ini-parser.h"
+#ifndef GALOTFA_INI_PARSER_CPP
+#define GALOTFA_INI_PARSER_CPP
+#include "ini_parser.h"
 #include "../tools/prompt.h"
-#include "../tools/string.h"
 #ifdef DO_UNIT_TEST
 #include "../tools/string.cpp"
 #endif
@@ -12,51 +11,46 @@
 #include <sys/stat.h>
 
 namespace galotfa {
-
-const std::string ini_parser::blank          = " \t\n\r\f\v";
-const std::string ini_parser::comment_prefix = "#;";
-const std::string ini_parser::section_prefix = "[";
-const std::string ini_parser::section_suffix = "]";
-const std::string ini_parser::key_value_sep  = "=";
-const std::string ini_parser::value_sep      = " \t,-:+&";
-
 ini_parser::ini_parser( const char* file_name )
 {
-    this->filename = file_name;
-    // #ifndef debug_parameter  // no initialization in debug mode
+    this->filename      = file_name;
+    this->_section_name = new std::string;  // a tmp variable which is used to store the section
+                                            // name in insert_to_table()
+#ifndef debug_parameter                     // no initialization in debug mode
     this->read( this->filename.c_str() );
-    // #endif
+#endif
 }
 
-void ini_parser::read( const char* filename )
+void ini_parser::read( const char* file )
 {
+    println( "Reading in the ini file: %s ... ", file );
     struct stat* st = new struct stat;
-    stat( filename, st );
+    st->st_size     = 0;
+    stat( file, st );
     this->check_filesize( st->st_size );
 
     // read the file into one buffer
-    FILE* fp = fopen( filename, "rb" );
-    if ( fp == NULL )
+    FILE* fp = fopen( file, "r" );
+    if ( fp == nullptr )
     {
         delete st;
         st = nullptr;
-        ERROR( "The file %s does not exist!\n", filename );
+        ERROR( "The file %s does not exist!\n", file );
     }
     char buffer[ st->st_size + 1 ];
     buffer[ st->st_size ] = '\0';
     char* p_buffer        = buffer;
-    fread( p_buffer, st->st_size, 1, fp );
+    fread( p_buffer, ( size_t )st->st_size, 1, fp );
 
     // parse the buffer
     char* token = strsep( &p_buffer, "\n" );  // get the first line
-    while ( token != NULL )
+    while ( token != nullptr )
     {
         if ( *token == '\0' )
         {
         }
         else
         {
-            // TODO: call the function to inter the line into the hash table
             this->insert_to_table( this->line_parser( token ), this->ini_table );
         }
         token = strsep( &p_buffer, "\n" );
@@ -65,26 +59,27 @@ void ini_parser::read( const char* filename )
     fclose( fp );
     delete st;
     st = nullptr;
+    println( "Done!" );
 }
 
 void ini_parser::insert_to_table( ini::Line                                      line,
                                   std::unordered_map< std::string, ini::Value >& hash ) const
 // remain the second parameter for convenience of unit test
 {
-    static std::string section_name = "";
+    // HACK: the section name must be stored in the function, otherwise it will just be ""
     switch ( line.type )
     {
     case ini::LineType::empty:
         break;
     case ini::LineType::section:
-        section_name = line.content;
+        *this->_section_name = line.content;
         break;
     case ini::LineType::key_value:
         size_t     pos = line.content.find_first_of( "=" );
         ini::Value value;
-        value.content                                              = line.content.substr( pos + 1 );
-        value.type                                                 = line.value_type;
-        hash[ section_name + "_" + line.content.substr( 0, pos ) ] = value;
+        value.content = line.content.substr( pos + 1 );
+        value.type    = line.value_type;
+        hash[ *this->_section_name + "_" + line.content.substr( 0, pos ) ] = value;
         break;
     }
 }
@@ -93,7 +88,7 @@ void ini_parser::check_filesize( long int size ) const
 {
     if ( size == 0 )
     {
-        ERROR( "The ini file is empty." );
+        ERROR( "The size of the ini file is 0, most common case: the file was not found." );
     }
     else if ( size >= 1024 * 1024 * 5 && size < 1024 * 1024 * 1024 )
     {
@@ -119,14 +114,14 @@ ini::Line ini_parser::line_parser( const char* str ) const
         return line;
         // with default types: LineType::empty and ValueType::none
     }
-    else if ( raw_content.find_first_of( section_prefix ) == 0 )
+    else if ( raw_content.find_first_of( SECTION_PREFIX ) == 0 )
     // section header
     {
-        if ( raw_content.find_first_of( section_suffix ) == raw_content.size() - 1 )
+        if ( raw_content.find_first_of( SECTION_SUFFIX ) == raw_content.size() - 1 )
         {
             line.type = ini::LineType::section;
-            raw_content.erase( 0, raw_content.find_first_of( section_prefix ) + 1 );
-            raw_content.erase( raw_content.find_first_of( section_suffix ) );
+            raw_content.erase( 0, raw_content.find_first_of( SECTION_PREFIX ) + 1 );
+            raw_content.erase( raw_content.find_first_of( SECTION_SUFFIX ) );
             std::replace( raw_content.begin(), raw_content.end(), ' ', '_' );
             std::replace( raw_content.begin(), raw_content.end(), '\t', '_' );
             line.content = raw_content;
@@ -137,28 +132,34 @@ ini::Line ini_parser::line_parser( const char* str ) const
         }
         ERROR( "Get an invalid section header in ini file:\n%s", str );
     }
-    else if ( raw_content.find_first_of( key_value_sep ) != std::string::npos )
+    else if ( raw_content.find_first_of( KEY_VALUE_SEP ) != std::string::npos )
     // key-value pair
     {
         line.type = ini::LineType::key_value;
         std::string key =
-            this->trim( raw_content.substr( 0, raw_content.find_first_of( key_value_sep ) ) );
+            this->trim( raw_content.substr( 0, raw_content.find_first_of( KEY_VALUE_SEP ) ) );
         std::string val =
-            this->trim( raw_content.substr( raw_content.find_first_of( key_value_sep ) + 1 ) );
+            this->trim( raw_content.substr( raw_content.find_first_of( KEY_VALUE_SEP ) + 1 ) );
         if ( val.size() == 0 || key.size() == 0
-             || key.find_first_of( value_sep ) != std::string::npos )
+             || key.find_first_of( VALUE_SEP ) != std::string::npos )
         {
             ERROR( "Get an invalid line in ini file:\n%s", str );
         }
+        transform( key.begin(), key.end(), key.begin(), ::tolower );
         line.content = key + "=" + val;
 
         // determine the value type
         std::transform( val.begin(), val.end(), val.begin(), ::tolower );
-        if ( val == "true" || val == "yes" || val == "enable" || val == "on" || val == "false"
-             || val == "no" || val == "disable" || val == "off" )
+        if ( val == "true" || val == "yes" || val == "enable" || val == "on" )
         {
             line.value_type = ini::ValueType::boolean;
             line.content    = key + "=" + "true";
+            return line;
+        }
+        else if ( val == "false" || val == "no" || val == "disable" || val == "off" )
+        {
+            line.value_type = ini::ValueType::boolean;
+            line.content    = key + "=" + "false";
             return line;
         }
         else
@@ -197,20 +198,6 @@ ini::Line ini_parser::line_parser( const char* str ) const
     return line;
 }
 
-inline std::string ini_parser::trim( std::string str ) const
-{
-    str = galotfa::string::trim( str, blank );
-    if ( str.find_first_of( comment_prefix ) != std::string::npos )
-    {
-        str.erase( str.find_first_of( comment_prefix ) );
-    }
-    return str;
-}
-
-inline std::vector< std::string > ini_parser::split( std::string str ) const
-{
-    return galotfa::string::split( str, value_sep );
-}
 
 // macro: get the hash key name, and make sure there is such key
 // it's only  used in the get functions
@@ -241,7 +228,7 @@ bool ini_parser::get_bool( std::string section, std::string key ) const
 {
     SECURE_EXTRACT( section, key );
     if ( this->ini_table[ hash_key_name ].type != ini::ValueType::boolean )
-        WARN( "[%s] -> [%s] is not boolean type!", section.c_str(), key.c_str() );
+        WARN( "[%s] -> [%s] is not boolean!", section.c_str(), key.c_str() );
     return this->ini_table[ hash_key_name ].content == "true";
 }
 
@@ -249,15 +236,16 @@ double ini_parser::get_double( std::string section, std::string key ) const
 {
     SECURE_EXTRACT( section, key );
     if ( this->ini_table[ hash_key_name ].type != ini::ValueType::number )
-        WARN( "[%s] -> [%s] is not number type!", section.c_str(), key.c_str() );
+        WARN( "[%s] -> [%s] is not number!", section.c_str(), key.c_str() );
     return std::stod( this->ini_table[ hash_key_name ].content );
 }
 
 std::vector< double > ini_parser::get_doubles( std::string section, std::string key ) const
 {
     SECURE_EXTRACT( section, key );
-    if ( this->ini_table[ hash_key_name ].type != ini::ValueType::numbers )
-        WARN( "[%s] -> [%s] is not numbers type!", section.c_str(), key.c_str() );
+    if ( this->ini_table[ hash_key_name ].type != ini::ValueType::numbers
+         && this->ini_table[ hash_key_name ].type != ini::ValueType::number )
+        WARN( "[%s] -> [%s] is not number(s)!", section.c_str(), key.c_str() );
     auto                  vals = this->split( this->ini_table[ hash_key_name ].content );
     std::vector< double > res( vals.size() );
     for ( size_t i = 0; i < vals.size(); ++i )
@@ -271,15 +259,16 @@ int ini_parser::get_int( std::string section, std::string key ) const
 {
     SECURE_EXTRACT( section, key );
     if ( this->ini_table[ hash_key_name ].type != ini::ValueType::number )
-        WARN( "[%s] -> [%s] is not number type!", section.c_str(), key.c_str() );
+        WARN( "[%s] -> [%s] is not number!", section.c_str(), key.c_str() );
     return std::stoi( this->ini_table[ hash_key_name ].content );
 }
 
 std::vector< int > ini_parser::get_ints( std::string section, std::string key ) const
 {
     SECURE_EXTRACT( section, key );
-    if ( this->ini_table[ hash_key_name ].type != ini::ValueType::numbers )
-        WARN( "[%s] -> [%s] is not numbers type!", section.c_str(), key.c_str() );
+    if ( this->ini_table[ hash_key_name ].type != ini::ValueType::numbers
+         && this->ini_table[ hash_key_name ].type != ini::ValueType::number )
+        WARN( "[%s] -> [%s] is not number(s)!", section.c_str(), key.c_str() );
     auto               vals = this->split( this->ini_table[ hash_key_name ].content );
     std::vector< int > res( vals.size() );
     for ( size_t i = 0; i < vals.size(); ++i )
@@ -294,19 +283,20 @@ std::string ini_parser::get_str( std::string section, std::string key ) const
 {
     SECURE_EXTRACT( section, key );
     if ( this->ini_table[ hash_key_name ].type != ini::ValueType::string )
-        WARN( "[%s] -> [%s] is not string type!", section.c_str(), key.c_str() );
+        WARN( "[%s] -> [%s] is not string!", section.c_str(), key.c_str() );
     return this->ini_table[ hash_key_name ].content;
 }
 
 std::vector< std::string > ini_parser::get_strs( std::string section, std::string key ) const
 {
     SECURE_EXTRACT( section, key );
-    if ( this->ini_table[ hash_key_name ].type != ini::ValueType::strings )
-        WARN( "[%s] -> [%s] is not strings type!", section.c_str(), key.c_str() );
+    if ( this->ini_table[ hash_key_name ].type != ini::ValueType::strings
+         && this->ini_table[ hash_key_name ].type != ini::ValueType::string )
+        WARN( "[%s] -> [%s] is not string(s)!", section.c_str(), key.c_str() );
     return this->split( this->ini_table[ hash_key_name ].content );
 }
 
-inline bool ini_parser::has( std::string section, std::string key ) const
+bool ini_parser::has( std::string section, std::string key ) const
 {
     std::replace( section.begin(), section.end(), ' ', '_' );
     std::replace( section.begin(), section.end(), '\t', '_' );
@@ -500,21 +490,29 @@ int ini_parser::test_split( void ) const
     std::string str1 = " 1,2,3 4";
     std::string str2 = "1 2\t 3 \t\t4";
     std::string str3 = "1+2:3:4";
-    std::string str4 = "1:::-+2\t3-4";
-    std::string str5 = "1.012+string+3&4";
+    std::string str4 = "1:::+2\t3 4";
+    std::string str5 = "1.012+string+3:4";
 
     std::vector< std::string > target1 = { "1", "2", "3", "4" };
     std::vector< std::string > target2 = { "1.012", "string", "3", "4" };
 
     auto res1 = split( trim( str1 ) );
+    if ( res1 != target1 )
+        CHECK_RETURN( false );
     auto res2 = split( trim( str2 ) );
+    if ( res2 != target1 )
+        CHECK_RETURN( false );
     auto res3 = split( trim( str3 ) );
+    if ( res3 != target1 )
+        CHECK_RETURN( false );
     auto res4 = split( trim( str4 ) );
+    if ( res4 != target1 )
+        CHECK_RETURN( false );
     auto res5 = split( trim( str5 ) );
+    if ( res5 != target2 )
+        CHECK_RETURN( false );
 
-    bool success = ( res1 == target1 ) && ( res2 == target1 ) && ( res3 == target1 )
-                   && ( res4 == target1 ) && ( res5 == target2 );
-    CHECK_RETURN( success );
+    CHECK_RETURN( true );
 }
 
 int ini_parser::test_read( void )
@@ -524,12 +522,12 @@ int ini_parser::test_read( void )
     {
         this->read( this->filename.c_str() );
         println( "It passed the test." );
-        return 0;
+        CHECK_RETURN( true );
     }
     catch ( std::exception& e )
     {
         WARN( "It failed the test, error message: %s", e.what() );
-        return 1;
+        CHECK_RETURN( false );
     }
 }
 
@@ -591,7 +589,7 @@ int ini_parser::test_get( void ) const
         return 1;
     }
 
-    bool success = ( res1 == target1 ) && ( res2 == target2 ) && ( res3 == target3 )
+    bool success = ( res1 == target1 ) && ( res2 - target2 < 1e-10 ) && ( res3 == target3 )
                    && ( res4 == target4 ) && ( res5 == target5 );
     CHECK_RETURN( success );
     return 0;

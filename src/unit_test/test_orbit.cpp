@@ -1,11 +1,11 @@
 // Call the unit test functions for orbit analysis part.
-#ifndef _ORBIT_TEST_
-#define _ORBIT_TEST_
+#ifndef ORBIT_TEST
+#define ORBIT_TEST
 #include "../tools/prompt.h"
 #include <stdio.h>
 
 // include the head file of the orbit analysis part.
-void test_orbit( void )
+static void test_orbit( void )
 {
     println( "Test the orbit analysis part.\n" );
     // call the unit test functions for the orbit analysis part.

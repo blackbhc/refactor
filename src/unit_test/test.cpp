@@ -1,10 +1,19 @@
+#include <variant>
 #define DO_UNIT_TEST 1
 #ifdef MPI_TEST
 #include <mpi.h>
 #endif
 #include "../tools/prompt.h"
-#include <stdio.h>
+#include <vector>
 
+static void operator+=( std::vector< int >& vec1, std::vector< int > vec2 )
+{
+    if ( vec1.size() != vec2.size() )
+        ERROR( "The size of two vectors to add are not equal. %ld != %ld", vec1.size(),
+               vec2.size() );
+    for ( size_t i = 0; i < vec1.size(); ++i )
+        vec1[ i ] += vec2[ i ];
+}
 
 // include the unit test header files
 #ifdef debug_parameter
@@ -51,6 +60,7 @@ int main( int argc, char* argv[] )
 int main()
 {
 #endif
+    std::vector< int > result = { 0, 0, 0 };  // the result of the unit test
     println( "--------------------------------------------------------------------" );
     println( "Start the unit tests." );
 
@@ -60,43 +70,43 @@ int main()
     try
     {
 #ifdef debug_string
-        test_string();
+        result += test_string();
         println( "--------------------------------------------------------------------" );
 #endif
 #ifdef debug_prompt
-        test_prompt();
+        result += test_prompt();
         println( "--------------------------------------------------------------------" );
 #endif
 #ifdef debug_parameter
-        test_parameter();
+        result += test_parameter();
         println( "--------------------------------------------------------------------" );
 #endif
 #ifdef debug_output
-        test_output();
+        result += test_output();
         println( "--------------------------------------------------------------------" );
 #endif
 #ifdef debug_pre
-        test_pre();
+        result += test_pre();
         println( "--------------------------------------------------------------------" );
 #endif
 #ifdef debug_model
-        test_model();
+        result += test_model();
         println( "--------------------------------------------------------------------" );
 #endif
 #ifdef debug_particle
-        test_particle();
+        result += test_particle();
         println( "--------------------------------------------------------------------" );
 #endif
 #ifdef debug_orbit
-        test_orbit();
+        result += test_orbit();
         println( "--------------------------------------------------------------------" );
 #endif
 #ifdef debug_group
-        test_group();
+        result += test_group();
         println( "--------------------------------------------------------------------" );
 #endif
 #ifdef debug_post
-        test_post();
+        result += test_post();
         println( "--------------------------------------------------------------------" );
 #endif
 
@@ -112,5 +122,17 @@ int main()
 #endif
     }
 
+    // print the summary of the unit test
+    int success = result[ 0 ];
+    int fail    = result[ 1 ];
+    int unknown = result[ 2 ];
+    println( "\033[0mThe test results of \033[5;34m%s\033[0m is:\033[0;32m %d success, "
+             "\033[0;31m%d fail, "
+             "\033[0;33m%d unknown.\033[0m",
+             "all unit tests", success, fail, unknown );
+    if ( fail + unknown == 0 )
+    {
+        println( "\033[5;34m%s\033[0m are passed!\033[0m", "All tests" );
+    }
     return 0;
 }

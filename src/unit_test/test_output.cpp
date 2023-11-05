@@ -1,13 +1,13 @@
 // Call the unit test functions for output part.
-#ifndef _OUTPUT_TEST_
-#define _OUTPUT_TEST_
+#ifndef OUTPUT_TEST
+#define OUTPUT_TEST
 #include "../output/writer.cpp"
 #include "../output/writer.h"
 #include "../tools/prompt.h"
-
+#include <vector>
 
 // include the head file of the output part.
-void test_output( void )
+static std::vector< int > test_output( void )
 {
     println( "Testing the output part." );
     int             success = 0;
@@ -23,5 +23,11 @@ void test_output( void )
     COUNT( writer.test_create_dataset() );
     COUNT( writer.test_push() );
     SUMMARY( "output" );
+
+    std::vector< int > result = { 0, 0, 0 };
+    result[ 0 ]               = success;
+    result[ 1 ]               = fail;
+    result[ 2 ]               = unknown;
+    return result;
 }
 #endif

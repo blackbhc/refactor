@@ -17,7 +17,7 @@ $(PROJECT_ROOT)/build/libgalotfa.a: src/*/*.*
 	@mkdir -p $(BUILD_DIR)/include $(BUILD_DIR)/lib
 	@cp -r $(PROJECT_ROOT)/src/* $(BUILD_DIR)/include/
 # NOTE: due to the mpi.h dependency, the final compilation must be tested thoroughly
-	$(CXX) $(CXXFLAGS) -c $(PROJECT_ROOT)/src/galotfa.h -o $(BUILD_DIR)/galotfa.o
+	$(MPICXX) $(CXXFLAGS) -c $(PROJECT_ROOT)/src/galotfa.h -o $(BUILD_DIR)/galotfa.o
 	ar -rcs $(BUILD_DIR)/lib/libgalotfa.a -lhdf5 $(BUILD_DIR)/galotfa.o
 	@rm $(BUILD_DIR)/galotfa.o
 	@rm $(BUILD_DIR)/include/**/*.c*
@@ -27,7 +27,7 @@ $(PROJECT_ROOT)/build/libgalotfa.so: src/*/*.*
 	@mkdir -p $(BUILD_DIR)/include $(BUILD_DIR)/lib
 	@cp -r $(PROJECT_ROOT)/src/* $(BUILD_DIR)/include/
 # NOTE: due to the mpi.h dependency, the final compilation must be tested thoroughly
-	$(CXX) $(CXXFLAGS) --shared -fPIC $(PROJECT_ROOT)/src/galotfa.h -o $(BUILD_DIR)/lib/libgalotfa.so
+	$(MPICXX) $(CXXFLAGS) --shared -fPIC $(PROJECT_ROOT)/src/galotfa.h -o $(BUILD_DIR)/lib/libgalotfa.so
 	@rm $(BUILD_DIR)/include/**/*.c*
 
 

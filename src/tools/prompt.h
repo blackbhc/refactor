@@ -1,7 +1,15 @@
-#ifndef __GALOTFA_PROMPT_H__
-#define __GALOTFA_PROMPT_H__
+#ifndef GALOTFA_PROMPT_H
+#define GALOTFA_PROMPT_H
 #include <stdexcept>
 #include <stdio.h>
+
+// for normal build mode, always use the mpi vertion prompts
+#ifndef DO_UNIT_TEST
+// if its header only, then other headers will include mpi.h
+#if !defined( GALOTFA_HEADER_ONLY ) && !defined( MPI_INCLUDED )
+#include <mpi.h>
+#endif
+#endif
 
 // print a message for warning
 #ifndef MPI_INCLUDED
@@ -17,25 +25,25 @@
         fprintf( file_ptr, "\n" );        \
     }
 #else
-#define println( ... )                          \
-    {                                           \
-        int rank;                               \
-        MPI_Comm_rank( MPI_COMM_WORLD, &rank ); \
-        if ( rank == 0 )                        \
-        {                                       \
-            printf( __VA_ARGS__ );              \
-            printf( "\n" );                     \
-        }                                       \
+#define println( ... )                           \
+    {                                            \
+        int _rank;                               \
+        MPI_Comm_rank( MPI_COMM_WORLD, &_rank ); \
+        if ( _rank == 0 )                        \
+        {                                        \
+            printf( __VA_ARGS__ );               \
+            printf( "\n" );                      \
+        }                                        \
     }
-#define fprintln( file_prt, ... )               \
-    {                                           \
-        int rank;                               \
-        MPI_Comm_rank( MPI_COMM_WORLD, &rank ); \
-        if ( rank == 0 )                        \
-        {                                       \
-            fprintf( file_ptr, __VA_ARGS__ );   \
-            fprintf( file_prt, "\n" );          \
-        }                                       \
+#define fprintln( file_ptr, ... )                \
+    {                                            \
+        int _rank;                               \
+        MPI_Comm_rank( MPI_COMM_WORLD, &_rank ); \
+        if ( _rank == 0 )                        \
+        {                                        \
+            fprintf( file_ptr, __VA_ARGS__ );    \
+            fprintf( file_ptr, "\n" );           \
+        }                                        \
     }
 #endif
 
@@ -43,6 +51,11 @@
 #define WARN( ... )                                                        \
     {                                                                      \
         fprintln( stderr, "\033[0;1;33m [WARNING]: \033[0m" __VA_ARGS__ ); \
+    }
+
+#define INFO( ... )                                            \
+    {                                                          \
+        println( "\033[0;1;32m [INFO]: \033[0m" __VA_ARGS__ ); \
     }
 
 // throw a error with a message
@@ -65,7 +78,7 @@
         }                                                                                       \
         else                                                                                    \
         {                                                                                       \
-            println( "Pass the test." );                                                      \
+            println( "Pass the test." );                                                        \
             return 0;                                                                           \
         }                                                                                       \
     }

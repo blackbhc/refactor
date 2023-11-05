@@ -1,5 +1,5 @@
-#ifndef __GALOTFA_PROMPT_CPP__
-#define __GALOTFA_PROMPT_CPP__
+#ifndef GALOTFA_PROMPT_CPP
+#define GALOTFA_PROMPT_CPP
 #include "prompt.h"
 #include <stdexcept>  // std::runtime_error
 #include <stdio.h>
@@ -9,7 +9,7 @@
 #ifdef debug_prompt
 namespace unit_test {
 // the unit test for prompts
-int warn_and_error()
+static int warn_and_error()
 {
     println( " Test the prompt functions." );
     println( "It should print a warning message and a error message, don't worry." );

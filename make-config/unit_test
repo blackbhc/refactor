@@ -14,6 +14,10 @@ test_dir/test: $(TEST_SRC) test_dir
 	@$(CXX) $(CXXFLAGS) $(PROJECT_ROOT)/src/unit_test/test.cpp -lhdf5 -o $(PROJECT_ROOT)/test_dir/test
 
 test_dir/mpi_test: $(TEST_SRC) test_dir
+ifneq ($(findstring output, $(TEST_TARGET)), )
+	@echo "The output target can not be test in mpi mode."
+	@exit 1
+endif
 	@echo "Building mpi unit test ..."
-	@$(CXX) -DMPI_TEST $(CXXFLAGS) -ggdb $(PROJECT_ROOT)/src/unit_test/test.cpp -lhdf5 -o \
+	@$(MPICXX) -DMPI_TEST $(CXXFLAGS) -ggdb $(PROJECT_ROOT)/src/unit_test/test.cpp -lhdf5 -o \
 		$(PROJECT_ROOT)/test_dir/mpi_test

@@ -1,5 +1,5 @@
-#ifndef __GALOTFA_WRITER_CPP__
-#define __GALOTFA_WRITER_CPP__
+#ifndef GALOTFA_WRITER_CPP
+#define GALOTFA_WRITER_CPP
 #include "writer.h"
 #include "../tools/prompt.h"
 #include "../tools/string.h"
@@ -12,21 +12,21 @@
 namespace galotfa {
 
 namespace hdf5 {
-    node::node( hid_t id, NodeType type )
+    node::node( hid_t id, NodeType nodetype )
     {
-        if ( type != NodeType::file )
+        if ( nodetype != NodeType::file )
             ERROR( "The 2 arguments constructor can only create root node for the file handle!" );
         this->self = id;
-        this->type = type;
+        this->type = nodetype;
     }
 
-    node::node( node* parent, hid_t id, NodeType type )
+    node::node( node* parent_ptr, hid_t id, NodeType nodetype )
     {
-        if ( type == NodeType::file )
+        if ( nodetype == NodeType::file )
             ERROR( "The 3 arguments constructor can not create root node for the file handle!" );
         this->self   = id;
-        this->type   = type;
-        this->parent = parent;
+        this->type   = nodetype;
+        this->parent = parent_ptr;
         parent->add_child( this );
     }
 
@@ -149,8 +149,8 @@ int writer::create_file( std::string path_to_file )
     }
 
     // insert the root node
-    this->nodes.insert( std::pair< std::string, hdf5::node >(
-        "/", std::move( hdf5::node( file_id, hdf5::NodeType::file ) ) ) );
+    this->nodes.insert(
+        std::pair< std::string, hdf5::node >( "/", hdf5::node( file_id, hdf5::NodeType::file ) ) );
     return 0;
 }
 
@@ -204,10 +204,9 @@ int writer::create_group( std::string group_name )
     for ( size_t i = 0; i < strings.size(); ++i )
     {
         std::string this_path;
+        this_path = parent_path + "/" + strings[ i ];
         if ( i == 0 )
-            this_path = parent_path + strings[ i ];
-        else
-            this_path = parent_path + "/" + strings[ i ];
+            this_path.erase( 0, 1 );  // remove the additional first "/"
 
         if ( this->nodes.find( this_path ) != this->nodes.end() )  // if the link exists
         {
@@ -218,6 +217,7 @@ int writer::create_group( std::string group_name )
             }
             else  // if not the last element, go to the next element
             {
+                parent_path = this_path;  // update the parent path
                 continue;
             }
         }
@@ -229,11 +229,11 @@ int writer::create_group( std::string group_name )
                             H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
             // insert the node
             auto pair = std::pair< std::string, hdf5::node >(
-                this_path, std::move( hdf5::node( &this->nodes.at( parent_path ), group_id,
-                                                  hdf5::NodeType::group ) ) );
+                this_path,
+                hdf5::node( &this->nodes.at( parent_path ), group_id, hdf5::NodeType::group ) );
             this->nodes.insert( std::move( pair ) );
+            parent_path = this_path;
         }
-        parent_path = this_path;
     }
     return 0;
 }
@@ -317,13 +317,13 @@ inline hdf5::node writer::create_datanode( hdf5::node& parent, std::string& data
 
     // create property list and set chunk and compression
     hid_t  prop_list = H5Pcreate( H5P_DATASET_CREATE );
-    herr_t status    = H5Pset_chunk( prop_list, info.rank + 1, chunk_dims );
+    herr_t status    = H5Pset_chunk( prop_list, ( int )info.rank + 1, chunk_dims );
     status           = H5Pset_deflate( prop_list, 6 );
     if ( status < 0 )
         ERROR( "Failed to set deflate!" );
 
     // create the zero-size dataspace
-    hid_t dataspace = H5Screate_simple( info.rank + 1, data_dims, max_dims );
+    hid_t dataspace = H5Screate_simple( ( int )info.rank + 1, data_dims, max_dims );
 
     hid_t dataset_id = H5Dcreate2( parent.get_hid(), dataset.c_str(), info.data_type, dataspace,
                                    H5P_DEFAULT, prop_list, H5P_DEFAULT );
@@ -333,15 +333,15 @@ inline hdf5::node writer::create_datanode( hdf5::node& parent, std::string& data
     datanode.set_property( prop_list );
     datanode.set_dataspace( dataspace );
     data_dims[ 0 ] = 1;
-    hid_t memspace = H5Screate_simple( info.rank + 1, data_dims, NULL );
+    hid_t memspace = H5Screate_simple( ( int )info.rank + 1, data_dims, NULL );
     datanode.set_memspace( memspace );
-    std::vector< hsize_t > dim_ext( data_dims, data_dims + info.rank + 1 );
+    std::vector< hsize_t > dim_ext( data_dims, data_dims + ( int )info.rank + 1 );
     datanode.set_dim_ext( dim_ext );
     datanode.set_size_info( info );
     return datanode;
 }
 
-template < typename T > int writer::push( T* ptr, unsigned int len, std::string dataset_name )
+template < typename T > int writer::push( T* ptr, unsigned long len, std::string dataset_name )
 {
     // check whether the dataset exists
     if ( this->nodes.find( dataset_name ) == this->nodes.end() )
@@ -362,8 +362,9 @@ template < typename T > int writer::push( T* ptr, unsigned int len, std::string 
             target_len *= dims[ i ];
         if ( target_len != len )
         {
-            WARN( "The target dataset has different length (%d) from the input (%d)!", target_len,
-                  len );
+            WARN( "The length of the target dataset different (%d) is different from the input "
+                  "(%lu)!",
+                  target_len, len );
             return 1;
         }
     }
@@ -426,6 +427,11 @@ template < typename T > int writer::push( T* ptr, unsigned int len, std::string 
     return 0;
 }
 
+// ensure the template function is instantiated
+template int writer::push< int >( int* ptr, unsigned long len, std::string dataset_name );
+template int writer::push< double >( double* ptr, unsigned long len, std::string dataset_name );
+template int writer::push< unsigned int >( unsigned int* ptr, unsigned long len,
+                                           std::string dataset_name );
 
 #ifdef debug_output
 int writer::test_node( void )
@@ -433,7 +439,7 @@ int writer::test_node( void )
     println( "Testing hdf5::node ..." );
     println( "The size of hdf5::node is %lu", sizeof( hdf5::node ) );
     println( "Testing hdf5::node::node( hid_t id, NodeType type ) with non file type, it should "
-             "raise a error ..." );
+             "raise an error ..." );
     try
     {
         auto node = new hdf5::node( -1, hdf5::NodeType::group );
@@ -441,11 +447,11 @@ int writer::test_node( void )
     }
     catch ( std::runtime_error& e )
     {
-        println( "It raise error as expected: %s", e.what() );
+        println( "It raise an error as expected: %s", e.what() );
     }
     catch ( std::exception& e )
     {
-        println( "It raise error unexpectedly: %s", e.what() );
+        println( "It raise an error unexpectedly: %s", e.what() );
         return 2;
     }
 
@@ -454,7 +460,7 @@ int writer::test_node( void )
 
     println( "Testing hdf5::node::node( node* parent_node, hid_t id, NodeType type ) with group "
              "type, it should not "
-             "raise a error ..." );
+             "raise an error ..." );
     try
     {
         galotfa::hdf5::node node2( &node1, -1, hdf5::NodeType::group );
@@ -462,13 +468,13 @@ int writer::test_node( void )
     }
     catch ( std::exception& e )
     {
-        println( "It raise error unexpectedly: %s", e.what() );
+        println( "It raise an error unexpectedly: %s", e.what() );
         return 2;
     }
 
     println( "Testing hdf5::node::node( node* parent_node, hid_t id, NodeType type ) with file "
              "type, it should "
-             "raise a error ..." );
+             "raise an error ..." );
     try
     {
         galotfa::hdf5::node node2( &node1, -1, hdf5::NodeType::file );
@@ -476,12 +482,12 @@ int writer::test_node( void )
     }
     catch ( std::runtime_error& e )
     {
-        println( "It raise error as expected: %s", e.what() );
+        println( "It raise an error as expected: %s", e.what() );
         success = success && true;
     }
     catch ( std::exception& e )
     {
-        println( "It raise error unexpectedly: %s", e.what() );
+        println( "It raise an error unexpectedly: %s", e.what() );
         return 2;
     }
 
@@ -747,7 +753,7 @@ int writer::test_create_dataset( void )
     }
     catch ( std::runtime_error& e )
     {
-        println( "It raise error as expected: %s", e.what() );
+        println( "It raise an error as expected: %s", e.what() );
     }
     catch ( std::exception& e )
     {
@@ -815,7 +821,7 @@ int writer::test_push( void )
     }
     catch ( std::runtime_error& e )
     {
-        println( "It raise error as expected: %s", e.what() );
+        println( "It raise an error as expected: %s", e.what() );
     }
     catch ( std::exception& e )
     {
