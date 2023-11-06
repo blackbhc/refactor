@@ -18,5 +18,5 @@ else
 endif
 
 ifeq ($(type), header-only)
-	CXXFLAGS += -Dheader_only
+	CXXFLAGS += -DGALOTFA_HEADER_ONLY
 endif
