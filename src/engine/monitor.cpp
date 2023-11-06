@@ -2,6 +2,7 @@
 #define GALOTFA_MONITOR_CPP
 #include "monitor.h"
 #include <hdf5.h>
+#include <mpi.h>
 #include <stdio.h>
 #include <string>
 #include <sys/stat.h>
@@ -177,9 +178,8 @@ int monitor::save()
     {
         // TODO: sort the particle ids in ascending order before writing
 
-        // auto datas = this->calc->feedback();
-        // return_code =
-        //     this->writers[ 0 ]->push( ( double* )datas[ 0 ], 3, "/test_group/test_dataset" );
+        double datas[ 1 ] = { 0.1 };
+        return_code = this->vec_of_writers[ 0 ][ 0 ]->push( ( double* )datas, 1, "/Bar/SBar" );
 
         if ( return_code != 0 )
             WARN( "Failed to push data to the writer." );
@@ -195,7 +195,7 @@ inline void monitor::create_model_file_datasets()
 {
     // this function should be called only when the model file is enabled
     // again, it should be called by the root process
-    for ( auto& writers_of_single_set : this->vec_of_writers[ 0 ] )
+    for ( auto& writer_of_single_set : this->vec_of_writers[ 0 ] )
     {
         // the size of the datasets
         galotfa::hdf5::size_info single_scaler_info = { H5T_NATIVE_DOUBLE,
@@ -209,27 +209,27 @@ inline void monitor::create_model_file_datasets()
         // for tensor
         galotfa::hdf5::size_info tensor_info = { H5T_NATIVE_DOUBLE, 4, { binnum, binnum, 3, 3 } };
 
-        writers_of_single_set->create_dataset( "/Times", single_scaler_info );
+        writer_of_single_set->create_dataset( "/Times", single_scaler_info );
         if ( this->para->pre_recenter )
-            writers_of_single_set->create_dataset( "/Center", single_vector_info );
+            writer_of_single_set->create_dataset( "/Center", single_vector_info );
         if ( this->para->md_image )
         {
-            writers_of_single_set->create_dataset( "/Image/Size", image_info );
+            writer_of_single_set->create_dataset( "/Image/Size", image_info );
             for ( auto& color : this->para->md_colors )
-                writers_of_single_set->create_dataset( "/Image/" + color, single_vector_info );
+                writer_of_single_set->create_dataset( "/Image/" + color, single_vector_info );
         }
         if ( this->para->md_bar_major_axis )
-            writers_of_single_set->create_dataset( "/Bar/MajorAxis", single_vector_info );
+            writer_of_single_set->create_dataset( "/Bar/MajorAxis", single_vector_info );
         if ( this->para->md_bar_length )
-            writers_of_single_set->create_dataset( "/Bar/Length", single_scaler_info );
+            writer_of_single_set->create_dataset( "/Bar/Length", single_scaler_info );
         if ( this->para->md_sbar )
-            writers_of_single_set->create_dataset( "/Bar/SBar", single_scaler_info );
+            writer_of_single_set->create_dataset( "/Bar/SBar", single_scaler_info );
         if ( this->para->md_sbuckle )
-            writers_of_single_set->create_dataset( "/Bar/SBuckle", single_scaler_info );
+            writer_of_single_set->create_dataset( "/Bar/SBuckle", single_scaler_info );
         if ( this->para->md_am.size() > 0 )
             for ( auto& m : this->para->md_am )
-                writers_of_single_set->create_dataset( "/Bar/A" + std::to_string( m ),
-                                                       single_scaler_info );
+                writer_of_single_set->create_dataset( "/Bar/A" + std::to_string( m ),
+                                                      single_scaler_info );
     }
 }
 
@@ -241,6 +241,9 @@ void monitor::create_particle_file_datasets( vector< unsigned long >& particle_a
     // created in the first call of `run_with(...)`
     for ( size_t i = 0; i < this->para->ptc_particle_types.size(); ++i )
     {
+        if ( particle_ana_nums[ i ] == 0 )  // if there is no target particle, just ignore it
+            continue;
+
         galotfa::hdf5::size_info scalers_info = { H5T_NATIVE_DOUBLE,
                                                   1,
                                                   { particle_ana_nums[ i ] } };
@@ -357,13 +360,18 @@ int monitor::run_with call_without_tracer
     if ( this->need_extract() )
         this->extractor( particle_number, types, particle_ids );  // extract the target particles
 
-    if ( this->step == 0 )
+    if ( this->step == 0 && this->para->ptc_switch_on )
     {
         // create the particle file's datasets at the first step
-        vector< unsigned long > particle_ana_nums( this->para->ptc_particle_types.size() );
-        for ( size_t i = 0; i < this->para->ptc_particle_types.size(); ++i )
+        auto                    ptc_target_type_num = this->para->ptc_particle_types.size();
+        vector< unsigned long > particle_ana_nums( ptc_target_type_num, 0 );
+        for ( size_t i = 0; i < ptc_target_type_num; ++i )
             particle_ana_nums[ i ] = this->part_num_particle[ i ];
-        this->create_particle_file_datasets( particle_ana_nums );
+        MPI_Allreduce( MPI_IN_PLACE, particle_ana_nums.data(), ptc_target_type_num,
+                       MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD );
+        // sum the number of target particles in all the MPI processes
+        if ( this->is_root() )
+            this->create_particle_file_datasets( particle_ana_nums );  // create the datasets
     }
 
     push_data no_tracer;

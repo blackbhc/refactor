@@ -440,7 +440,6 @@ int para::test_print()
     // Global section
     printi( glb, switch_on );
     prints( glb, output_dir );
-    printis( glb, particle_types );
     prints( glb, convergence_type );
     printd( glb, convergence_threshold );
     printi( glb, max_iter );
@@ -459,6 +458,9 @@ int para::test_print()
     // Model section
     printi( md, switch_on );
     prints( md, filename );
+    printis( md, particle_types );
+    printi( md, multiple );
+    printss( md, classification );
     printi( md, period );
     prints( md, region_shape );
     printd( md, ratio );

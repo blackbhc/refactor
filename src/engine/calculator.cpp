@@ -6,18 +6,12 @@ namespace galotfa {
 calculator::calculator( galotfa::para& parameter ) : para( parameter )
 {
     // TEST: allocate the output data pointer
-    this->output_data = new double[ 3 ];
-    for ( int i = 0; i < 3; ++i )
-        this->output_data[ i ] = ( double )i + 3.1415926;
 }
 
 calculator::~calculator()
 {
     if ( this->active )
         this->stop();
-    // TEST: delete the output data pointer
-    if ( this->output_data != nullptr )
-        delete[] this->output_data;
 }
 
 int calculator::start() const
@@ -127,7 +121,6 @@ inline int calculator::run_once() const
 std::vector< void* > calculator::feedback() const
 {
     std::vector< void* > data_ptrs;
-    data_ptrs.push_back( ( void* )this->output_data );
     return data_ptrs;
 }
 

@@ -109,17 +109,10 @@ int main()
         result += test_post();
         println( "--------------------------------------------------------------------" );
 #endif
-
-#ifdef MPI_TEST
-        MPI_Finalize();
-#endif
     }
     catch ( const std::exception& e )
     {
-        println( "Encounter an error during the unit test, error message: %s", e.what() );
-#ifdef MPI_TEST
-        MPI_Finalize();
-#endif
+        ERROR( "Encounter an unexpected error during the unit test, error message: %s", e.what() );
     }
 
     // print the summary of the unit test
@@ -134,5 +127,8 @@ int main()
     {
         println( "\033[5;34m%s\033[0m are passed!\033[0m", "All tests" );
     }
+#ifdef MPI_TEST
+    MPI_Finalize();
+#endif
     return 0;
 }
