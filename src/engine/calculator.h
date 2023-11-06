@@ -27,9 +27,8 @@ class calculator
 private:
     // TODO: add the data container: pointers of the sim data, and dynamic arrays of the analysis
     // results
-    mutable bool   active = false;         // whether the analysis engine is active
-    galotfa::para& para;                   // the parameter object
-    double*        output_data = nullptr;  // TEST: the output data
+    mutable bool   active = false;  // whether the analysis engine is active
+    galotfa::para& para;            // the parameter object
 
     // private methods
 private:
