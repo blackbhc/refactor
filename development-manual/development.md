@@ -196,6 +196,8 @@ which will combine other modules together to finish the on-the-fly analysis.
   parameter to the virtual analysis engine.
 - `monitor.save()`: the API between the monitor and the writer class, to save the analysis results at each step into
   hdf5 files.
+- `monitor.extractor()`: extract the array index of the target particles from the simulation data, then the
+  calculator can use the index to extract the target particles' data from the simulation data.
 - `calculator.start()`: start up the analysis engine.
 - `calculator.stop()`: stop the analysis engine, which will free some status flags and resources.
 - `calculator.pre_process(...)`: the wrapper of the pre-process part of the analysis engine, which will be
@@ -206,6 +208,12 @@ which will combine other modules together to finish the on-the-fly analysis.
 - `calculator.group()`: the wrapper of the group level analysis part of the analysis engine.
 - `calculator.post()`: the wrapper of the post process part of the analysis engine, which will
   be called after all synchronized time steps.
+- `calculator.is_target_of_xxx(...)`: judge whether the particle is the target of the xxx analysis module,
+  where xxx is the name of the analysis module, e.g. `is_target_of_pre(...)`, `is_target_of_ptc(...)`
+  will return true if the particle is the target of the pre-process and particle level analysis module.
+  Note that these functions only check the physical aspects of the particles, e.g. whether the particle
+  is located in the target region, but do not check the particle type, which is checked in the `extractor`
+  function.
 
 #### Implementation details
 
@@ -223,6 +231,9 @@ which will combine other modules together to finish the on-the-fly analysis.
   - `create_writers()`: create the writer objects based on the parameter file, due to the file lock, this
     function should be called only in the main process. To improve the readability of the code, this function
     are split into several inline functions.
+  - `extractor()`: iterate the simulation data to extract the array index of the target particles, which will
+    be used to extract the target particles' data from the simulation data.
+  - `release_once()`: release the resources allocated in `extractor()` after each synchronized time step.
 
 - class `calculator`: the virtual analysis engine's calculator.
 
@@ -366,9 +377,9 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
   - member prefix indicates their section in the parameter file: `glb` for the global section, `pre` for the
     pre-process section, `md` for the model section, `ptc` for the particle section, `orb` for the orbit section,
     `grp` for the group section and `post` for the post-process section.
-  - most members of struct `para` are just a proxy of possible parameters in the ini file, except the
-    `md_target_sets`, which is parsed from the `particle_types` and `classification` parameters from
-    model section of the ini file.
+  - most members of struct `para` are just a proxy of possible parameters in the ini file, except:
+    - `md_target_sets`: parsed from the `particle_types` and `classification` parameters from
+      model section of the ini file.
   - constructor: with a reference to a created `ini_parser` object, then update the value of the parameters
     based on the parameter file (with hard code, the ugly but fast way).
   - `check()`: check whether there are some conflicts between the parameters, and whether there are some
@@ -475,15 +486,17 @@ size of the sub-space of the array.
 
 - `writer(std::string)`: the class for data output, which require a string to specify the path to the output
   file for initialization. This function can only be used in the main process, due to the hdf5 file lock.
-  - `nodes`: the hash map with string-type key, and `galotfa::hdf5::node`-type value, the key is the absolute
+  - `nodes`: the hash map with string-type key, and `galotfa::hdf5::node*`-type value, the key is the absolute
     path of the node, e.g. `/group1/group2/dataset_name` and `/` for the file.
-    - Note: due to there is no default constructor for the `node` class, to call a `node` object in the hash map,
-      you need to use the `at` method.
+    - Note: due to the limitation to use pointer represent the tree structure, the value in the hash table
+      are all new allocated objects, which should be deleted in the destructor of the writer class.
     - The key must start with `/` and end without `/`.
     - (Current feature) The `nodes` only support push nodes and clean the whole tree structure. So the `nodes`
       is cleaned only in the destructor of the writer. (This is due to `nodes` use string-type key and
       there is no any tree structure in the hash map, so it's hard to clean the tree structure of the individual
       node).
+  - `writer::clean_nodes()`: release the resources of the `nodes` hash map, which will be called in the
+    destructor of the writer class or some unit test functions.
   - `writer::~writer()`: the destructor of the class, which will close the hdf5 file and the created hdf5 objects,
     such as dataset and group.
   - `writer::create_file(std::string)`: call `open_file(...)` to open the hdf5 file, and create a file node
@@ -497,12 +510,12 @@ size of the sub-space of the array.
     as group, `a/b/c` here.
   - Note: The previous three create function will return 1 if there is some warning, and 0 for success. So never
     ignore the return value of these functions.
-  - `galota::hdf5::node create_datanode(node& parent, std::string& dataset, galotfa::hdf5::size_info&)`: setup the
+  - `galota::hdf5::node* create_datanode(node& parent, std::string& dataset, galotfa::hdf5::size_info&)`: setup the
     dataset of the parent node with the given name and info. `dataset` string should be the name of dataset
     only, e.g. for `/group1/group2/dataset_name` the given value should be `dataset_name`. The parent node
     should be a group node.
   - `open_file(...)`: open a hdf5 file and return its id, private.
   - `push(void* buffer, unsigned long len, std::string dataset_name)`: a template function, the main interface
-    to push a array of data to a existing dataset, the dataset name should be the absolute path of the dataset,
+    to push an array of data to an existing dataset, the dataset name should be the absolute path of the dataset,
     e.g. `/group1/group2/dataset_name`. If such dataset does not exist, the writer will create it automatically.
     The data type of the dataset will be restored by `node`, during creation of the dataset.

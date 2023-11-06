@@ -414,9 +414,7 @@ of stars that contribute to the bar, or the spiral arms, etc.
   If there is no too much particles to trace, the period can be set to a small value, e.g. 1, which means log the
   position of the target particles at every synchronized time step.
 - <a id="idfile"></a>`idfile`: the path to an ASCII file of particles id of the target particle to trace, must
-  be given if the orbit curve log is enabled, otherwise the program will raise an error. The particle type
-  of this part can be any type of particles in the simulation, not restricted to the target particles specified
-  by the `particle_types` parameter in the `Global` section.
+  be given if the orbit curve log is enabled, otherwise the program will raise an error.
   - The particle id in this file can be separated by any of the following characters: white space, new line,
     `,`, `-`, `+`, `:` and `&`.
   - Particle ID that is not exist in the simulation will be ignored, with some warning message.
