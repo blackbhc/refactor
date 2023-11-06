@@ -33,7 +33,6 @@ monitor::monitor( void )
         this->init();  // create the output directory and the output files
         // create and start the virtual calc's calculator
         this->calc = new galotfa::calculator( *( this->para ) );
-        this->calc->start();
     }
 }
 
@@ -70,9 +69,8 @@ void monitor::init()
 
 monitor::~monitor()
 {
-    if ( this->calc->is_active() )
-        this->calc->stop();
-
+    // call the post analysis module of the calculator
+    this->calc->call_post_module();
     if ( this->para != nullptr )
     {
         delete this->para;
@@ -357,7 +355,7 @@ int monitor::run_with call_without_tracer
     if ( !this->para->glb_switch_on )  // if galotfa is disabled, just return 0
         return 0;
 
-    if ( this->need_extract() )
+    if ( this->need_ana() )
         this->extractor( particle_number, types, particle_ids );  // extract the target particles
 
     if ( this->step == 0 && this->para->ptc_switch_on )
@@ -382,7 +380,7 @@ int monitor::run_with call_without_tracer
         return return_code;
     }
 
-    if ( this->need_extract() )
+    if ( this->need_ana() )
         this->release_once();  // release the memory allocated in extractor()
 
     ++this->step;
@@ -405,7 +403,7 @@ inline bool monitor::need_ana_group() const
 {
     return this->para->grp_switch_on && this->step % this->para->grp_period == 0;
 }
-inline bool monitor::need_extract() const
+inline bool monitor::need_ana() const
 {
     return need_ana_model() || need_ana_particle() || need_log_orbit() || need_ana_group();
 }
@@ -465,11 +463,10 @@ void monitor::release_once() const
 void monitor::extractor( unsigned long& partnum_total, unsigned long types[],
                          unsigned long ids[] ) const
 {
-    static unsigned long i = 0;  // a static temporary variable
     for ( auto& ids : this->id_for_pre )
         ids = new unsigned long[ partnum_total ];
     // NOTE: the pre-process data will always be extracted, so the extractor should be called
-    // only when need_extract() is true
+    // only when need_ana() is true
 
     if ( this->need_ana_model() )
     {
@@ -491,16 +488,17 @@ void monitor::extractor( unsigned long& partnum_total, unsigned long types[],
         this->id_for_group = new unsigned long[ partnum_total ];
     } */
 
-    static size_t j = 0;  // a static temporary variable
-    static size_t k = 0;  // a static temporary variable
+    static unsigned long i = 0;  // a static temporary variable
+    static size_t        j = 0;  // a static temporary variable
+    static size_t        k = 0;  // a static temporary variable
+    // i: index for iterating all the particles
+    // j: index for iterating all the target sets
+    // k: index for iterating all the members in each target set
     for ( i = 0; i < partnum_total; ++i )
     {
-        // i: index for iterating all the particles
-        // j: index for iterating all the target sets
-        // k: index for iterating all the members in each target set
         if ( this->calc->is_target_of_pre() )
         {
-            for ( size_t j = 0; j < this->para->pre_recenter_anchors.size(); ++j )
+            for ( j = 0; j < this->para->pre_recenter_anchors.size(); ++j )
             {
                 if ( types[ i ] == this->para->pre_recenter_anchors[ j ] )
                 {
@@ -512,9 +510,9 @@ void monitor::extractor( unsigned long& partnum_total, unsigned long types[],
         if ( this->need_ana_model() )
             if ( this->calc->is_target_of_md() )
             {
-                for ( size_t j = 0; j < this->para->md_target_sets.size(); ++j )
+                for ( j = 0; j < this->para->md_target_sets.size(); ++j )
                 {
-                    for ( size_t k = 0; k < this->para->md_target_sets[ j ].size(); ++k )
+                    for ( k = 0; k < this->para->md_target_sets[ j ].size(); ++k )
                         if ( types[ i ] == this->para->md_target_sets[ j ][ k ] )
                             this->id_for_model[ j ][ this->part_num_model[ j ]++ ] = i;
                 }
@@ -539,6 +537,23 @@ void monitor::extractor( unsigned long& partnum_total, unsigned long types[],
         }
     }
 }
+
+int monitor::push_data call_without_tracer const
+{
+    // This function should be called before the increment of the step counter
+    if ( need_ana() )
+        this->calc->call_pre_module();
+    if ( need_ana_model() )
+        this->calc->call_md_module();
+    if ( need_ana_particle() )
+        this->calc->call_ptc_module();
+    if ( need_log_orbit() )
+        this->calc->call_orb_module();
+    if ( need_ana_group() )
+        this->calc->call_grp_module();
+    return 0;
+}
+
 
 }  // namespace galotfa
 #endif

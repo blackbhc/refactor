@@ -8,28 +8,6 @@ calculator::calculator( galotfa::para& parameter ) : para( parameter )
     // TEST: allocate the output data pointer
 }
 
-calculator::~calculator()
-{
-    if ( this->active )
-        this->stop();
-}
-
-int calculator::start() const
-{
-    // TODO: allocate some resources at here: large enough containers of the analysis results
-    // TODO: set up some flags at here
-    this->active = true;
-    return 0;
-}
-
-int calculator::stop() const
-{
-    // TODO: release some resources at here
-    // TODO: shuffle some flags at here
-    this->active = false;
-    return 0;
-}
-
 inline int shuffle()
 {
     // TODO: to be implemented
@@ -38,83 +16,39 @@ inline int shuffle()
     return 0;
 }
 
-// receive data without potential tracer
-int calculator::recv_data() const
+int calculator::call_pre_module() const
 {
-    // TODO: to be implemented
-    if ( !this->active )
-        ERROR( "The analysis engine is not active!" );
-
-    this->run_once();
+    INFO( "Mock the behavior of pre-process module" );
     return 0;
 }
 
-// receive data with potential tracer
-int calculator::recv_data_without_tracer() const
+int calculator::call_md_module() const
 {
-    // TODO: to be implemented
-    if ( !this->active )
-        ERROR( "The analysis engine is not active!" );
-
-    this->run_once();
+    INFO( "Mock the behavior of model analysis module" );
     return 0;
 }
 
-int calculator::pre_process() const
+int calculator::call_ptc_module() const
 {
-    // TODO: to be implemented
-    ;
+    INFO( "Mock the behavior of particle analysis module" );
     return 0;
 }
 
-int calculator::model() const
+int calculator::call_orb_module() const
 {
-    // TODO: to be implemented
-    ;
+    INFO( "Mock the behavior of orbital curve log module" );
     return 0;
 }
 
-int calculator::particle() const
+int calculator::call_grp_module() const
 {
-    // TODO: to be implemented
-    ;
+    INFO( "Mock the behavior of group analysis module" );
     return 0;
 }
 
-int calculator::orbit_curve() const
+int calculator::call_post_module() const
 {
-    // TODO: to be implemented
-    ;
-    return 0;
-}
-
-int calculator::group() const
-{
-    // TODO: to be implemented
-    ;
-    return 0;
-}
-
-int calculator::post() const
-{
-    // TODO: to be implemented
-    ;
-    return 0;
-}
-
-inline int calculator::run_once() const
-{
-    static unsigned long long counter = 0;
-    // TODO: call the analysis modules only at the steps specified by the parameter
-
-    this->pre_process();
-    this->model();
-    this->particle();
-    this->orbit_curve();
-    this->group();
-    this->post();
-
-    ++counter;
+    INFO( "Mock the behavior of post analysis module" );
     return 0;
 }
 

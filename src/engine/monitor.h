@@ -67,22 +67,14 @@ private:
     {
         return this->galotfa_rank == 0;
     }
-    inline int push_data call_without_tracer const
-    {
-        this->calc->recv_data();
-        return 0;
-    }
+    int push_data call_without_tracer const;
     // the push data API with potential tracer
-    inline int push_data call_with_tracer const
-    {
-        this->calc->recv_data_without_tracer();
-        return 0;
-    }
-    int         create_writers();              // create the writers
-    inline void create_files();                // create the output files
-    inline void create_model_file_datasets();  // create the datasets in the model file
-    void        create_particle_file_datasets(
-               vector< unsigned long >& particle_ana_nums );  // create the datasets in the particle file
+    inline int push_data call_with_tracer const;
+    int                  create_writers();              // create the writers
+    inline void          create_files();                // create the output files
+    inline void          create_model_file_datasets();  // create the datasets in the model file
+    void                 create_particle_file_datasets(
+                        vector< unsigned long >& particle_ana_nums );  // create the datasets in the particle file
     inline void create_orbit_file_datasets();  // create the datasets in the orbit file
     inline void create_group_file_datasets();  // create the datasets in the group file
     inline void create_post_file_datasets();   // create the datasets in the post file
@@ -98,7 +90,7 @@ private:
     inline bool need_log_orbit() const;
     inline bool need_ana_group() const;
     inline bool need_ana_post() const;
-    inline bool need_extract() const;
+    inline bool need_ana() const;
 
     // public methods
 public:

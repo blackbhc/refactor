@@ -27,37 +27,26 @@ class calculator
 private:
     // TODO: add the data container: pointers of the sim data, and dynamic arrays of the analysis
     // results
-    mutable bool   active = false;  // whether the analysis engine is active
-    galotfa::para& para;            // the parameter object
+    galotfa::para& para;  // the parameter object
 
     // private methods
 private:
     // the analysis wrappers: call the analysis modules, and restore the results
-    int        pre_process() const;
-    int        model() const;
-    int        particle() const;
-    int        orbit_curve() const;
-    int        group() const;
-    int        post() const;
     inline int shuffle();
 
 public:
     calculator( galotfa::para& parameter );
-    ~calculator();
-    inline bool is_active() const
-    {
-        return this->active;
-    }
-    int        start() const;
-    int        stop() const;
-    inline int run_once() const;  // a wrapper of the analysis modules
-    // receive data without potential tracer
-    int recv_data( void ) const;
-    // receive data with potential tracer
-    int                  recv_data_without_tracer( void ) const;
+    ~calculator() = default;
     std::vector< void* > feedback() const;
     bool                 is_target_of_pre() const;
     bool                 is_target_of_md() const;
+    // the apis between the analysis engine and the real analysis codes
+    int call_pre_module() const;
+    int call_md_module() const;
+    int call_ptc_module() const;
+    int call_orb_module() const;
+    int call_grp_module() const;
+    int call_post_module() const;
 };
 
 }  // namespace galotfa
