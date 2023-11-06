@@ -162,12 +162,10 @@ inline void writer::clean_nodes( void )
 
 writer::~writer( void )
 {
-#ifndef debug_output  // if not in debug mode: close file
     // TODO: flush the buffer before closing the file
     INFO( "Exiting writer..." );
     clean_nodes();
     this->stack_counter.clear();
-#endif
 }
 
 int writer::create_file( std::string path_to_file )
@@ -385,7 +383,7 @@ template < typename T > int writer::push( T* ptr, unsigned long len, std::string
     // check whether the dataset exists
     if ( this->nodes.find( dataset_name ) == this->nodes.end() )
     {
-        WARN( "Try to push data into unexist dataset : %s", dataset_name.c_str() );
+        ERROR( "Try to push data into unexist dataset : %s", dataset_name.c_str() );
         return 1;
     }
     else if ( !this->nodes.at( dataset_name )->is_dataset() )
@@ -559,13 +557,13 @@ int writer::test_open_file()
     bool create_another_success = access( ( testfile2 + "-1" ).c_str(), F_OK ) == 0;
     if ( create_another_success )
     {
-        // remove( ( testfile2 + "0" ).c_str() );
+        remove( ( testfile2 + "0" ).c_str() );
     }
     else
     {
         CHECK_RETURN( false );
     }
-    // remove( testfile2.c_str() );
+    remove( testfile2.c_str() );
 
 
     CHECK_RETURN( true );
@@ -917,7 +915,7 @@ int writer::test_push( void )
     }
 
     clean_nodes();
-    remove( testfile.c_str() );
+    // remove( testfile.c_str() );
     CHECK_RETURN( true );
 }
 #endif
