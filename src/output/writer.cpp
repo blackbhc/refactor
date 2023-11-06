@@ -27,7 +27,7 @@ namespace hdf5 {
         this->self   = id;
         this->type   = nodetype;
         this->parent = parent_ptr;
-        parent->add_child( this );
+        parent_ptr->add_child( this );
     }
 
     node::node( node&& other ) noexcept
@@ -41,26 +41,41 @@ namespace hdf5 {
         if ( this->type != NodeType::uninitialized )
             this->close();
     }
-    void node::add_child( node* child )
+    inline void node::add_child( node* child )
     {
         this->children.push_back( child );
+    }
+    inline void node::remove_from_parent()
+    {
+        if ( this->parent != nullptr )  // only when the node has a parent
+        {
+            for ( size_t i = 0; i < this->parent->children.size(); ++i )
+            {
+                if ( this->parent->children.at( i ) == this )
+                {
+                    this->parent->children.erase( this->parent->children.begin() + ( long )i );
+                    break;
+                }
+            }
+        }
     }
 
     void node::close( void )
     {
         for ( auto& child : this->children )
             child->close();
+        this->remove_from_parent();
         this->children.clear();
 
-        // if the attribute, property or dataspace is not created, the handle is -1
+        // if the attribute, property or dataspace is not created, the handle is 0
         // if created, close it
-        if ( this->prop != -1 )
+        if ( this->prop != 0 )
             H5Pclose( this->prop );
-        if ( this->dataspace != -1 )
+        if ( this->dataspace != 0 )
             H5Sclose( this->dataspace );
-        if ( this->memspace != -1 )
+        if ( this->memspace != 0 )
             H5Sclose( this->memspace );
-        if ( this->self != -1 )
+        if ( this->self != 0 )
             switch ( this->type )
             {
             case NodeType::file:
@@ -78,18 +93,26 @@ namespace hdf5 {
                 }
                 break;
             default:
-                WARN( "The closeed galotfa::hdf5::node target is uninitialized!" );
+                if ( this->type != NodeType::uninitialized )
+                {
+                    WARN( "Get a garbage value node: %ld at %p", this->self, ( void* )this );
+                }
+                else
+                {
+                    WARN( "The closed galotfa::hdf5::node target (hid = %ld) is uninitialized!",
+                          this->self );
+                }
             }
         // shuffle the members to uninitialized state
         shuffle( *this );
-    };
+    }
 
     inline void shuffle( node& node )
     {
-        node.self      = -1;
-        node.prop      = -1;
-        node.dataspace = -1;
-        node.memspace  = -1;
+        node.self      = 0;
+        node.prop      = 0;
+        node.dataspace = 0;
+        node.memspace  = 0;
         node.type      = NodeType::uninitialized;
         node.parent    = nullptr;
         node.children.clear();
@@ -124,19 +147,32 @@ writer::writer( std::string path_to_file )
 #endif
 }
 
+inline void writer::clean_nodes( void )
+{
+    for ( auto& node : this->nodes )
+    {
+        if ( node.second != nullptr )
+        {
+            delete node.second;
+            node.second = nullptr;
+        }
+    }
+    nodes.clear();
+}
+
 writer::~writer( void )
 {
 #ifndef debug_output  // if not in debug mode: close file
     // TODO: flush the buffer before closing the file
-    nodes.at( "/" ).close();
-    nodes.clear();
+    clean_nodes();
+    this->stack_counter.clear();
 #endif
 }
 
 int writer::create_file( std::string path_to_file )
 {
     hid_t file_id = this->open_file( path_to_file );
-    if ( file_id == -1 )
+    if ( file_id == 0 )
     {
         ERROR( "Failed to create file: %s", path_to_file.c_str() );
         return 1;
@@ -149,8 +185,8 @@ int writer::create_file( std::string path_to_file )
     }
 
     // insert the root node
-    this->nodes.insert(
-        std::pair< std::string, hdf5::node >( "/", hdf5::node( file_id, hdf5::NodeType::file ) ) );
+    auto root = new galotfa::hdf5::node( file_id, hdf5::NodeType::file );
+    this->nodes.insert( std::pair< std::string, hdf5::node* >( "/", root ) );
     return 0;
 }
 
@@ -178,7 +214,7 @@ inline hid_t writer::open_file( std::string path_to_file )
     catch ( ... )
     {
         WARN( "Failed to create file: %s", path_to_file.c_str() );
-        return -1;
+        return 0;
     }
 }
 
@@ -225,13 +261,16 @@ int writer::create_group( std::string group_name )
         {
             // create the group
             hid_t group_id =
-                H5Gcreate2( this->nodes.at( parent_path ).get_hid(), strings[ i ].c_str(),
+                H5Gcreate2( this->nodes.at( parent_path )->get_hid(), strings[ i ].c_str(),
                             H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
             // insert the node
-            auto pair = std::pair< std::string, hdf5::node >(
+            auto group_node_ptr =
+                new galotfa::hdf5::node( this->nodes.at( parent_path ), group_id,
+                                         hdf5::NodeType::group );  // create a new node
+            auto pair = std::pair< std::string, hdf5::node* >(
                 this_path,
-                hdf5::node( &this->nodes.at( parent_path ), group_id, hdf5::NodeType::group ) );
-            this->nodes.insert( std::move( pair ) );
+                group_node_ptr );  // create a pair of key-value to insert into the nodes map
+            this->nodes.insert( pair );
             parent_path = this_path;
         }
     }
@@ -282,16 +321,15 @@ int writer::create_dataset( std::string dataset_name, hdf5::size_info& info )
         this->create_group( parent_path );
 
     // create the dataset
-    hdf5::node node = create_datanode( this->nodes.at( parent_path ), strings.back(), info );
+    auto data_node_ptr = create_datanode( *this->nodes.at( parent_path ), strings.back(), info );
     // insert the node
-    auto pair = std::pair< std::string, hdf5::node >( parent_path + "/" + strings.back(),
-                                                      std::move( node ) );
-    this->nodes.insert( std::move( pair ) );
+    this->nodes.insert( std::pair< std::string, galotfa::hdf5::node* >(
+        parent_path + "/" + strings.back(), data_node_ptr ) );
     return 0;
 }
 
-inline hdf5::node writer::create_datanode( hdf5::node& parent, std::string& dataset,
-                                           hdf5::size_info& info )
+inline hdf5::node* writer::create_datanode( hdf5::node& parent, std::string& dataset,
+                                            hdf5::size_info& info )
 {
     // check the size of the size_info is consistent: done in the caller-function create_file(
     // ...)
@@ -328,17 +366,17 @@ inline hdf5::node writer::create_datanode( hdf5::node& parent, std::string& data
     hid_t dataset_id = H5Dcreate2( parent.get_hid(), dataset.c_str(), info.data_type, dataspace,
                                    H5P_DEFAULT, prop_list, H5P_DEFAULT );
     // create the dataset with 0 size data
-    hdf5::node datanode( &parent, dataset_id, hdf5::NodeType::dataset );
-    datanode.set_hid( dataset_id );
-    datanode.set_property( prop_list );
-    datanode.set_dataspace( dataspace );
+    auto datanode_ptr = new galotfa::hdf5::node( &parent, dataset_id, hdf5::NodeType::dataset );
+    datanode_ptr->set_hid( dataset_id );
+    datanode_ptr->set_property( prop_list );
+    datanode_ptr->set_dataspace( dataspace );
     data_dims[ 0 ] = 1;
     hid_t memspace = H5Screate_simple( ( int )info.rank + 1, data_dims, NULL );
-    datanode.set_memspace( memspace );
+    datanode_ptr->set_memspace( memspace );
     std::vector< hsize_t > dim_ext( data_dims, data_dims + ( int )info.rank + 1 );
-    datanode.set_dim_ext( dim_ext );
-    datanode.set_size_info( info );
-    return datanode;
+    datanode_ptr->set_dim_ext( dim_ext );
+    datanode_ptr->set_size_info( info );
+    return datanode_ptr;
 }
 
 template < typename T > int writer::push( T* ptr, unsigned long len, std::string dataset_name )
@@ -349,7 +387,7 @@ template < typename T > int writer::push( T* ptr, unsigned long len, std::string
         WARN( "Try to push data into unexist dataset : %s", dataset_name.c_str() );
         return 1;
     }
-    else if ( !this->nodes.at( dataset_name ).is_dataset() )
+    else if ( !this->nodes.at( dataset_name )->is_dataset() )
     {
         WARN( "The target is not a dataset: %s", dataset_name.c_str() );
         return 1;
@@ -357,7 +395,7 @@ template < typename T > int writer::push( T* ptr, unsigned long len, std::string
     else
     {
         unsigned int target_len = 1;
-        auto         dims       = this->nodes.at( dataset_name ).get_dim_ext();
+        auto         dims       = this->nodes.at( dataset_name )->get_dim_ext();
         for ( size_t i = 1; i < dims.size(); ++i )
             target_len *= dims[ i ];
         if ( target_len != len )
@@ -392,13 +430,13 @@ template < typename T > int writer::push( T* ptr, unsigned long len, std::string
     // herr_t status = H5Dset_extent( dataset, new_sizes ); */
 
     // select the hyperslab, namely a subset of the dataset
-    hdf5::size_info* info       = this->nodes.at( dataset_name ).get_size_info();
-    auto             dims       = this->nodes.at( dataset_name ).get_dim_ext();
-    hid_t            dataset_id = this->nodes.at( dataset_name ).get_hid();
+    hdf5::size_info* info       = this->nodes.at( dataset_name )->get_size_info();
+    auto             dims       = this->nodes.at( dataset_name )->get_dim_ext();
+    hid_t            dataset_id = this->nodes.at( dataset_name )->get_hid();
     auto             rank       = dims.size();
     hsize_t*         offset     = new hsize_t[ rank ]();
     offset[ 0 ]                 = stack_counter[ dataset_name ] - 1;
-    hid_t memspace              = this->nodes.at( dataset_name ).get_memspace();
+    hid_t memspace              = this->nodes.at( dataset_name )->get_memspace();
 
     dims[ 0 ]     = stack_counter[ dataset_name ];
     herr_t status = H5Dset_extent( dataset_id, dims.data() ); /* extend the dataset */
@@ -416,7 +454,7 @@ template < typename T > int writer::push( T* ptr, unsigned long len, std::string
 
     // flush the buffer if the stack is "full"
     if ( stack_counter[ dataset_name ] % VIRTUAL_STACK_SIZE == 0 )
-        H5Dflush( this->nodes.at( dataset_name ).get_hid() );
+        H5Dflush( this->nodes.at( dataset_name )->get_hid() );
 
     ++stack_counter[ dataset_name ];
     if ( status < 0 )
@@ -442,7 +480,7 @@ int writer::test_node( void )
              "raise an error ..." );
     try
     {
-        auto node = new hdf5::node( -1, hdf5::NodeType::group );
+        auto node = new hdf5::node( 0, hdf5::NodeType::group );
         ( void )node;  // avoid unused variable warning
     }
     catch ( std::runtime_error& e )
@@ -455,7 +493,7 @@ int writer::test_node( void )
         return 2;
     }
 
-    hdf5::node node1( -1, hdf5::NodeType::file );
+    hdf5::node node1( 0, hdf5::NodeType::file );
     bool       success = false;
 
     println( "Testing hdf5::node::node( node* parent_node, hid_t id, NodeType type ) with group "
@@ -463,7 +501,7 @@ int writer::test_node( void )
              "raise an error ..." );
     try
     {
-        galotfa::hdf5::node node2( &node1, -1, hdf5::NodeType::group );
+        galotfa::hdf5::node node2( &node1, 0, hdf5::NodeType::group );
         success = ( node2.get_parent() == &node1 );
     }
     catch ( std::exception& e )
@@ -477,7 +515,7 @@ int writer::test_node( void )
              "raise an error ..." );
     try
     {
-        galotfa::hdf5::node node2( &node1, -1, hdf5::NodeType::file );
+        galotfa::hdf5::node node2( &node1, 0, hdf5::NodeType::file );
         success = ( node2.get_parent() == &node1 );
     }
     catch ( std::runtime_error& e )
@@ -503,7 +541,13 @@ int writer::test_open_file()
     H5Fclose( file_id );
     bool create_success = access( testfile.c_str(), F_OK ) == 0;
     if ( create_success )
+    {
         remove( testfile.c_str() );
+    }
+    else
+    {
+        CHECK_RETURN( false );
+    }
 
     // test it can create a file with suffix
     std::string testfile2 = "test2.h5";
@@ -513,12 +557,17 @@ int writer::test_open_file()
     H5Fclose( file_id );
     bool create_another_success = access( ( testfile2 + "-1" ).c_str(), F_OK ) == 0;
     if ( create_another_success )
-        remove( ( testfile2 + "-1" ).c_str() );
-    remove( testfile2.c_str() );
+    {
+        // remove( ( testfile2 + "0" ).c_str() );
+    }
+    else
+    {
+        CHECK_RETURN( false );
+    }
+    // remove( testfile2.c_str() );
 
-    bool success = create_success && create_another_success;
 
-    CHECK_RETURN( success );
+    CHECK_RETURN( true );
 }
 
 int writer::test_create_close()
@@ -530,9 +579,9 @@ int writer::test_create_close()
     println( "All nodes:" );
     for ( auto& node : this->nodes )
         println( "node: %s", node.first.c_str() );
-    bool insert_node_success = this->nodes.at( "/" ).is_root();
+    bool insert_node_success = this->nodes.at( "/" )->is_root();
+    clean_nodes();  // clean the nodes vector
 
-    nodes.at( "/" ).close();
     bool  close_success = true;
     hid_t file_id       = H5Fopen( "test.hdf5", H5F_ACC_RDONLY, H5P_DEFAULT );
     if ( file_id < 0 )
@@ -549,12 +598,9 @@ int writer::test_create_close()
 int writer::test_create_group()
 {
     println( "Testing writer::create_group(std::string group_name) ..." );
-    std::string testfile     = "test.hdf5";
-    std::string testgroup1   = "/group1";
-    std::string testgroup2   = "/group1/group2/group3";
-    auto        testfile_c   = testfile.c_str();
-    auto        testgroup1_c = testgroup1.c_str();
-    auto        testgroup2_c = testgroup2.c_str();
+    std::string testfile   = "test.hdf5";
+    std::string testgroup1 = "/group1";
+    std::string testgroup2 = "/group1/group2/group3";
 
     // test it can create a file and the "/" node
     println( "Testing it can create a root group \"/\" ..." );
@@ -563,19 +609,16 @@ int writer::test_create_group()
         remove( "test.hdf5" );
 
     int create_file_failure = this->create_file( testfile );  // create a test file
-    // TODO: it should always be used in pair with each other: close the node and free its hash
-    // key-value pair, create an inline function to do this
-    nodes.at( "/" ).close();
-    nodes.erase( "/" );
+    clean_nodes();
 
     if ( create_file_failure )
         CHECK_RETURN( false );
     try
     {
         // open the file and check the group exists
-        hid_t file_id = H5Fopen( testfile_c, H5F_ACC_RDONLY, H5P_DEFAULT );
+        hid_t file_id = H5Fopen( testfile.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT );
         H5Fclose( file_id );
-        remove( testfile_c );  // clean up
+        remove( testfile.c_str() );  // clean up
     }
     catch ( ... )
     {
@@ -593,8 +636,7 @@ int writer::test_create_group()
     println( "Testing it can create a first level group ..." );
     create_file_failure      = this->create_file( testfile );  // create a test file
     int create_group_failure = this->create_group( testgroup1 );
-    nodes.at( "/" ).close();
-    nodes.clear();
+    clean_nodes();
     // check the nodes vector is empty
     if ( !nodes.empty() )
     {
@@ -606,13 +648,13 @@ int writer::test_create_group()
     try
     {
         // open the file and check the group exists
-        hid_t file_id  = H5Fopen( testfile_c, H5F_ACC_RDONLY, H5P_DEFAULT );
-        hid_t group_id = H5Gopen2( file_id, testgroup1_c, H5P_DEFAULT );
+        hid_t file_id  = H5Fopen( testfile.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT );
+        hid_t group_id = H5Gopen2( file_id, testgroup1.c_str(), H5P_DEFAULT );
 
         // close the file
         H5Gclose( group_id );
         H5Fclose( file_id );
-        remove( testfile_c );  // clean up
+        remove( testfile.c_str() );  // clean up
     }
     catch ( std::exception& e )
     {
@@ -625,8 +667,7 @@ int writer::test_create_group()
     println( "Testing it can create groups with multiple levels ..." );
     create_file_failure  = this->create_file( testfile );  // create a test file
     create_group_failure = this->create_group( testgroup2 );
-    nodes.at( "/" ).close();
-    nodes.clear();
+    clean_nodes();
     // check the nodes vector is empty
     if ( !nodes.empty() )
     {
@@ -637,11 +678,11 @@ int writer::test_create_group()
         CHECK_RETURN( false );
     try
     {
-        hid_t file_id  = H5Fopen( testfile_c, H5F_ACC_RDONLY, H5P_DEFAULT );
-        hid_t group_id = H5Gopen2( file_id, testgroup2_c, H5P_DEFAULT );  // open the group
+        hid_t file_id  = H5Fopen( testfile.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT );
+        hid_t group_id = H5Gopen2( file_id, testgroup2.c_str(), H5P_DEFAULT );  // open the group
         H5Gclose( group_id );
         H5Fclose( file_id );
-        remove( testfile_c );  // clean up
+        // remove( testfile.c_str() );  // clean up
     }
     catch ( const std::exception& e )
     {
@@ -656,19 +697,17 @@ int writer::test_create_dataset( void )
 {
     println( "Testing writer::create_dataset(std::string dataset_name, hdf5::size_info info) ..." );
 
-    std::string testfile   = "test.hdf5";
-    std::string testset1   = "/data";
-    std::string testset2   = "/group/data";
-    std::string testgroup  = "/group/data";  // for error test
-    auto        testfile_c = testfile.c_str();
-    auto        testset1_c = testset1.c_str();
-    auto        testset2_c = testset2.c_str();
+    std::string testfile  = "test.hdf5";
+    std::string testset1  = "/data";
+    std::string testset2  = "/group/data";
+    std::string testgroup = "/group/data";  // for error test
 
     hdf5::size_info info{ H5T_NATIVE_INT, 1, { 1 } };  // create a size_info object
 
     // ensure the test file does not exist
-    if ( access( testfile_c, F_OK ) == 0 )
-        remove( testfile_c );
+    if ( access( testfile.c_str(), F_OK ) == 0 )
+        remove( testfile.c_str() );
+
     int create_file_failure = this->create_file( testfile );  // create the test file
     if ( create_file_failure )
         CHECK_RETURN( false );
@@ -682,22 +721,20 @@ int writer::test_create_dataset( void )
     }
     catch ( std::exception& e )
     {
-        nodes.at( "/" ).close();
-        nodes.clear();
+        clean_nodes();
         WARN( "Encounter unexpected error: %s", e.what() );
         CHECK_RETURN( false );
     }
     // clean up
-    nodes.at( "/" ).close();
-    nodes.clear();
+    clean_nodes();
 
     try
     {
-        hid_t file_id    = H5Fopen( testfile_c, H5F_ACC_RDONLY, H5P_DEFAULT );
-        hid_t dataset_id = H5Dopen2( file_id, testset1_c, H5P_DEFAULT );  // open the dataset
+        hid_t file_id    = H5Fopen( testfile.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT );
+        hid_t dataset_id = H5Dopen2( file_id, testset1.c_str(), H5P_DEFAULT );  // open the dataset
         H5Dclose( dataset_id );
         H5Fclose( file_id );
-        remove( testfile_c );  // clean up
+        remove( testfile.c_str() );  // clean up
     }
     catch ( std::exception& e )
     {
@@ -716,25 +753,23 @@ int writer::test_create_dataset( void )
     }
     catch ( std::exception& e )
     {
-        nodes.at( "/" ).close();
-        nodes.clear();
+        clean_nodes();
         WARN( "Encounter unexpected error: %s", e.what() );
         CHECK_RETURN( false );
     }
     // clean up
-    nodes.at( "/" ).close();
-    nodes.clear();
+    clean_nodes();
 
     try
     {
         // read the file and check the dataset exists
-        hid_t file_id    = H5Fopen( testfile_c, H5F_ACC_RDONLY, H5P_DEFAULT );
-        hid_t group_id   = H5Gopen2( file_id, "/group", H5P_DEFAULT );    // open the group
-        hid_t dataset_id = H5Dopen2( file_id, testset2_c, H5P_DEFAULT );  // open the dataset
+        hid_t file_id    = H5Fopen( testfile.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT );
+        hid_t group_id   = H5Gopen2( file_id, "/group", H5P_DEFAULT );          // open the group
+        hid_t dataset_id = H5Dopen2( file_id, testset2.c_str(), H5P_DEFAULT );  // open the dataset
         H5Dclose( dataset_id );
         H5Gclose( group_id );
         H5Fclose( file_id );
-        remove( testfile_c );  // clean up
+        remove( testfile.c_str() );  // clean up
     }
     catch ( std::exception& e )
     {
@@ -757,14 +792,12 @@ int writer::test_create_dataset( void )
     }
     catch ( std::exception& e )
     {
-        nodes.at( "/" ).close();
-        nodes.clear();
+        clean_nodes();
         WARN( "Encounter unexpected error: %s", e.what() );
         CHECK_RETURN( false );
     }
     // clean up
-    nodes.at( "/" ).close();
-    nodes.clear();
+    clean_nodes();
 
     CHECK_RETURN( true );
 }
@@ -806,8 +839,7 @@ int writer::test_push( void )
     }
     catch ( std::exception& e )
     {
-        nodes.at( "/" ).close();
-        nodes.clear();
+        clean_nodes();
         remove( testfile.c_str() );
         WARN( "Encounter unexpected error: %s", e.what() );
         CHECK_RETURN( false );
@@ -825,16 +857,14 @@ int writer::test_push( void )
     }
     catch ( std::exception& e )
     {
-        nodes.at( "/" ).close();
-        nodes.clear();
+        clean_nodes();
         remove( testfile.c_str() );
         WARN( "Encounter unexpected error: %s", e.what() );
         CHECK_RETURN( false );
     }
 
     // clean up
-    nodes.at( "/" ).close();
-    nodes.clear();
+    clean_nodes();
     remove( testfile.c_str() );
 
     // test it can push to different datasets
@@ -879,16 +909,14 @@ int writer::test_push( void )
     }
     catch ( std::exception& e )
     {
-        nodes.at( "/" ).close();
-        nodes.clear();
+        clean_nodes();
         remove( testfile.c_str() );
         WARN( "Encounter unexpected error: %s", e.what() );
         CHECK_RETURN( false );
     }
 
-    // nodes.at( "/" ).close();
-    // nodes.clear();
-    // remove( testfile.c_str() );
+    clean_nodes();
+    remove( testfile.c_str() );
     CHECK_RETURN( true );
 }
 #endif
