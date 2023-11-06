@@ -143,7 +143,7 @@ ini::Line ini_parser::line_parser( const char* str ) const
         if ( val.size() == 0 || key.size() == 0
              || key.find_first_of( VALUE_SEP ) != std::string::npos )
         {
-            ERROR( "Get an invalid line in ini file:\n%s", str );
+            ERROR( "Get an invalid line in the ini file:\n%s", str );
         }
         transform( key.begin(), key.end(), key.begin(), ::tolower );
         line.content = key + "=" + val;

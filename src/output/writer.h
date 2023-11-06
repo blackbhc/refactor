@@ -32,17 +32,21 @@ namespace hdf5 {
     // basic node for hdf5: group and dataset,
     // this class is used to organize the resources: dataspace, property and attribute
     {
+#ifndef debug_output
         // private members
+    private:
+#else
     public:
-        hid_t    self = -1;
+#endif
+        hid_t    self = 0;
         NodeType type = NodeType::uninitialized;
         // node*                parent   = nullptr;
         std::vector< node* >   children;
         node*                  parent    = nullptr;
         hdf5::size_info*       info      = nullptr;
-        hid_t                  prop      = -1;  // property
-        hid_t                  dataspace = -1;  // dataspace
-        hid_t                  memspace  = -1;  // memspace for analysis result in single step
+        hid_t                  prop      = 0;  // property
+        hid_t                  dataspace = 0;  // dataspace
+        hid_t                  memspace  = 0;  // memspace for analysis result in single step
         std::vector< hsize_t > dim_ext;  // the dim to extend: {1, info.dims[1], info.dims[2], ...}
         // public methods
     public:
@@ -50,7 +54,8 @@ namespace hdf5 {
         node( node* paraent, hid_t id, NodeType type );
         node( node&& other ) noexcept;
         ~node( void );
-        void         add_child( node* child );
+        inline void  add_child( node* child );
+        inline void  remove_from_parent();
         void         close( void );
         inline hid_t get_hid( void ) const
         {
@@ -154,8 +159,7 @@ class writer
 public:
     // private members
 private:
-    std::unordered_map< std::string, hdf5::node > nodes = {};
-    // TODO: move to struct-type key with tree info, and implement a tree based clear method
+    std::unordered_map< std::string, hdf5::node* >        nodes         = {};
     std::unordered_map< std::string, unsigned long long > stack_counter = {};
 
     // public methods
@@ -179,9 +183,10 @@ public:
     // private methods
 private:
     // the nake open functions, without any check, internal use only
-    inline hid_t      open_file( std::string path_to_file );
-    inline hdf5::node create_datanode( hdf5::node& parent, std::string& dataset,
-                                       hdf5::size_info& info );
+    inline hid_t       open_file( std::string path_to_file );
+    inline hdf5::node* create_datanode( hdf5::node& parent, std::string& dataset,
+                                        hdf5::size_info& info );
+    inline void        clean_nodes();
 };
 
 }  // namespace galotfa

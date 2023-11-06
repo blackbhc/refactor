@@ -2,6 +2,7 @@
 #define GALOTFA_MONITOR_CPP
 #include "monitor.h"
 #include <hdf5.h>
+#include <mpi.h>
 #include <stdio.h>
 #include <string>
 #include <sys/stat.h>
@@ -30,9 +31,9 @@ monitor::monitor( void )
     if ( this->para->glb_switch_on )
     {
         this->init();  // create the output directory and the output files
-        // create and start the virtual engine's calculator
-        this->engine = new galotfa::calculator( *( this->para ) );
-        this->engine->start();
+        // create and start the virtual calc's calculator
+        this->calc = new galotfa::calculator( *( this->para ) );
+        this->calc->start();
     }
 }
 
@@ -52,12 +53,25 @@ void monitor::init()
         }
         this->create_writers();
     }
+    // extend the size of the members
+    this->id_for_pre.resize( this->para->pre_recenter_anchors.size(), nullptr );
+    this->part_num_pre.resize( this->para->pre_recenter_anchors.size(), 0 );
+    if ( this->para->md_switch_on )
+    {
+        this->id_for_model.resize( this->para->md_target_sets.size(), nullptr );
+        this->part_num_model.resize( this->para->md_target_sets.size(), 0 );
+    }
+    if ( this->para->ptc_switch_on )
+    {
+        this->id_for_particle.resize( this->para->ptc_particle_types.size(), nullptr );
+        this->part_num_particle.resize( this->para->ptc_particle_types.size(), 0 );
+    }
 }
 
 monitor::~monitor()
 {
-    if ( this->engine->is_active() )
-        this->engine->stop();
+    if ( this->calc->is_active() )
+        this->calc->stop();
 
     if ( this->para != nullptr )
     {
@@ -65,19 +79,19 @@ monitor::~monitor()
         this->para = nullptr;
     }
 
-    if ( this->engine != nullptr )
+    if ( this->calc != nullptr )
     {
-        delete this->engine;
-        this->engine = nullptr;
+        delete this->calc;
+        this->calc = nullptr;
     }
 
     // free the writers pointers
-    for ( auto& writer_of_single_section : this->vec_of_writers )
-        for ( auto& w : writer_of_single_section )
-            if ( w != nullptr )
+    for ( auto& writers_of_single_section : this->vec_of_writers )
+        for ( auto& writer : writers_of_single_section )
+            if ( writer != nullptr )
             {
-                delete w;
-                w = nullptr;
+                delete writer;
+                writer = nullptr;
             }
     this->vec_of_writers.clear();
 
@@ -162,10 +176,10 @@ int monitor::save()
     int return_code = 0;
     if ( this->is_root() )
     {
-        // auto datas = this->engine->feedback();
-        //
-        // return_code =
-        //     this->writers[ 0 ]->push( ( double* )datas[ 0 ], 3, "/test_group/test_dataset" );
+        // TODO: sort the particle ids in ascending order before writing
+
+        double datas[ 1 ] = { 0.1 };
+        return_code = this->vec_of_writers[ 0 ][ 0 ]->push( ( double* )datas, 1, "/Bar/SBar" );
 
         if ( return_code != 0 )
             WARN( "Failed to push data to the writer." );
@@ -181,9 +195,7 @@ inline void monitor::create_model_file_datasets()
 {
     // this function should be called only when the model file is enabled
     // again, it should be called by the root process
-    // TODO: specify different target analysis sets (and target particle types) for different
-    // analysis level
-    for ( auto& writers_of_single_set : this->vec_of_writers[ 0 ] )
+    for ( auto& writer_of_single_set : this->vec_of_writers[ 0 ] )
     {
         // the size of the datasets
         galotfa::hdf5::size_info single_scaler_info = { H5T_NATIVE_DOUBLE,
@@ -197,27 +209,27 @@ inline void monitor::create_model_file_datasets()
         // for tensor
         galotfa::hdf5::size_info tensor_info = { H5T_NATIVE_DOUBLE, 4, { binnum, binnum, 3, 3 } };
 
-        writers_of_single_set->create_dataset( "/Times", single_scaler_info );
+        writer_of_single_set->create_dataset( "/Times", single_scaler_info );
         if ( this->para->pre_recenter )
-            writers_of_single_set->create_dataset( "/Center", single_vector_info );
+            writer_of_single_set->create_dataset( "/Center", single_vector_info );
         if ( this->para->md_image )
         {
-            writers_of_single_set->create_dataset( "/Image/Size", image_info );
+            writer_of_single_set->create_dataset( "/Image/Size", image_info );
             for ( auto& color : this->para->md_colors )
-                writers_of_single_set->create_dataset( "/Image/" + color, single_vector_info );
+                writer_of_single_set->create_dataset( "/Image/" + color, single_vector_info );
         }
         if ( this->para->md_bar_major_axis )
-            writers_of_single_set->create_dataset( "/Bar/MajorAxis", single_vector_info );
+            writer_of_single_set->create_dataset( "/Bar/MajorAxis", single_vector_info );
         if ( this->para->md_bar_length )
-            writers_of_single_set->create_dataset( "/Bar/Length", single_scaler_info );
+            writer_of_single_set->create_dataset( "/Bar/Length", single_scaler_info );
         if ( this->para->md_sbar )
-            writers_of_single_set->create_dataset( "/Bar/SBar", single_scaler_info );
+            writer_of_single_set->create_dataset( "/Bar/SBar", single_scaler_info );
         if ( this->para->md_sbuckle )
-            writers_of_single_set->create_dataset( "/Bar/SBuckle", single_scaler_info );
+            writer_of_single_set->create_dataset( "/Bar/SBuckle", single_scaler_info );
         if ( this->para->md_am.size() > 0 )
             for ( auto& m : this->para->md_am )
-                writers_of_single_set->create_dataset( "/Bar/A" + std::to_string( m ),
-                                                       single_scaler_info );
+                writer_of_single_set->create_dataset( "/Bar/A" + std::to_string( m ),
+                                                      single_scaler_info );
     }
 }
 
@@ -229,6 +241,9 @@ void monitor::create_particle_file_datasets( vector< unsigned long >& particle_a
     // created in the first call of `run_with(...)`
     for ( size_t i = 0; i < this->para->ptc_particle_types.size(); ++i )
     {
+        if ( particle_ana_nums[ i ] == 0 )  // if there is no target particle, just ignore it
+            continue;
+
         galotfa::hdf5::size_info scalers_info = { H5T_NATIVE_DOUBLE,
                                                   1,
                                                   { particle_ana_nums[ i ] } };
@@ -280,10 +295,11 @@ inline void monitor::create_orbit_file_datasets()
     vector< std::string > ids       = galotfa::string::split( id_string, " \t\n" );
     for ( auto& id_str : ids )
     {
-        this->particle_ids.push_back( std::stoul( id_str ) );
+        this->orbit_log_ids.push_back( std::stoul( id_str ) );
     }
 
-    for ( auto& target_id : this->particle_ids )
+    this->orbit_part_num = ids.size();
+    for ( auto& target_id : this->orbit_log_ids )
     {
         // TODO: support more available orbit types, such as recentered, aligned and corotating
         galotfa::hdf5::size_info single_vector_info = { H5T_NATIVE_DOUBLE, 1, { 3 } };
@@ -294,6 +310,7 @@ inline void monitor::create_orbit_file_datasets()
         this->vec_of_writers[ 2 ][ 0 ]->create_dataset(
             "/Particle" + std::to_string( target_id ) + "/Velocity",
             single_vector_info );  // create the dataset for each particle
+        // TODO: add an attribute in each dataset to indicate the particle id
     }
 
     delete st;
@@ -333,6 +350,194 @@ inline void monitor::create_post_file_datasets()
     // again, it should be called by the root process
     // TODO: implement this function
     ;
+}
+
+int monitor::run_with call_without_tracer
+{
+    if ( !this->para->glb_switch_on )  // if galotfa is disabled, just return 0
+        return 0;
+
+    if ( this->need_extract() )
+        this->extractor( particle_number, types, particle_ids );  // extract the target particles
+
+    if ( this->step == 0 && this->para->ptc_switch_on )
+    {
+        // create the particle file's datasets at the first step
+        auto                    ptc_target_type_num = this->para->ptc_particle_types.size();
+        vector< unsigned long > particle_ana_nums( ptc_target_type_num, 0 );
+        for ( size_t i = 0; i < ptc_target_type_num; ++i )
+            particle_ana_nums[ i ] = this->part_num_particle[ i ];
+        MPI_Allreduce( MPI_IN_PLACE, particle_ana_nums.data(), ptc_target_type_num,
+                       MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD );
+        // sum the number of target particles in all the MPI processes
+        if ( this->is_root() )
+            this->create_particle_file_datasets( particle_ana_nums );  // create the datasets
+    }
+
+    push_data no_tracer;
+    int       return_code = this->save();
+    if ( return_code != 0 )
+    {
+        WARN( "Failed to save the data to the output files." );
+        return return_code;
+    }
+
+    if ( this->need_extract() )
+        this->release_once();  // release the memory allocated in extractor()
+
+    ++this->step;
+    return 0;
+}
+
+inline bool monitor::need_ana_model() const
+{
+    return this->para->md_switch_on && this->step % this->para->md_period == 0;
+}
+inline bool monitor::need_ana_particle() const
+{
+    return this->para->ptc_switch_on && this->step % this->para->ptc_period == 0;
+}
+inline bool monitor::need_log_orbit() const
+{
+    return this->para->orb_switch_on && this->step % this->para->orb_period == 0;
+}
+inline bool monitor::need_ana_group() const
+{
+    return this->para->grp_switch_on && this->step % this->para->grp_period == 0;
+}
+inline bool monitor::need_extract() const
+{
+    return need_ana_model() || need_ana_particle() || need_log_orbit() || need_ana_group();
+}
+
+void monitor::release_once() const
+{
+    if ( need_ana_model() )
+        for ( size_t i = 0; i < this->id_for_pre.size(); ++i )
+        {
+            if ( this->id_for_pre[ i ] != nullptr )
+            {
+                delete[] this->id_for_pre[ i ];
+                this->id_for_pre[ i ] = nullptr;
+            }
+            this->part_num_pre[ i ] = 0;
+        }
+
+    if ( this->para->md_switch_on )
+    {
+        for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
+        {
+            if ( this->id_for_model[ i ] != nullptr )
+            {
+                delete[] this->id_for_model[ i ];
+                this->id_for_model[ i ] = nullptr;
+            }
+            this->part_num_model[ i ] = 0;
+        }
+    }
+    if ( this->para->ptc_switch_on )
+    {
+        for ( size_t i = 0; i < this->para->ptc_particle_types.size(); ++i )
+        {
+            if ( this->id_for_particle[ i ] != nullptr )
+            {
+                delete[] this->id_for_particle[ i ];
+                this->id_for_particle[ i ] = nullptr;
+            }
+            this->part_num_particle[ i ] = 0;
+        }
+    }
+
+    if ( this->id_for_orbit != nullptr )
+    {
+        delete[] this->id_for_orbit;
+        this->id_for_orbit   = nullptr;
+        this->part_num_orbit = 0;
+    }
+
+    /* if ( this->id_for_group != nullptr )
+    {
+        delete[] this->id_for_group;
+        this->id_for_group = nullptr;
+    } */
+}
+
+void monitor::extractor( unsigned long& partnum_total, unsigned long types[],
+                         unsigned long ids[] ) const
+{
+    static unsigned long i = 0;  // a static temporary variable
+    for ( auto& ids : this->id_for_pre )
+        ids = new unsigned long[ partnum_total ];
+    // NOTE: the pre-process data will always be extracted, so the extractor should be called
+    // only when need_extract() is true
+
+    if ( this->need_ana_model() )
+    {
+        for ( auto& ids : this->id_for_model )
+            ids = new unsigned long[ partnum_total ];
+    }
+    if ( this->need_ana_particle() )
+    {
+        for ( auto& ids : this->id_for_particle )
+            ids = new unsigned long[ partnum_total ];
+    }
+    if ( this->need_log_orbit() )
+    {
+        this->id_for_orbit = new unsigned long[ this->orbit_part_num ];
+    }
+
+    /* if ( this->need_ana_group() )
+    {
+        this->id_for_group = new unsigned long[ partnum_total ];
+    } */
+
+    static size_t j = 0;  // a static temporary variable
+    static size_t k = 0;  // a static temporary variable
+    for ( i = 0; i < partnum_total; ++i )
+    {
+        // i: index for iterating all the particles
+        // j: index for iterating all the target sets
+        // k: index for iterating all the members in each target set
+        if ( this->calc->is_target_of_pre() )
+        {
+            for ( size_t j = 0; j < this->para->pre_recenter_anchors.size(); ++j )
+            {
+                if ( types[ i ] == this->para->pre_recenter_anchors[ j ] )
+                {
+                    this->id_for_pre[ j ][ this->part_num_pre[ j ]++ ] = i;
+                }
+            }
+        }
+
+        if ( this->need_ana_model() )
+            if ( this->calc->is_target_of_md() )
+            {
+                for ( size_t j = 0; j < this->para->md_target_sets.size(); ++j )
+                {
+                    for ( size_t k = 0; k < this->para->md_target_sets[ j ].size(); ++k )
+                        if ( types[ i ] == this->para->md_target_sets[ j ][ k ] )
+                            this->id_for_model[ j ][ this->part_num_model[ j ]++ ] = i;
+                }
+            }
+
+        if ( this->need_ana_particle() )
+        {
+            for ( size_t j = 0; j < this->para->ptc_particle_types.size(); ++j )
+            {
+                if ( types[ i ] == this->para->ptc_particle_types[ j ] )
+                    this->id_for_particle[ j ][ this->part_num_particle[ j ]++ ] = i;
+            }
+        }
+
+        if ( this->need_log_orbit() )
+        {
+            for ( size_t j = 0; j < this->orbit_part_num; ++j )
+            {
+                if ( ids[ i ] == this->orbit_log_ids[ j ] )
+                    this->id_for_orbit[ this->part_num_orbit++ ] = i;
+            }
+        }
+    }
 }
 
 }  // namespace galotfa
