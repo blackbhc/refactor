@@ -214,6 +214,8 @@ which will combine other modules together to finish the on-the-fly analysis.
   Note that these functions only check the physical aspects of the particles, e.g. whether the particle
   is located in the target region, but do not check the particle type, which is checked in the `extractor`
   function.
+- `calculator.call_xxx_module(...)`: `xxx` is `pre`, `model` ... These functions are used to call the corresponding
+  real analysis functions, which are implemented in the real analysis modules.
 
 #### Implementation details
 
