@@ -1,7 +1,5 @@
 #! env make
 
-define_a_print = 1
-
 ifeq ($(mode),release)
     CXXFLAGS += -std=c++11 -O3 -Wall -Wextra
 else ifeq ($(mode),debug)
@@ -11,7 +9,7 @@ ifeq ($(CXX), clang++)
 	CXXFLAGS += -Wno-extra-semi-stmt -Wno-disabled-macro-expansion -Wno-vla-extension -Wno-old-style-cast -Wno-padded -Wno-reserved-macro-identifier
 	CXXFLAGS += -Wno-reserved-identifier -Wno-documentation-unknown-command -Wno-documentation -Wno-documentation-deprecated-sync
 	CXXFLAGS += -Wno-zero-as-null-pointer-constant -Wno-switch-enum -Wno-unsafe-buffer-usage -Wno-unknown-warning-option -Wno-cast-qual 
-	CXXFLAGS += -Wno-suggest-override -Wno-suggest-destructor-override -Wno-weak-vtables
+	CXXFLAGS += -Wno-suggest-override -Wno-suggest-destructor-override -Wno-weak-vtables -Wno-unused-function
 else
     CXXFLAGS += -std=c++11 -O3 -Og -Wall -Wextra -Werror -fsanitize=undefined,leak,address
 endif
@@ -21,8 +19,4 @@ endif
 
 ifeq ($(type), header-only)
 	CXXFLAGS += -Dheader_only
-endif
-
-ifeq ($(define_a_print), 1)
-	CXXFLAGS += -Ddefine_a_print
 endif

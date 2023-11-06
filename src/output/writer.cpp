@@ -38,8 +38,7 @@ namespace hdf5 {
 
     node::~node( void )
     {
-        if ( this->type != NodeType::uninitialized )
-            this->close();
+        this->close();
     }
     inline void node::add_child( node* child )
     {
@@ -99,8 +98,9 @@ namespace hdf5 {
                 }
                 else
                 {
-                    WARN( "The closed galotfa::hdf5::node target (hid = %ld) is uninitialized!",
-                          this->self );
+                    WARN(
+                        "The closed galotfa::hdf5::node target (hid = %ld) at %p is uninitialized!",
+                        this->self, ( void* )this );
                 }
             }
         // shuffle the members to uninitialized state
@@ -164,6 +164,7 @@ writer::~writer( void )
 {
 #ifndef debug_output  // if not in debug mode: close file
     // TODO: flush the buffer before closing the file
+    INFO( "Exiting writer..." );
     clean_nodes();
     this->stack_counter.clear();
 #endif
@@ -231,7 +232,7 @@ int writer::create_group( std::string group_name )
     // check whether the root node exists
     if ( this->nodes.find( "/" ) == this->nodes.end() )
     {
-        WARN(
+        INFO(
             "The root node does not exist, create it automatically with a filename=test.hdf5..." );
         this->create_file( "test.hdf5" );
     }

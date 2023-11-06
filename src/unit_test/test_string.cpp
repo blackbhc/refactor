@@ -1,6 +1,6 @@
 // Call the unit test functions for output part.
-#ifndef OUTPUT_TEST
-#define OUTPUT_TEST
+#ifndef STRING_TEST
+#define STRING_TEST
 #include "../tools/prompt.h"
 #include "../tools/string.cpp"
 #include "../tools/string.h"
