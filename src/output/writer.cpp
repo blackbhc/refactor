@@ -142,6 +142,7 @@ writer::writer( std::string path_to_file )
 {
 #ifndef debug_output  // if not in debug mode: create file
     this->create_file( path_to_file );
+    this->filename = path_to_file;
 #else  // if in debug mode: do nothing
     ( void )path_to_file;  // avoid unused variable warning
 #endif
@@ -163,7 +164,6 @@ inline void writer::clean_nodes( void )
 writer::~writer( void )
 {
     // TODO: flush the buffer before closing the file
-    INFO( "Exiting writer..." );
     clean_nodes();
     this->stack_counter.clear();
 }
@@ -247,7 +247,8 @@ int writer::create_group( std::string group_name )
         {
             if ( i == strings.size() - 1 )  // if be the last element, warn and return
             {
-                WARN( "The group or dataset %s already exists!", group_name.c_str() );
+                WARN( "The group or dataset %s is already in use in file %s!", group_name.c_str(),
+                      this->filename.c_str() );
                 return 1;
             }
             else  // if not the last element, go to the next element
@@ -287,7 +288,7 @@ int writer::create_dataset( std::string dataset_name, hdf5::size_info& info )
         galotfa::string::split( dataset_name, "/" );  // split the path into a string vector
     if ( strings.size() == 0 )
     {
-        WARN( "The path to create a hdf5 dataset is empty!" );
+        WARN( "The path of the creating hdf5 dataset is empty!" );
         return 1;  // if the path is empty, do nothing
     }
 
@@ -301,25 +302,24 @@ int writer::create_dataset( std::string dataset_name, hdf5::size_info& info )
 #endif
 
     // get the parent path
-    std::string parent_path = "/";
+    std::string parent_path = "";
     for ( size_t i = 0; i < strings.size() - 1; ++i )
-    {
-        if ( i == 0 )
-            parent_path += strings[ i ];
-        else
-            parent_path += "/" + strings[ i ];
-    }
-    // check whether the dataset exists
+        parent_path += "/" + strings[ i ];
+
+    // check whether there are group/dataset with the same name
     if ( this->nodes.find( parent_path + "/" + strings.back() ) != this->nodes.end() )
     {
-        WARN( "The dataset %s already exists!", dataset_name.c_str() );
+        WARN( "The name %s is already in use in file %s!", dataset_name.c_str(),
+              this->filename.c_str() );
         return 1;
     }
     // check whether the parent node exists, if not, create it
-    else if ( this->nodes.find( parent_path ) == this->nodes.end() )
+    else if ( this->nodes.find( parent_path ) == this->nodes.end() && parent_path != "" )
         this->create_group( parent_path );
 
     // create the dataset
+    if ( parent_path == "" )
+        parent_path = "/";  // avoid the empty string
     auto data_node_ptr = create_datanode( *this->nodes.at( parent_path ), strings.back(), info );
     // insert the node
     this->nodes.insert( std::pair< std::string, galotfa::hdf5::node* >(
@@ -383,7 +383,7 @@ template < typename T > int writer::push( T* ptr, unsigned long len, std::string
     // check whether the dataset exists
     if ( this->nodes.find( dataset_name ) == this->nodes.end() )
     {
-        ERROR( "Try to push data into unexist dataset : %s", dataset_name.c_str() );
+        WARN( "Try to push data into unexist dataset: %s", dataset_name.c_str() );
         return 1;
     }
     else if ( !this->nodes.at( dataset_name )->is_dataset() )

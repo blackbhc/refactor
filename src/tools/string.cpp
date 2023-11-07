@@ -122,7 +122,6 @@ int test_split( void )
     CHECK_RETURN( success );
 }
 
-#include <cassert>
 int test_replace( void )
 {
     println(

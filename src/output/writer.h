@@ -159,6 +159,7 @@ class writer
 public:
     // private members
 private:
+    std::string                                           filename;
     std::unordered_map< std::string, hdf5::node* >        nodes         = {};
     std::unordered_map< std::string, unsigned long long > stack_counter = {};
 

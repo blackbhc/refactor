@@ -18,7 +18,4 @@ int test_split( void );
 int test_replace( void );
 }  // namespace unit_test
 #endif
-
-
-
 #endif
