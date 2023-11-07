@@ -31,7 +31,7 @@ void mpi_final_if_need( void )
 extern "C" {
 void galotfa_without_pot_tracer( unsigned long particle_ids[], unsigned long types[],
                                  double masses[], double coordiantes[][ 3 ],
-                                 double velocities[][ 3 ], double times[],
+                                 double velocities[][ 3 ], double times,
                                  unsigned long particle_number )
 {
     static galotfa::monitor otf_monitor;
@@ -45,7 +45,7 @@ void galotfa_without_pot_tracer( unsigned long particle_ids[], unsigned long typ
 
 void galotfa_with_pot_tracer( unsigned long pot_tracer_type, unsigned long particle_ids[],
                               unsigned long types[], double masses[], double coordiantes[][ 3 ],
-                              double velocities[][ 3 ], double times[],
+                              double velocities[][ 3 ], double times,
                               unsigned long particle_number )
 
 {

@@ -16,12 +16,12 @@ using std::vector;
 // and an optional potential tracer type
 #define call_without_tracer                                                 \
     ( unsigned long particle_ids[], unsigned long types[], double masses[], \
-      double coordinates[][ 3 ], double velocities[][ 3 ], double times[],  \
+      double coordinates[][ 3 ], double velocities[][ 3 ], double& time,    \
       unsigned long particle_number )
 
-#define call_with_tracer                                                                    \
-    ( unsigned long pot_tracer_type, unsigned long particle_ids[], unsigned long types[],   \
-      double masses[], double coordinates[][ 3 ], double velocities[][ 3 ], double times[], \
+#define call_with_tracer                                                                  \
+    ( unsigned long pot_tracer_type, unsigned long particle_ids[], unsigned long types[], \
+      double masses[], double coordinates[][ 3 ], double velocities[][ 3 ], double& time, \
       unsigned long particle_number )
 
 #define no_tracer ( particle_ids, types, masses, coordinates, velocities, times, particle_number )
