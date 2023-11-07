@@ -192,7 +192,7 @@ to see their explanation.
 |            | <a href="#recenter">`recenter`</a>                           | Boolean    | `on`          | `on` or `off`                                               |
 |            | <a href="#recenter_anchors">`recenter_anchors`</a>           | Integer(s) |               | Avaiable particle types of your simulation IC               |
 |            | <a href="#region_shape">`region_shape`</a>                   | String     | `cylinder`    | `sphere`, `cylinder` or `box`.                              |
-|            | <a href="#ratio">`ratio`</a>                                 | Float      | 1.0           | $>0$                                                        |
+|            | <a href="#axis_ratio">`axis_ratio`</a>                       | Float      | 1.0           | $>0$                                                        |
 |            | <a href="#size">`region_size`</a>                            | Float      | 20.0          | $>0$                                                        |
 |            | <a href="#recenter_method">`recenter_method`</a>             | String     | `density`     | `com`, `density` or `potential`                             |
 | `Model`    |                                                              |            |               |                                                             |
@@ -203,7 +203,7 @@ to see their explanation.
 |            | <a href="#multiple">`multiple`</a>                           | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#classification">`classification`</a>               | Strings    | empty         | see in the <a href="#classification">text</a>               |
 |            | <a href="#region_shape_m">`region_shape`</a>                 | String     | `cylinder`    | `sphere`, `cylinder` or `box`.                              |
-|            | <a href="#ratio_m">`ratio`</a>                               | Float      | 1.0           | $>0$                                                        |
+|            | <a href="#axis_ratio_m">`axis_ratio`</a>                     | Float      | 1.0           | $>0$                                                        |
 |            | <a href="#align_bar">`align_bar`</a>                         | Boolean    | `on`          | `on` or `off`                                               |
 |            | <a href="#size_m">`region_size`</a>                          | Float      | 20.0          | $>0$                                                        |
 |            | <a href="#image">`image`</a>                                 | Boolean    | `off`         | `on` or `off`                                               |
@@ -285,20 +285,21 @@ major axis to the $x$-axis.
   `recenter_anchors` = `2` to use the disk particles to calculate the center of the system.
 - <a id="region_shape"></a>`region_shape`: only meaningful when `recenter` = `on`, the shape of the region
   to calculate the center of the target particles, which will affect how the `region_size` is interpreted (see below).
-  - `region_shape` = `sphere`: the region is a sphere or spheroid if `ratio` $\neq$ 1, the axis of the spheroid is the
+  The particles that are located at the boundary of the region will also be included.
+  - `region_shape` = `sphere`: the region is a sphere or spheroid if `axis_ratio` $\neq$ 1, the axis of the spheroid is the
     parallel to the $z$-axis.
   - `region_shape` = `cylinder`: the region is a cylinder with symmetry axis parallel to the $z$-axis.
   - `region_shape` = `box`: the region is a box with sides parallel to the $x$, $y$ and $z$ axis.
-- <a id="ratio"></a>`ratio`: only meaningful when `recenter` = `on`, the ratio of the region's characteristic
-  lengths, which will affect how the `region_size` is interpreted.
+- <a id="axis_ratio"></a>`axis_ratio`: only meaningful when `recenter` = `on`, the axis_ratio of the region's
+  characteristic lengths, which will affect how the `region_size` is interpreted.
 - <a id="size"></a>`region_size`: only meaningful when `recenter` = `on`, the size of the region to calculate
-  the center of the target particles, which will
-  - `region_shape` = `sphere`: the region is a sphere with $R=$ `region_size` if `ratio` = 1. If `ratio` is not 1,
-    the sphere will be stretched along the $z$-axis with $R_z=$ `ratio` $\times$ `region_size`.
+  the center of the target particles (), which is interpreted differently according to the `region_shape`:
+  - `region_shape` = `sphere`: the region is a sphere with $R=$ `region_size` if `axis_ratio` = 1. If `axis_ratio` is not 1,
+    the sphere will be stretched along the $z$-axis with $R_z=$ `axis_ratio` $\times$ `region_size`.
   - `region_shape` = `cylinder`: the region is a cylinder with $R=$ `region_size`, and half height $H=$
-    `ratio` $\times$ `region_size`.
+    `axis_ratio` $\times$ `region_size`.
   - `region_shape` = `box`: the region is a cube with side length $L=$ `region_size`, and stretched along the
-    $z$-axis with $L_z=$ `ratio` $\times$ `region_size`.
+    $z$-axis with height $L_z=$ `axis_ratio` $\times$ `region_size`.
 - <a id="recenter_method"></a>`recenter_method`: the method to calculate the center of the target particles,
   with iteration if necessary (see `convergence_type` and `convergence_threshold`).
   - `recenter_method` = `com`: the center is defined as the center of mass of the target particles.
@@ -339,19 +340,19 @@ The model level on-the-fly analysis of the target particles. The most common cas
   - Values should in the range of `particle_types`, otherwise the program will raise an error.
 - <a id="region_shape_m"></a>`region_shape`: similar to the `region_shape` in the `Pre` section, but this one is
   used to calculate the model quantifications of the target particles, can get multiple values.
-  - `region_shape` = `sphere`: the region is a sphere or spheroid if `ratio` $\neq$ 1, the axis of the spheroid is the
-    parallel to the $z$-axis.
+  - `region_shape` = `sphere`: the region is a sphere or spheroid if `axis_ratio` $\neq$ 1, the axis of the spheroid
+    is the parallel to the $z$-axis.
   - `region_shape` = `cylinder`: the region is a cylinder with symmetry axis parallel to the $z$-axis.
   - `region_shape` = `box`: the region is a box with sides parallel to the $x$, $y$ and $z$ axis.
-- <a id="ratio_m"></a>`ratio`: similar to the `ratio` in the `Pre` section, but this one is used to calculate the
-  model quantifications of the target particles.
+- <a id="axis_ratio_m"></a>`axis_ratio`: similar to the `axis_ratio` in the `Pre` section, but this one is used to
+  calculate the model quantifications of the target particles.
 - <a id="size_m"></a>`region_size`: similar to the `region_size` in the `Pre` section, but this one is used to
-  - `region_shape` = `sphere`: the region is a sphere with $R=$ `region_size` if `ratio` = 1. If `ratio` $\neq$ 1, the sphere
-    will be stretched along the $z$-axis with $R_z=$ `ratio` $\times$ `region_size`.
+  - `region_shape` = `sphere`: the region is a sphere with $R=$ `region_size` if `axis_ratio` = 1. If `axis_ratio`
+    $\neq$ 1, the sphere will be stretched along the $z$-axis with $R_z=$ `axis_ratio` $\times$ `region_size`.
   - `region_shape` = `cylinder`: the region is a cylinder with $R=$ `region_size`, and half height $H=$
-    `ratio` $\times$ `region_size`.
-  - `region_shape` = `box`: the region is a cube with side length $L=$ `region_size`, and stretched along the $z$-axis with
-    $L_z=$ `ratio` $\times$ `region_size`.
+    `axis_ratio` $\times$ `region_size`.
+  - `region_shape` = `box`: the region is a cube with side length $L=$ `region_size`, and stretched along the
+    $z$-axis with $L_z=$ `axis_ratio` $\times$ `region_size`.
 - <a id="image"></a>`image`: whether to output the image matrices of the target particles.
   - The particles will be divided into bins in each axis (according to the `region_shape`) and do some statistics
     in each bin, such as the mean value of some quantity, the number of particles in each bin, etc. The bin number
@@ -361,7 +362,7 @@ The model level on-the-fly analysis of the target particles. The most common cas
   - The quantities of the image are specified by the `colors` parameter in the view of color coded (see below).
     (The name `image` may be changed in the future, as its meaning is not so clear.)
 - <a id="image_bins"></a>`image_bins`: how many bins of the image matrices in each dimension, for the axis that
-  may be stretched, the number of bins in such axis is also determined by the `ratio` parameter.
+  may be stretched, the number of bins in such axis is also determined by the `axis_ratio` parameter.
 - <a id="colors"></a>`colors`:
   At least one color must be given, if the `image` is enabled, otherwise the program will raise an error.
   - `particle_number`: the number of particles in each bin.
@@ -470,6 +471,7 @@ before using any `galotfa` APIs.
 - [ ] (other) add potential tracer support into the common simulation codes.
 - [ ] (global) output the used parameters to a separate file: galotfa-used.ini
 - [ ] (global) specify different target particle types (and possible multiple analysis sets) in different analysis level.
+- [ ] (pre-process) support triaxial region shape.
 - [ ] (model) the bar length calculation.
 - [ ] (particle) the guiding radius calculation.
 - [ ] (particle) the orbital frequency calculation.

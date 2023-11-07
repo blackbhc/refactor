@@ -150,6 +150,7 @@ There are 5 steps to add a new unit test:
 - <a href="#src_tools">`src/tools`</a>
 - <a href="#src_parameter">`src/parameter`</a>
 - <a href="#src_output">`src/output`</a>
+- <a href="#src_analysis">`src/analysis`</a>
 
 ### `src/engine`: <a id="src_engine"></a><a href="#list_of_modules"><font size=4>(src list)</font></a>
 
@@ -219,7 +220,12 @@ which will combine other modules together to finish the on-the-fly analysis.
 
 #### Implementation details
 
-- class `monitor`: the virtual analysis engine's monitor.
+- struct `analysis_results`: the analysis results of the analysis engine, just design to be a symbolic integration
+  of the pointer of the analysis resutls' container in the `calculator` class.
+- struct `writer_integration`: the integration of writers for different analysis modules, as there may be
+  more than one (and unknown) output files in the model and group level analysis modules.
+- class `monitor`: the virtual analysis engine's monitor, which will take over the analysis period and the
+  extract of the target particles of analysis.
 
   - `init()`: create the output directory and open the hdf5 files, only to make the constructor more readable, and
     should be called only in the constructor.
@@ -241,28 +247,17 @@ which will combine other modules together to finish the on-the-fly analysis.
 
   - constructor: with one argument `galotfa::parameter::para&`, which is a reference to the parameter class.
   - some container of the analysis results, which will be used to restore the results from different analysis modules.
-  - `recv_data(...)`: the API between the companion of the `monitor.push_data(...)` that receive the data from
-    the monitor and deliver the real analysis parts.
   - There are two versions of this function, one of which support the potential tracer.
-  - At the end of the function, the `run_once` function will be called to analysis the data at one synchronized
-    time step.
-  - Actually, the `monitor.push_data(...)` function is an inline function that just call this function,
-    to define them as separate functions is just for better readability of the codes.
-  - `start()`: start up the analysis engine, which will allocate the memory for the analysis results and set
-    some status flags.
-  - `stop()`: stop the analysis engine, which will free some status flags and resources.
   - the analysis wrappers (list in the API section): use the parameters to call the pure functions, which
     is implemented in the real analysis modules, to finish the on-the-fly analysis, and then update the
     analysis results that returned by the pure functions.
-  - `run_once(...)`: the API to call the calculator to analysis of the data at one synchronized time step.
-    This function is a wrapper of the previous APIs and will be automatically called by the `recv_data` function.
-  - `feedback(...)`: return the analysis results' pointers to the monitor, due to the limitation of static
-    type, the pointers will be stored in a vector of `void*` type, which will be converted to the real type
-    in the monitor. Keep this in mind when you want to add a new analysis module, and be careful to use the
-    pointers in the vector.
+  - `feedback(...)`: return the analysis results' pointers to the monitor, which is stored in a struct
+    `analysis_results`, of which every member pointer is a pointer to the analysis results or `nullptr`
+    if such analysis module is not activated.
 
-    <font color=red>Note</font>: such pointers' data will be overwritten in the each synchronized time step, so the
-    monitor should save the data immediately after the `feedback` function is called.
+    <font color=red>NOTE</font>: such pointers only point to the analysis results' container, so its data
+    will be overwritten in the next analysis step. To correctly output the analysis results, the monitor
+    should push the results to the `writer` immediately after the `feedback` function is called.
 
 ### `src/tools` <a id="src_tools"></a> <a href="#list_of_modules"><font size=4>(src list)</font></a>
 
@@ -521,3 +516,26 @@ size of the sub-space of the array.
     to push an array of data to an existing dataset, the dataset name should be the absolute path of the dataset,
     e.g. `/group1/group2/dataset_name`. If such dataset does not exist, the writer will create it automatically.
     The data type of the dataset will be restored by `node`, during creation of the dataset.
+
+### `src/analysis`: <a id="src_analysis"></a> <a href="#list_of_modules"><font size=4>(src list)</font></a>
+
+The real analysis modules, which will be called by the virtual analysis engine. For better modularity, this
+module only deal with the data and calculation, and the logical control based on parameters is the work of
+`calculator`, and by different parameters, the `calculator` can call different analysis functions in this module.
+All functions are non-member functions, which can be treated as a black box to finish some calculation.
+
+Note: all unit test of this module are designed for mpi mode, `make test` can not pass the compilation.
+
+#### Utility functions: `src/analysis/utils.h` and `src/analysis/utils.cpp`
+
+These functions are used in the analysis module, which implement some common calculation, such as 2D binning
+statistics, smoothing, etc.
+
+- `in_spheroid(...)`: check whether the particle is in the spheroid region, which is used to check whether
+  the particle is in the target region of the pre-process part.
+- `in_cylinder(...)`: similar but for a cylinder region.
+- `in_box(...)`: similar but for a box region.
+
+#### Pre-process part
+
+- `center_by_com(...)`: calculate the system's center of mass.
