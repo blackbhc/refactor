@@ -46,6 +46,9 @@ static void operator+=( std::vector< int >& vec1, std::vector< int > vec2 )
 #ifdef debug_string
 #include "test_string.cpp"
 #endif
+#ifdef debug_utils
+#include "test_utils.cpp"
+#endif
 
 #ifdef MPI_TEST
 int main( int argc, char* argv[] )
@@ -107,6 +110,10 @@ int main()
 #endif
 #ifdef debug_post
         result += test_post();
+        println( "--------------------------------------------------------------------" );
+#endif
+#ifdef debug_utils
+        result += test_utils();
         println( "--------------------------------------------------------------------" );
 #endif
     }

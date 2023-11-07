@@ -1,21 +1,23 @@
 // Call the unit test functions for pre-processing part.
-#ifndef PRE_TEST
-#define PRE_TEST
+#ifndef UTILS_TEST
+#define UTILS_TEST
 // include the head file of the pre-processing part.
-#include "../analysis/pre.cpp"
-#include "../analysis/pre.h"
+#include "../analysis/utils.cpp"
+#include "../analysis/utils.h"
 #include "../tools/prompt.h"
 #include <stdio.h>
 #include <vector>
 
-static std::vector< int > test_pre()
+static std::vector< int > test_utils()
 {
-    println( "Test the pre-processing part.\n" );
+    println( "Test the analysis utils part.\n" );
     int success = 0;
     int fail    = 0;
     int unknown = 0;
-    COUNT( unit_test::test_center_of_mass() );
-    SUMMARY( "pre-processing" );
+    COUNT( unit_test::test_in_spheroid() );
+    COUNT( unit_test::test_in_box() );
+    COUNT( unit_test::test_in_cylinder() );
+    SUMMARY( "analysis utils" );
 
     std::vector< int > result = { 0, 0, 0 };
     result[ 0 ]               = success;
