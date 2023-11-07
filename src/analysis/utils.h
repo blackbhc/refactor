@@ -2,11 +2,13 @@
 #define GALOTFA_ANALYSIS_UNTILS_H
 namespace galotfa {
 namespace analysis {
-    bool in_spheroid( double& coordx, double& coordy, double& coordz, double& size, double& ratio );
+    bool in_spheroid( double ( &pos )[ 3 ], double& size, double& ratio );
 
-    bool in_box( double& coordx, double& coordy, double& coordz, double& size, double& ratio );
+    bool in_box( double ( &pos )[ 3 ], double& size, double& ratio );
 
-    bool in_cylinder( double& coordx, double& coordy, double& coordz, double& size, double& ratio );
+    bool in_cylinder( double ( &pos )[ 3 ], double& size, double& ratio );
+
+    double norm( double ( &vec )[ 3 ] );
 }  // namespace analysis
 }  // namespace galotfa
 

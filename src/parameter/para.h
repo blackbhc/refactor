@@ -26,7 +26,7 @@ struct para
 
     // pre section parameters
     bool          pre_recenter = true, pre_align_bar = true;
-    double        pre_region_size = 20, pre_ratio = 1;
+    double        pre_region_size = 20, pre_region_ratio = 1;
     std::string   pre_region_shape = "cylinder", pre_recenter_method = "density";
     vector< int > pre_recenter_anchors;
 
@@ -38,7 +38,7 @@ struct para
     vector< std::string >   md_classification;
     vector< vector< int > > md_target_sets;
     int                     md_image_bins  = 100;
-    double                  md_region_size = 20, md_ratio = 1;
+    double                  md_region_size = 20, md_region_ratio = 1;
     std::string             md_region_shape = "cylinder";
     vector< int >           md_am;  // An, lowercase for ini key
     vector< std::string >   md_colors;

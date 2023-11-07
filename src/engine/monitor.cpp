@@ -32,7 +32,7 @@ monitor::monitor( void )
     {
         this->init();  // create the output directory and the output files
         // create and start the virtual calc's calculator
-        this->calc = new galotfa::calculator( *( this->para ) );
+        this->calc = new galotfa::calculator( this->para );
     }
 }
 
@@ -53,8 +53,6 @@ void monitor::init()
         this->create_writers();
     }
     // extend the size of the members
-    this->id_for_pre.resize( this->para->pre_recenter_anchors.size(), nullptr );
-    this->part_num_pre.resize( this->para->pre_recenter_anchors.size(), 0 );
     if ( this->para->md_switch_on )
     {
         this->id_for_model.resize( this->para->md_target_sets.size(), nullptr );
@@ -84,14 +82,31 @@ monitor::~monitor()
     }
 
     // free the writers pointers
-    for ( auto& writers_of_single_section : this->vec_of_writers )
-        for ( auto& writer : writers_of_single_section )
+    if ( this->writers.model_writers.size() > 0 )
+        for ( auto& writer : this->writers.model_writers )
             if ( writer != nullptr )
             {
                 delete writer;
                 writer = nullptr;
             }
-    this->vec_of_writers.clear();
+    if ( this->writers.group_writers.size() > 0 )
+        for ( auto& writer : this->writers.group_writers )
+            if ( writer != nullptr )
+            {
+                delete writer;
+                writer = nullptr;
+            }
+    if ( this->writers.particle_writer != nullptr )
+    {
+        delete this->writers.particle_writer;
+        this->writers.particle_writer = nullptr;
+    }
+    if ( this->writers.orbit_writer != nullptr )
+    {
+        delete this->writers.orbit_writer;
+        this->writers.orbit_writer = nullptr;
+    }
+
 
     int  initialized = 0;
     auto status      = MPI_Initialized( &initialized );
@@ -106,10 +121,6 @@ monitor::~monitor()
 int monitor::create_writers()
 {
     // initialized the vector of the writers
-    for ( int i = 0; i < 5; ++i )
-    {
-        this->vec_of_writers.push_back( vector< galotfa::writer* >{} );
-    }
 
     // create the files for each analysis set
     this->create_files();
@@ -140,7 +151,7 @@ inline void monitor::create_files()
             std::string file = this->para->glb_output_dir + "/" + prefix + this->para->md_filename;
 
             galotfa::writer* writer = new galotfa::writer( file.c_str() );
-            this->vec_of_writers[ 0 ].push_back( writer );
+            this->writers.model_writers.push_back( writer );
         }
     }
     else
@@ -149,22 +160,23 @@ inline void monitor::create_files()
         std::string file = this->para->glb_output_dir + "/" + this->para->md_filename;
 
         galotfa::writer* writer = new galotfa::writer( file.c_str() );
-        this->vec_of_writers[ 0 ].push_back( writer );
+        this->writers.model_writers.push_back( writer );
     }
 
     if ( this->para->ptc_switch_on )
     {
-        std::string      file   = this->para->glb_output_dir + "/" + this->para->ptc_filename;
-        galotfa::writer* writer = new galotfa::writer( file.c_str() );
-        this->vec_of_writers[ 1 ].push_back( writer );
+        std::string      file         = this->para->glb_output_dir + "/" + this->para->ptc_filename;
+        galotfa::writer* writer       = new galotfa::writer( file.c_str() );
+        this->writers.particle_writer = writer;
     }
 
     if ( this->para->orb_switch_on )
     {
-        std::string      file   = this->para->glb_output_dir + "/" + this->para->orb_filename;
-        galotfa::writer* writer = new galotfa::writer( file.c_str() );
-        this->vec_of_writers[ 2 ].push_back( writer );
+        std::string      file      = this->para->glb_output_dir + "/" + this->para->orb_filename;
+        galotfa::writer* writer    = new galotfa::writer( file.c_str() );
+        this->writers.orbit_writer = writer;
     }
+    // TODO: the file of group analysis
 }
 
 int monitor::save()
@@ -174,13 +186,12 @@ int monitor::save()
     int return_code = 0;
     if ( this->is_root() )
     {
-        // TODO: sort the particle ids in ascending order before writing
-
-        double datas[ 1 ] = { 0.1 };
-        return_code = this->vec_of_writers[ 0 ][ 0 ]->push( ( double* )datas, 1, "/Bar/SBar" );
-
-        if ( return_code != 0 )
-            WARN( "Failed to push data to the writer." );
+        galotfa::analysis_result res = this->calc->feedback();
+        for ( auto& single_model : this->writers.model_writers )
+        {
+            if ( this->para->pre_recenter )
+                single_model->push< double >( res.system_center, 3, "/Center" );
+        }
     }
 
     MPI_Bcast( &return_code, 1, MPI_INT, 0, MPI_COMM_WORLD );
@@ -193,7 +204,7 @@ inline void monitor::create_model_file_datasets()
 {
     // this function should be called only when the model file is enabled
     // again, it should be called by the root process
-    for ( auto& writer_of_single_set : this->vec_of_writers[ 0 ] )
+    for ( auto& single_model : this->writers.model_writers )
     {
         // the size of the datasets
         galotfa::hdf5::size_info single_scaler_info = { H5T_NATIVE_DOUBLE,
@@ -207,27 +218,26 @@ inline void monitor::create_model_file_datasets()
         // for tensor
         galotfa::hdf5::size_info tensor_info = { H5T_NATIVE_DOUBLE, 4, { binnum, binnum, 3, 3 } };
 
-        writer_of_single_set->create_dataset( "/Times", single_scaler_info );
+        single_model->create_dataset( "/Times", single_scaler_info );
         if ( this->para->pre_recenter )
-            writer_of_single_set->create_dataset( "/Center", single_vector_info );
+            single_model->create_dataset( "/Center", single_vector_info );
         if ( this->para->md_image )
         {
-            writer_of_single_set->create_dataset( "/Image/Size", image_info );
+            single_model->create_dataset( "/Image/Size", image_info );
             for ( auto& color : this->para->md_colors )
-                writer_of_single_set->create_dataset( "/Image/" + color, single_vector_info );
+                single_model->create_dataset( "/Image/" + color, single_vector_info );
         }
         if ( this->para->md_bar_major_axis )
-            writer_of_single_set->create_dataset( "/Bar/MajorAxis", single_vector_info );
+            single_model->create_dataset( "/Bar/MajorAxis", single_vector_info );
         if ( this->para->md_bar_length )
-            writer_of_single_set->create_dataset( "/Bar/Length", single_scaler_info );
+            single_model->create_dataset( "/Bar/Length", single_scaler_info );
         if ( this->para->md_sbar )
-            writer_of_single_set->create_dataset( "/Bar/SBar", single_scaler_info );
+            single_model->create_dataset( "/Bar/SBar", single_scaler_info );
         if ( this->para->md_sbuckle )
-            writer_of_single_set->create_dataset( "/Bar/SBuckle", single_scaler_info );
+            single_model->create_dataset( "/Bar/SBuckle", single_scaler_info );
         if ( this->para->md_am.size() > 0 )
             for ( auto& m : this->para->md_am )
-                writer_of_single_set->create_dataset( "/Bar/A" + std::to_string( m ),
-                                                      single_scaler_info );
+                single_model->create_dataset( "/Bar/A" + std::to_string( m ), single_scaler_info );
     }
 }
 
@@ -248,16 +258,16 @@ void monitor::create_particle_file_datasets( vector< unsigned long >& particle_a
         std::string prefix = "/PartType" + std::to_string( this->para->ptc_particle_types[ i ] );
         if ( this->para->ptc_circularity )
         {
-            this->vec_of_writers[ 1 ][ 0 ]->create_dataset( prefix + "/Circularity", scalers_info );
+            this->writers.particle_writer->create_dataset( prefix + "/Circularity", scalers_info );
         }
         if ( this->para->ptc_circularity_3d )
         {
-            this->vec_of_writers[ 1 ][ 0 ]->create_dataset( prefix + "/Circularity3D",
-                                                            scalers_info );
+            this->writers.particle_writer->create_dataset( prefix + "/Circularity3D",
+                                                           scalers_info );
         }
         if ( this->para->ptc_rg )
         {
-            this->vec_of_writers[ 1 ][ 0 ]->create_dataset( prefix + "/Rg", scalers_info );
+            this->writers.particle_writer->create_dataset( prefix + "/Rg", scalers_info );
         }
         // TODO: the orbital frequency is not supported yet
     }
@@ -302,10 +312,10 @@ inline void monitor::create_orbit_file_datasets()
         // TODO: support more available orbit types, such as recentered, aligned and corotating
         galotfa::hdf5::size_info single_vector_info = { H5T_NATIVE_DOUBLE, 1, { 3 } };
         // this->orbit_writer->create_group( "/Orbit" + std::to_string( target_id ) );
-        this->vec_of_writers[ 2 ][ 0 ]->create_dataset(
+        this->writers.orbit_writer->create_dataset(
             "/Particle" + std::to_string( target_id ) + "/Position",
             single_vector_info );  // create the dataset for each particle
-        this->vec_of_writers[ 2 ][ 0 ]->create_dataset(
+        this->writers.orbit_writer->create_dataset(
             "/Particle" + std::to_string( target_id ) + "/Velocity",
             single_vector_info );  // create the dataset for each particle
         // TODO: add an attribute in each dataset to indicate the particle id
@@ -356,7 +366,8 @@ int monitor::run_with call_without_tracer
         return 0;
 
     if ( this->need_ana() )
-        this->extractor( particle_number, types, particle_ids );  // extract the target particles
+        this->extractor( particle_number, types, particle_ids,
+                         coordinates );  // extract the target particles
 
     if ( this->step == 0 && this->para->ptc_switch_on )
     {
@@ -376,7 +387,7 @@ int monitor::run_with call_without_tracer
     int       return_code = this->save();
     if ( return_code != 0 )
     {
-        WARN( "Failed to save the data to the output files." );
+        WARN( "Failed to save analysis results to the output files." );
         return return_code;
     }
 
@@ -410,64 +421,58 @@ inline bool monitor::need_ana() const
 
 void monitor::release_once() const
 {
-    if ( need_ana_model() )
-        for ( size_t i = 0; i < this->id_for_pre.size(); ++i )
-        {
-            if ( this->id_for_pre[ i ] != nullptr )
-            {
-                delete[] this->id_for_pre[ i ];
-                this->id_for_pre[ i ] = nullptr;
-            }
-            this->part_num_pre[ i ] = 0;
-        }
 
     if ( this->para->md_switch_on )
-    {
-        for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
+        if ( need_ana_model() )
         {
-            if ( this->id_for_model[ i ] != nullptr )
+            for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
             {
-                delete[] this->id_for_model[ i ];
-                this->id_for_model[ i ] = nullptr;
+                if ( this->id_for_model[ i ] != nullptr )
+                {
+                    delete[] this->id_for_model[ i ];
+                    this->id_for_model[ i ] = nullptr;
+                }
+                this->part_num_model[ i ] = 0;
             }
-            this->part_num_model[ i ] = 0;
         }
-    }
+
     if ( this->para->ptc_switch_on )
-    {
-        for ( size_t i = 0; i < this->para->ptc_particle_types.size(); ++i )
+        if ( need_ana_particle() )
         {
-            if ( this->id_for_particle[ i ] != nullptr )
+            for ( size_t i = 0; i < this->para->ptc_particle_types.size(); ++i )
             {
-                delete[] this->id_for_particle[ i ];
-                this->id_for_particle[ i ] = nullptr;
+                if ( this->id_for_particle[ i ] != nullptr )
+                {
+                    delete[] this->id_for_particle[ i ];
+                    this->id_for_particle[ i ] = nullptr;
+                }
+                this->part_num_particle[ i ] = 0;
             }
-            this->part_num_particle[ i ] = 0;
         }
-    }
 
     if ( this->id_for_orbit != nullptr )
-    {
-        delete[] this->id_for_orbit;
-        this->id_for_orbit   = nullptr;
-        this->part_num_orbit = 0;
-    }
+        if ( need_log_orbit() )
+        {
+            delete[] this->id_for_orbit;
+            this->id_for_orbit   = nullptr;
+            this->part_num_orbit = 0;
+        }
 
     /* if ( this->id_for_group != nullptr )
-    {
-        delete[] this->id_for_group;
-        this->id_for_group = nullptr;
-    } */
+        if ( need_ana_group() )
+        {
+            delete[] this->id_for_group;
+            this->id_for_group = nullptr;
+        } */
 }
 
-void monitor::extractor( unsigned long& partnum_total, unsigned long types[],
-                         unsigned long ids[] ) const
+void monitor::extractor( unsigned long& partnum_total, unsigned long types[], unsigned long ids[],
+                         double coordinates[][ 3 ] ) const
 {
-    for ( auto& ids : this->id_for_pre )
-        ids = new unsigned long[ partnum_total ];
     // NOTE: the pre-process data will always be extracted, so the extractor should be called
     // only when need_ana() is true
 
+    // HACK: the extract of target particles for pre-process is implemented in the calculator
     if ( this->need_ana_model() )
     {
         for ( auto& ids : this->id_for_model )
@@ -496,19 +501,9 @@ void monitor::extractor( unsigned long& partnum_total, unsigned long types[],
     // k: index for iterating all the members in each target set
     for ( i = 0; i < partnum_total; ++i )
     {
-        if ( this->calc->is_target_of_pre() )
-        {
-            for ( j = 0; j < this->para->pre_recenter_anchors.size(); ++j )
-            {
-                if ( types[ i ] == this->para->pre_recenter_anchors[ j ] )
-                {
-                    this->id_for_pre[ j ][ this->part_num_pre[ j ]++ ] = i;
-                }
-            }
-        }
-
         if ( this->need_ana_model() )
-            if ( this->calc->is_target_of_md() )
+            if ( this->calc->is_target_of_md( types[ i ], coordinates[ i ][ 0 ],
+                                              coordinates[ i ][ 1 ], coordinates[ i ][ 2 ] ) )
             {
                 for ( j = 0; j < this->para->md_target_sets.size(); ++j )
                 {
@@ -538,13 +533,13 @@ void monitor::extractor( unsigned long& partnum_total, unsigned long types[],
     }
 }
 
-int monitor::push_data call_without_tracer const
+inline int monitor::push_data call_without_tracer const
 {
     // This function should be called before the increment of the step counter
     if ( need_ana() )
-        this->calc->call_pre_module();
-    if ( need_ana_model() )
-        this->calc->call_md_module();
+        this->calc->call_pre_module( types, masses, coordinates, particle_number );
+    // if ( need_ana_model() )
+    //     this->calc->call_md_module();
     if ( need_ana_particle() )
         this->calc->call_ptc_module();
     if ( need_log_orbit() )

@@ -72,7 +72,7 @@ para::para( ini_parser& parser )
     update( pre, recenter, Pre, bool );
     update( pre, recenter_anchors, Pre, ints );
     update( pre, region_shape, Pre, str );
-    update( pre, ratio, Pre, double );
+    update( pre, region_ratio, Pre, double );
     update( pre, region_size, Pre, double );
     update( pre, recenter_method, Pre, str );
     update( pre, align_bar, Pre, bool );
@@ -85,7 +85,7 @@ para::para( ini_parser& parser )
     update( md, multiple, Model, bool );
     update( md, classification, Model, strs );
     update( md, region_shape, Model, str );
-    update( md, ratio, Model, double );
+    update( md, region_ratio, Model, double );
     update( md, region_size, Model, double );
     update( md, image, Model, bool );
     update( md, image_bins, Model, int );
@@ -221,7 +221,7 @@ int para::check( void )
                       "The convergence threshold is non-positive, which is not allowed." )
 
         IF_THEN_WARN( this->glb_max_iter <= 0,
-                      "The maximum iteration is non-positive, which is not allowed." );
+                      "The maximum iteration times is non-positive, which is not allowed." );
 
         IF_THEN_WARN( this->glb_equal_threshold <= 0,
                       "The equal threshold is non-positive, which is not allowed." );
@@ -254,7 +254,7 @@ int para::check( void )
                 "The region size for pre-process region is non-positive, which is not allowed." )
 
             IF_THEN_WARN(
-                this->pre_ratio <= 0,
+                this->pre_region_ratio <= 0,
                 "The axis ratio for pre-process region is non-positive, which is not allowed." )
 
             IF_THEN_WARN( this->pre_recenter_method != "com"
@@ -312,7 +312,7 @@ int para::check( void )
             "The axis ratio for model analysis region is non-positive, which is not allowed." )
 
         IF_THEN_WARN(
-            this->md_ratio <= 0,
+            this->md_region_ratio <= 0,
             "The axis ratio for model analysis region is non-positive, which is not allowed." )
 
         if ( this->md_image )
@@ -450,7 +450,7 @@ int para::test_print()
     // Pre section
     printi( pre, recenter );
     prints( pre, region_shape );
-    printd( pre, ratio );
+    printd( pre, region_ratio );
     printd( pre, region_size );
     prints( pre, recenter_method );
     printi( pre, align_bar );
@@ -463,7 +463,7 @@ int para::test_print()
     printss( md, classification );
     printi( md, period );
     prints( md, region_shape );
-    printd( md, ratio );
+    printd( md, region_ratio );
     printd( md, region_size );
     printi( md, image );
     printi( md, image_bins );

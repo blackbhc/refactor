@@ -3,33 +3,32 @@
 #include "pre.h"
 #include <mpi.h>
 #include <string.h>
-namespace galotfa {
-int center_of_mass( int part_num, double masses[], double coords[][ 3 ], double center[ 3 ] )
+namespace ana = galotfa::analysis;
+int ana::center_of_mass( unsigned long part_num, double masses[], double coords[][ 3 ],
+                         double center[ 3 ] )
 {
     // calculate the center of mass of the given array of particles
-    double _center[ 3 ] = { 0 };
-    double mass_sum     = 0;
+    double mass_sum = 0;
     memset( center, 0, sizeof( double ) * 3 );
     for ( int i = 0; i < part_num; ++i )
     {
         mass_sum += masses[ i ];
         // summation only for the numerator
-        _center[ 0 ] += masses[ i ] * coords[ i ][ 0 ];
-        _center[ 1 ] += masses[ i ] * coords[ i ][ 1 ];
-        _center[ 2 ] += masses[ i ] * coords[ i ][ 2 ];
+        center[ 0 ] += masses[ i ] * coords[ i ][ 0 ];
+        center[ 1 ] += masses[ i ] * coords[ i ][ 1 ];
+        center[ 2 ] += masses[ i ] * coords[ i ][ 2 ];
     }
     // divide by the denominator
     if ( mass_sum > 0 )  // if there are particles
     {
-        _center[ 0 ] /= mass_sum;
-        _center[ 1 ] /= mass_sum;
-        _center[ 2 ] /= mass_sum;
+        center[ 0 ] /= mass_sum;
+        center[ 1 ] /= mass_sum;
+        center[ 2 ] /= mass_sum;
     }
 
-    MPI_Reduce( _center, center, 3, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+    MPI_Allreduce( MPI_IN_PLACE, center, 3, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
     return 0;
-}
-}  // namespace galotfa
+}  // namespace galotfa::analysis
 
 
 #ifdef debug_pre

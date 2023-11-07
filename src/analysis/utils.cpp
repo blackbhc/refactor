@@ -1,21 +1,27 @@
 #ifndef GALOTFA_ANALYSIS_UNTILS_CPP
 #define GALOTFA_ANALYSIS_UNTILS_CPP
 #include "utils.h"
+#include <math.h>
 namespace ana = galotfa::analysis;
-bool ana::in_spheroid( double& coordx, double& coordy, double& coordz, double& size, double& ratio )
+bool ana::in_spheroid( double ( &pos )[ 3 ], double& size, double& ratio )
 {
-    return ( coordx * coordx + coordy * coordy + coordz * coordz / ( ratio * ratio )
+    return ( pos[ 0 ] * pos[ 0 ] + pos[ 1 ] * pos[ 1 ] + pos[ 2 ] * pos[ 2 ] / ( ratio * ratio )
              <= size * size );
 }
-bool ana::in_box( double& coordx, double& coordy, double& coordz, double& size, double& ratio )
+bool ana::in_box( double ( &pos )[ 3 ], double& size, double& ratio )
 {
-    return ( coordx >= -size / 2 && coordx <= size / 2 && coordy >= -size / 2 && coordy <= size / 2
-             && coordz >= -size * ratio / 2 && coordz <= size * ratio / 2 );
+    return ( pos[ 0 ] >= -size / 2 && pos[ 0 ] <= size / 2 && pos[ 1 ] >= -size / 2
+             && pos[ 1 ] <= size / 2 && pos[ 2 ] >= -size * ratio / 2
+             && pos[ 2 ] <= size * ratio / 2 );
 }
-bool ana::in_cylinder( double& coordx, double& coordy, double& coordz, double& size, double& ratio )
+bool ana::in_cylinder( double ( &pos )[ 3 ], double& size, double& ratio )
 {
-    return ( coordx * coordx + coordy * coordy <= size * size )
-           && ( coordz >= -size * ratio / 2 && coordz <= size * ratio / 2 );
+    return ( pos[ 0 ] * pos[ 0 ] + pos[ 1 ] * pos[ 1 ] <= size * size )
+           && ( pos[ 2 ] >= -size * ratio / 2 && pos[ 2 ] <= size * ratio / 2 );
+}
+double ana::norm( double ( &vec )[ 3 ] )
+{
+    return sqrt( vec[ 0 ] * vec[ 0 ] + vec[ 1 ] * vec[ 1 ] + vec[ 2 ] * vec[ 2 ] );
 }
 
 #ifdef debug_utils
@@ -33,33 +39,31 @@ int test_in_spheroid()
     double size1         = 1.0;
     double size2         = 2.0;
 
-    if ( !ana::in_spheroid( test_coord1[ 0 ], test_coord1[ 1 ], test_coord1[ 2 ], size1, ratio1 )
-         || !ana::in_spheroid( test_coord1[ 0 ], test_coord1[ 1 ], test_coord1[ 2 ], size1, ratio2 )
-         || !ana::in_spheroid( test_coord1[ 0 ], test_coord1[ 1 ], test_coord1[ 2 ], size1, ratio3 )
-         || !ana::in_spheroid( test_coord1[ 0 ], test_coord1[ 1 ], test_coord1[ 2 ], size2, ratio1 )
-         || !ana::in_spheroid( test_coord1[ 0 ], test_coord1[ 1 ], test_coord1[ 2 ], size2, ratio2 )
-         || !ana::in_spheroid( test_coord1[ 0 ], test_coord1[ 1 ], test_coord1[ 2 ], size2,
-                               ratio3 ) )
+    if ( !ana::in_spheroid( test_coord1, size1, ratio1 )
+         || !ana::in_spheroid( test_coord1, size1, ratio2 )
+         || !ana::in_spheroid( test_coord1, size1, ratio3 )
+         || !ana::in_spheroid( test_coord1, size2, ratio1 )
+         || !ana::in_spheroid( test_coord1, size2, ratio2 )
+         || !ana::in_spheroid( test_coord1, size2, ratio3 ) )
         CHECK_RETURN( false );
 
-    if ( ana::in_spheroid( test_coord2[ 0 ], test_coord2[ 1 ], test_coord2[ 2 ], size1, ratio1 )
-         || ana::in_spheroid( test_coord2[ 0 ], test_coord2[ 1 ], test_coord2[ 2 ], size1, ratio2 )
-         || ana::in_spheroid( test_coord2[ 0 ], test_coord2[ 1 ], test_coord2[ 2 ], size1, ratio3 )
-         || ana::in_spheroid( test_coord2[ 0 ], test_coord2[ 1 ], test_coord2[ 2 ], size2, ratio1 )
-         || !ana::in_spheroid( test_coord2[ 0 ], test_coord2[ 1 ], test_coord2[ 2 ], size2, ratio2 )
-         || !ana::in_spheroid( test_coord2[ 0 ], test_coord2[ 1 ], test_coord2[ 2 ], size2,
-                               ratio3 ) )
+    if ( ana::in_spheroid( test_coord2, size1, ratio1 )
+         || ana::in_spheroid( test_coord2, size1, ratio2 )
+         || ana::in_spheroid( test_coord2, size1, ratio3 )
+         || ana::in_spheroid( test_coord2, size2, ratio1 )
+         || !ana::in_spheroid( test_coord2, size2, ratio2 )
+         || !ana::in_spheroid( test_coord2, size2, ratio3 ) )
         CHECK_RETURN( false );
 
 
-    if ( ana::in_spheroid( test_coord3[ 0 ], test_coord3[ 1 ], test_coord3[ 2 ], size1, ratio1 )
-         || ana::in_spheroid( test_coord3[ 0 ], test_coord3[ 1 ], test_coord3[ 2 ], size1, ratio2 )
-         || ana::in_spheroid( test_coord3[ 0 ], test_coord3[ 1 ], test_coord3[ 2 ], size1, ratio3 )
-         || ana::in_spheroid( test_coord3[ 0 ], test_coord3[ 1 ], test_coord3[ 2 ], size2, ratio1 )
-         || ana::in_spheroid( test_coord3[ 0 ], test_coord3[ 1 ], test_coord3[ 2 ], size2, ratio2 )
-         || ana::in_spheroid( test_coord3[ 0 ], test_coord3[ 1 ], test_coord3[ 2 ], size2,
-                              ratio3 ) )
+    if ( ana::in_spheroid( test_coord3, size1, ratio1 )
+         || ana::in_spheroid( test_coord3, size1, ratio2 )
+         || ana::in_spheroid( test_coord3, size1, ratio3 )
+         || ana::in_spheroid( test_coord3, size2, ratio1 )
+         || ana::in_spheroid( test_coord3, size2, ratio2 )
+         || ana::in_spheroid( test_coord3, size2, ratio3 ) )
         CHECK_RETURN( false );
+
     CHECK_RETURN( true );
 }
 int test_in_box()
@@ -73,28 +77,23 @@ int test_in_box()
     double ratio3        = 1.5;
     double size1         = 1.0;
     double size2         = 2.0;
-    if ( !ana::in_box( test_coord1[ 0 ], test_coord1[ 1 ], test_coord1[ 2 ], size1, ratio1 )
-         || !ana::in_box( test_coord1[ 0 ], test_coord1[ 1 ], test_coord1[ 2 ], size1, ratio2 )
-         || !ana::in_box( test_coord1[ 0 ], test_coord1[ 1 ], test_coord1[ 2 ], size1, ratio3 )
-         || !ana::in_box( test_coord1[ 0 ], test_coord1[ 1 ], test_coord1[ 2 ], size2, ratio1 )
-         || !ana::in_box( test_coord1[ 0 ], test_coord1[ 1 ], test_coord1[ 2 ], size2, ratio2 )
-         || !ana::in_box( test_coord1[ 0 ], test_coord1[ 1 ], test_coord1[ 2 ], size2, ratio3 ) )
+
+    if ( !ana::in_box( test_coord1, size1, ratio1 ) || !ana::in_box( test_coord1, size1, ratio2 )
+         || !ana::in_box( test_coord1, size1, ratio3 ) || !ana::in_box( test_coord1, size2, ratio1 )
+         || !ana::in_box( test_coord1, size2, ratio2 )
+         || !ana::in_box( test_coord1, size2, ratio3 ) )
         CHECK_RETURN( false );
 
-    if ( ana::in_box( test_coord2[ 0 ], test_coord2[ 1 ], test_coord2[ 2 ], size1, ratio1 )
-         || ana::in_box( test_coord2[ 0 ], test_coord2[ 1 ], test_coord2[ 2 ], size1, ratio2 )
-         || ana::in_box( test_coord2[ 0 ], test_coord2[ 1 ], test_coord2[ 2 ], size1, ratio3 )
-         || ana::in_box( test_coord2[ 0 ], test_coord2[ 1 ], test_coord2[ 2 ], size2, ratio1 )
-         || !ana::in_box( test_coord2[ 0 ], test_coord2[ 1 ], test_coord2[ 2 ], size2, ratio2 )
-         || !ana::in_box( test_coord2[ 0 ], test_coord2[ 1 ], test_coord2[ 2 ], size2, ratio3 ) )
+    if ( ana::in_box( test_coord2, size1, ratio1 ) || ana::in_box( test_coord2, size1, ratio2 )
+         || ana::in_box( test_coord2, size1, ratio3 ) || ana::in_box( test_coord2, size2, ratio1 )
+         || !ana::in_box( test_coord2, size2, ratio2 )
+         || !ana::in_box( test_coord2, size2, ratio3 ) )
         CHECK_RETURN( false );
 
-    if ( ana::in_box( test_coord3[ 0 ], test_coord3[ 1 ], test_coord3[ 2 ], size1, ratio1 )
-         || ana::in_box( test_coord3[ 0 ], test_coord3[ 1 ], test_coord3[ 2 ], size1, ratio2 )
-         || ana::in_box( test_coord3[ 0 ], test_coord3[ 1 ], test_coord3[ 2 ], size1, ratio3 )
-         || ana::in_box( test_coord3[ 0 ], test_coord3[ 1 ], test_coord3[ 2 ], size2, ratio1 )
-         || ana::in_box( test_coord3[ 0 ], test_coord3[ 1 ], test_coord3[ 2 ], size2, ratio2 )
-         || ana::in_box( test_coord3[ 0 ], test_coord3[ 1 ], test_coord3[ 2 ], size2, ratio3 ) )
+
+    if ( ana::in_box( test_coord3, size1, ratio1 ) || ana::in_box( test_coord3, size1, ratio2 )
+         || ana::in_box( test_coord3, size1, ratio3 ) || ana::in_box( test_coord3, size2, ratio1 )
+         || ana::in_box( test_coord3, size2, ratio2 ) || ana::in_box( test_coord3, size2, ratio3 ) )
         CHECK_RETURN( false );
 
     CHECK_RETURN( true );
@@ -111,31 +110,29 @@ int test_in_cylinder()
     double size1         = 1.0;
     double size2         = 2.0;
 
-    if ( !ana::in_cylinder( test_coord1[ 0 ], test_coord1[ 1 ], test_coord1[ 2 ], size1, ratio1 )
-         || !ana::in_cylinder( test_coord1[ 0 ], test_coord1[ 1 ], test_coord1[ 2 ], size1, ratio2 )
-         || !ana::in_cylinder( test_coord1[ 0 ], test_coord1[ 1 ], test_coord1[ 2 ], size1, ratio3 )
-         || !ana::in_cylinder( test_coord1[ 0 ], test_coord1[ 1 ], test_coord1[ 2 ], size2, ratio1 )
-         || !ana::in_cylinder( test_coord1[ 0 ], test_coord1[ 1 ], test_coord1[ 2 ], size2, ratio2 )
-         || !ana::in_cylinder( test_coord1[ 0 ], test_coord1[ 1 ], test_coord1[ 2 ], size2,
-                               ratio3 ) )
+    if ( !ana::in_cylinder( test_coord1, size1, ratio1 )
+         || !ana::in_cylinder( test_coord1, size1, ratio2 )
+         || !ana::in_cylinder( test_coord1, size1, ratio3 )
+         || !ana::in_cylinder( test_coord1, size2, ratio1 )
+         || !ana::in_cylinder( test_coord1, size2, ratio2 )
+         || !ana::in_cylinder( test_coord1, size2, ratio3 ) )
         CHECK_RETURN( false );
 
-    if ( ana::in_cylinder( test_coord2[ 0 ], test_coord2[ 1 ], test_coord2[ 2 ], size1, ratio1 )
-         || ana::in_cylinder( test_coord2[ 0 ], test_coord2[ 1 ], test_coord2[ 2 ], size1, ratio2 )
-         || ana::in_cylinder( test_coord2[ 0 ], test_coord2[ 1 ], test_coord2[ 2 ], size1, ratio3 )
-         || ana::in_cylinder( test_coord2[ 0 ], test_coord2[ 1 ], test_coord2[ 2 ], size2, ratio1 )
-         || !ana::in_cylinder( test_coord2[ 0 ], test_coord2[ 1 ], test_coord2[ 2 ], size2, ratio2 )
-         || !ana::in_cylinder( test_coord2[ 0 ], test_coord2[ 1 ], test_coord2[ 2 ], size2,
-                               ratio3 ) )
+    if ( ana::in_cylinder( test_coord2, size1, ratio1 )
+         || ana::in_cylinder( test_coord2, size1, ratio2 )
+         || ana::in_cylinder( test_coord2, size1, ratio3 )
+         || ana::in_cylinder( test_coord2, size2, ratio1 )
+         || !ana::in_cylinder( test_coord2, size2, ratio2 )
+         || !ana::in_cylinder( test_coord2, size2, ratio3 ) )
         CHECK_RETURN( false );
 
-    if ( ana::in_cylinder( test_coord3[ 0 ], test_coord3[ 1 ], test_coord3[ 2 ], size1, ratio1 )
-         || ana::in_cylinder( test_coord3[ 0 ], test_coord3[ 1 ], test_coord3[ 2 ], size1, ratio2 )
-         || ana::in_cylinder( test_coord3[ 0 ], test_coord3[ 1 ], test_coord3[ 2 ], size1, ratio3 )
-         || ana::in_cylinder( test_coord3[ 0 ], test_coord3[ 1 ], test_coord3[ 2 ], size2, ratio1 )
-         || ana::in_cylinder( test_coord3[ 0 ], test_coord3[ 1 ], test_coord3[ 2 ], size2, ratio2 )
-         || ana::in_cylinder( test_coord3[ 0 ], test_coord3[ 1 ], test_coord3[ 2 ], size2,
-                              ratio3 ) )
+
+    if ( ana::in_cylinder( test_coord3, size1, ratio1 )
+         || ana::in_cylinder( test_coord3, size1, ratio2 )
+         || ana::in_cylinder( test_coord3, size1, ratio3 )
+         || ana::in_cylinder( test_coord3, size2, ratio1 )
+         || ana::in_cylinder( test_coord3, size2, ratio2 )
+         || ana::in_cylinder( test_coord3, size2, ratio3 ) )
         CHECK_RETURN( false );
 
     CHECK_RETURN( true );
