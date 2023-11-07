@@ -690,7 +690,7 @@ int writer::test_create_group()
         hid_t group_id = H5Gopen2( file_id, testgroup2.c_str(), H5P_DEFAULT );  // open the group
         H5Gclose( group_id );
         H5Fclose( file_id );
-        // remove( testfile.c_str() );  // clean up
+        remove( testfile.c_str() );  // clean up
     }
     catch ( const std::exception& e )
     {
@@ -924,7 +924,7 @@ int writer::test_push( void )
     }
 
     clean_nodes();
-    // remove( testfile.c_str() );
+    remove( testfile.c_str() );
     CHECK_RETURN( true );
 }
 #endif
