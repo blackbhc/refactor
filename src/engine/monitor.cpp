@@ -12,13 +12,12 @@ namespace galotfa {
 monitor::monitor( void )
 {
     // check and ensure MPI is initialized
-    int  initialized = 0;
-    auto status      = MPI_Initialized( &initialized );
+    auto status = MPI_Initialized( &this->mpi_init_before_galotfa );
     if ( status != MPI_SUCCESS )
     {
         ERROR( "Failed to check MPI initialization status." );
     }
-    else if ( !initialized )
+    else if ( !this->mpi_init_before_galotfa )
         MPI_Init( NULL, NULL );
 
     // get the rank and size of the MPI process
@@ -108,13 +107,7 @@ monitor::~monitor()
     }
 
 
-    int  initialized = 0;
-    auto status      = MPI_Initialized( &initialized );
-    if ( status != MPI_SUCCESS )
-    {
-        WARN( "Failed to check MPI initialization status when exit the monitor of galotfa." );
-    }
-    else if ( initialized )
+    if ( this->mpi_init_before_galotfa )
         MPI_Finalize();
 }
 

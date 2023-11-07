@@ -5,7 +5,7 @@
 #include <string.h>
 namespace ana = galotfa::analysis;
 int ana::center_of_mass( unsigned long part_num, double masses[], double coords[][ 3 ],
-                         double center[ 3 ] )
+                         double ( &center )[ 3 ] )
 {
     // calculate the center of mass of the given array of particles
     double mass_sum = 0;
@@ -18,6 +18,9 @@ int ana::center_of_mass( unsigned long part_num, double masses[], double coords[
         center[ 1 ] += masses[ i ] * coords[ i ][ 1 ];
         center[ 2 ] += masses[ i ] * coords[ i ][ 2 ];
     }
+    MPI_Allreduce( MPI_IN_PLACE, center, 3, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+    MPI_Allreduce( MPI_IN_PLACE, &masses, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+
     // divide by the denominator
     if ( mass_sum > 0 )  // if there are particles
     {
@@ -25,8 +28,6 @@ int ana::center_of_mass( unsigned long part_num, double masses[], double coords[
         center[ 1 ] /= mass_sum;
         center[ 2 ] /= mass_sum;
     }
-
-    MPI_Allreduce( MPI_IN_PLACE, center, 3, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
     return 0;
 }  // namespace galotfa::analysis
 

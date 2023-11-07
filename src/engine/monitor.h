@@ -24,8 +24,8 @@ using std::vector;
       double masses[], double coordinates[][ 3 ], double velocities[][ 3 ], double& time, \
       unsigned long particle_number )
 
-#define no_tracer ( particle_ids, types, masses, coordinates, velocities, times, particle_number )
-#define has_tracer ( particle_ids, types, masses, coordinates, velocities, times, particle_number )
+#define no_tracer ( particle_ids, types, masses, coordinates, velocities, time, particle_number )
+#define has_tracer ( particle_ids, types, masses, coordinates, velocities, time, particle_number )
 // TODO: use conditional compilation to deal the caller with potential tracer
 
 namespace galotfa {
@@ -42,8 +42,9 @@ class monitor
 {
     // private members
 private:
-    galotfa::para*       para = nullptr;  // pointer to the parameter class
-    galotfa::calculator* calc = nullptr;
+    int                  mpi_init_before_galotfa = 0;
+    galotfa::para*       para                    = nullptr;  // pointer to the parameter class
+    galotfa::calculator* calc                    = nullptr;
     unsigned long long   step = 0;  // the current step of the simulation/analysis
     // array of pointers to the writers: 5 possible output files
     // model, particle, orbit, group, post
