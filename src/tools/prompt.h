@@ -48,15 +48,11 @@
 #endif
 
 // print a message for warning
-#define WARN( ... )                                                        \
-    {                                                                      \
-        fprintln( stderr, "\033[0;1;33m [WARNING]: \033[0m" __VA_ARGS__ ); \
-    }
+#define WARN( ... ) fprintln( stderr, "\033[0;1;33m [WARNING]: \033[0m" __VA_ARGS__ )
 
-#define INFO( ... )                                            \
-    {                                                          \
-        println( "\033[0;1;32m [INFO]: \033[0m" __VA_ARGS__ ); \
-    }
+#define INFO( ... ) println( "\033[0;1;32m [INFO]: \033[0m" __VA_ARGS__ )
+
+#define REACH INFO( "Reach %s %d line", __FILE__, __LINE__ )
 
 // throw a error with a message
 // TODO: support more error type
