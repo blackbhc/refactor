@@ -319,11 +319,20 @@ int writer::create_dataset( std::string dataset_name, hdf5::size_info& info )
 
     // create the dataset
     if ( parent_path == "" )
-        parent_path = "/";  // avoid the empty string
-    auto data_node_ptr = create_datanode( *this->nodes.at( parent_path ), strings.back(), info );
-    // insert the node
-    this->nodes.insert( std::pair< std::string, galotfa::hdf5::node* >(
-        parent_path + "/" + strings.back(), data_node_ptr ) );
+    {
+        auto data_node_ptr = create_datanode( *this->nodes.at( "/" ), strings.back(), info );
+        // insert the node
+        this->nodes.insert(
+            std::pair< std::string, galotfa::hdf5::node* >( "/" + strings.back(), data_node_ptr ) );
+    }
+    else
+    {
+        auto data_node_ptr =
+            create_datanode( *this->nodes.at( parent_path ), strings.back(), info );
+        // insert the node
+        this->nodes.insert( std::pair< std::string, galotfa::hdf5::node* >(
+            parent_path + "/" + strings.back(), data_node_ptr ) );
+    }
     return 0;
 }
 
