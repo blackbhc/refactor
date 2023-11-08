@@ -270,7 +270,7 @@ For `prompt.h`, `prompt.cpp`:
 - `fprintln`: macro, similar as `println` but aims to simplify `fprintf`.
 - `INFO`: print a information message, based on the `println` macro.
 - `WARN`: print a warning message to `stderr`, based on the `fprintln` macro.
-- `ERROR`: print a error message to `stderr`, based on the `fprintln` macro.
+- `ERROR`: print an error message to `stderr`, based on the `fprintln` macro.
 
 For `string.h`, `string.cpp`:
 
@@ -306,7 +306,7 @@ include `prompt.h`, otherwise `CPP` can not distinguish the `MPI` environment.</
     namely `printf(...); printf("\n");`.
   - `fprintln`: similar as `println` but print to a FILE pointer.
   - `WARN`: print a warning message, based on the `fprintln` macro.
-  - `ERROR`: print a error message, based on the `fprintln` macro.
+  - `ERROR`: print an error message, based on the `fprintln` macro.
   - `COUNT(<call a unit test function>)`: the function to check the result of a unit test, then increase
     the int variable `success`, `fail` and `unknown` correspondingly, in the local environment where the
     macro is called. This macro should be used only in the unit test wrapper functions, where the unit
