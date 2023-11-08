@@ -263,6 +263,9 @@ int para::check( void )
                           "The recenter method is unknown: %s."
                           "\nSupported value: com, density or potential",
                           this->pre_recenter_method.c_str() );
+
+            if ( this->pre_recenter_method == "potential" )
+                WARN( "The recenter method as potential is not supported yet. Use com instead." );
         }
         else
         {
@@ -325,7 +328,7 @@ int para::check( void )
                           "The image option is enabled, but none color is not specified." );
 
             auto invalid_color = []( std::string& color ) -> bool {
-                return color != "particle_number" && color != "surface_density"
+                return color != "number_density" && color != "surface_density"
                        && color != "mean_velocity" && color != "dispersion"
                        && color != "dispersion_tensor";
             };

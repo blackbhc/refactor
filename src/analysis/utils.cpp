@@ -24,6 +24,7 @@ double ana::norm( double ( &vec )[ 3 ] )
     return sqrt( vec[ 0 ] * vec[ 0 ] + vec[ 1 ] * vec[ 1 ] + vec[ 2 ] * vec[ 2 ] );
 }
 
+
 #ifdef debug_utils
 #include "../tools/prompt.h"
 namespace unit_test {
@@ -133,6 +134,50 @@ int test_in_cylinder()
          || ana::in_cylinder( test_coord3, size2, ratio1 )
          || ana::in_cylinder( test_coord3, size2, ratio2 )
          || ana::in_cylinder( test_coord3, size2, ratio3 ) )
+        CHECK_RETURN( false );
+
+    CHECK_RETURN( true );
+}
+
+int test_vec()
+{
+    println( "Test the vec struct ..." );
+    ana::vec< 3, double > test_vec1{ 3, 4, 5 };
+    ana::vec< 3, double > test_vec2 = { -3, -4, 5 };
+    ana::vec< 3, double > test_vec3( test_vec1 );
+
+    println( "Test it can raise an error when the size of the initializer list is not equal to the "
+             "dimension of the vector." );
+    println( "It should raise an error, don't worry about it." );
+    try
+    {
+        ana::vec< 3, double > test_vec4{ 3, 4 };
+    }
+    catch ( std::runtime_error& e )
+    {
+        println( "It raise an error as expected: %s", e.what() );
+    }
+
+    println( "Test the norm() function ..." );
+    if ( fabs( test_vec1.norm() - sqrt( 50 ) ) > 1e-10 )
+        CHECK_RETURN( false );
+
+    println( "Test the length() function ..." );
+    if ( test_vec1.length() != 3 )
+        CHECK_RETURN( false );
+
+    println( "Test the inner product function ..." );
+    if ( fabs( test_vec1 * test_vec2 ) > 1e-10 )
+        CHECK_RETURN( false );
+
+    println( "Test the scalar product function..." );
+    test_vec3 *= 0.5;
+    if ( test_vec3 != test_vec1 / 2 )
+        CHECK_RETURN( false );
+
+    println( "Test the normalize method ..." );
+    test_vec1.normalize();
+    if ( fabs( test_vec1.norm() - 1.0 ) > 1e-10 )
         CHECK_RETURN( false );
 
     CHECK_RETURN( true );
