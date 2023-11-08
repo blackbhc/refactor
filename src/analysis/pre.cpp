@@ -10,7 +10,7 @@ int ana::center_of_mass( unsigned long part_num, double masses[], double coords[
     // calculate the center of mass of the given array of particles
     double mass_sum = 0;
     memset( center, 0, sizeof( double ) * 3 );
-    for ( int i = 0; i < part_num; ++i )
+    for ( unsigned long i = 0; i < part_num; ++i )
     {
         mass_sum += masses[ i ];
         // summation only for the numerator
@@ -60,7 +60,7 @@ int test_center_of_mass()
             coords[ i ][ 2 ] = pow( -1, i + 2 );
         }
     }
-    galotfa::center_of_mass( part_num, masses, coords, center );
+    ana::center_of_mass( part_num, masses, coords, center );
 
     if ( rank == 0 )
     {
@@ -83,7 +83,7 @@ int test_center_of_mass()
             coords[ i ][ 2 ] = ( double )( i % 10 );
         }
     }
-    galotfa::center_of_mass( part_num, masses, coords, center );
+    ana::center_of_mass( part_num, masses, coords, center );
     if ( rank == 0 )
     {
         if ( fabs( center[ 0 ] - 4.5 ) > eps )
