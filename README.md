@@ -304,7 +304,9 @@ major axis to the $x$-axis.
   with iteration if necessary (see `convergence_type` and `convergence_threshold`).
   - `recenter_method` = `com`: the center is defined as the center of mass of the target particles.
   - `recenter_method` = `density`: the center is defined as the pixel of the highest surface density of the target
-    particle(s), the size of the pixel is determined by `image_size` in the `Model` section.
+    particle(s), the size of the pixel is determined by `image_size` in the `Model` section. Note that if
+    the `region_method` = `density`, then the `image` option in the `Model` section will be automatically
+    turned on and `surface_density` will be automatically added to the `colors` parameter in the `Model` section.
   - `recenter_method` = `potential`: future feature.
 - <a id="align_bar"></a>`align_bar`: whether rotate the coordinates to align the $x$-axis to the bar major axis,
   this option is only available when the bar is detected. It's may be useful to align the bar major axis to the
@@ -365,7 +367,7 @@ The model level on-the-fly analysis of the target particles. The most common cas
   may be stretched, the number of bins in such axis is also determined by the `axis_ratio` parameter.
 - <a id="colors"></a>`colors`:
   At least one color must be given, if the `image` is enabled, otherwise the program will raise an error.
-  - `particle_number`: the number of particles in each bin.
+  - `number_density`: the number of particles in each bin.
   - `surface_density`: the surface density of the particles in each bin. The unit is $[M]/[L]^2$, $[M]$ and
     $[L]$ are the internal unit of mass and length in the simulation, the same below.
   - `mean_velocity`: the mean velocity of the particles in each bin, one component for each axis.
