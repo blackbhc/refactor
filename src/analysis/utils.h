@@ -160,6 +160,17 @@ namespace analysis {
         {
             return !( this->operator==( rhs ) );
         }
+
+        vec< N, T > cross( const vec< N, T >& rhs ) const
+        {
+            if ( N != 3 )
+                ERROR( "The cross product is only defined for 3D vectors." );
+            vec< 3, T > result;
+            result.data[ 0 ] = data[ 1 ] * rhs.data[ 2 ] - data[ 2 ] * rhs.data[ 1 ];
+            result.data[ 1 ] = data[ 2 ] * rhs.data[ 0 ] - data[ 0 ] * rhs.data[ 2 ];
+            result.data[ 2 ] = data[ 0 ] * rhs.data[ 1 ] - data[ 1 ] * rhs.data[ 0 ];
+            return result;
+        }
     };
 }  // namespace analysis
 }  // namespace galotfa

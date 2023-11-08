@@ -180,6 +180,24 @@ int test_vec()
     if ( fabs( test_vec1.norm() - 1.0 ) > 1e-10 )
         CHECK_RETURN( false );
 
+    println( "Test the cross product function ..." );
+    ana::vec< 3, double > unit_x = { 1, 0, 0 };
+    ana::vec< 3, double > unit_y = { 0, 1, 0 };
+    ana::vec< 3, double > unit_z = { 0, 0, 1 };
+    ana::vec< 3, double > vec0   = { 0, 0, 0 };
+    if ( unit_x.cross( unit_y ) != unit_z )
+        CHECK_RETURN( false );
+    if ( unit_y.cross( unit_z ) != unit_x )
+        CHECK_RETURN( false );
+    if ( unit_z.cross( unit_x ) != unit_y )
+        CHECK_RETURN( false );
+    if ( unit_x.cross( unit_x ) != vec0 )
+        CHECK_RETURN( false );
+    if ( unit_y.cross( unit_y ) != vec0 )
+        CHECK_RETURN( false );
+    if ( unit_z.cross( unit_z ) != vec0 )
+        CHECK_RETURN( false );
+
     CHECK_RETURN( true );
 }
 
