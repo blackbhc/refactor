@@ -10,7 +10,7 @@ ifeq ($(CXX), clang++)
 	CXXFLAGS += -Wno-reserved-identifier -Wno-documentation-unknown-command -Wno-documentation -Wno-documentation-deprecated-sync
 	CXXFLAGS += -Wno-zero-as-null-pointer-constant -Wno-switch-enum -Wno-unsafe-buffer-usage -Wno-unknown-warning-option -Wno-cast-qual 
 	CXXFLAGS += -Wno-suggest-override -Wno-suggest-destructor-override -Wno-weak-vtables -Wno-unused-function -Wno-missing-prototypes
-	CXXFLAGS += -Wno-deprecated
+	CXXFLAGS += -Wno-deprecated -Wno-missing-braces -Wno-zero-length-array 
 else
     CXXFLAGS += -std=c++11 -O3 -Og -Wall -Wextra -Werror -fsanitize=undefined,leak,address
 endif

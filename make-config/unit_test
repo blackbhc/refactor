@@ -11,7 +11,7 @@ TEST_SRC = src/*/*.*
 
 test_dir/test: $(TEST_SRC) test_dir
 	@echo "Building unit test ..."
-	@$(CXX) $(CXXFLAGS) $(PROJECT_ROOT)/src/unit_test/test.cpp -lhdf5 -o $(PROJECT_ROOT)/test_dir/test
+	@$(CXX) $(CXXFLAGS) $(PROJECT_ROOT)/src/unit_test/test.cpp -lhdf5 -lgsl -lgslcblas -o $(PROJECT_ROOT)/test_dir/test
 
 test_dir/mpi_test: $(TEST_SRC) test_dir
 ifneq ($(findstring output, $(TEST_TARGET)), )
@@ -19,5 +19,5 @@ ifneq ($(findstring output, $(TEST_TARGET)), )
 	@exit 1
 endif
 	@echo "Building mpi unit test ..."
-	@$(MPICXX) -DMPI_TEST $(CXXFLAGS) -ggdb $(PROJECT_ROOT)/src/unit_test/test.cpp -lhdf5 -o \
-		$(PROJECT_ROOT)/test_dir/mpi_test
+	@$(MPICXX) -DMPI_TEST $(CXXFLAGS) -ggdb $(PROJECT_ROOT)/src/unit_test/test.cpp -lhdf5 -lgsl \
+		-lgslcblas -o $(PROJECT_ROOT)/test_dir/mpi_test

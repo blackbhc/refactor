@@ -54,7 +54,7 @@
 
 #define REACH INFO( "Reach %s %d line", __FILE__, __LINE__ )
 
-// throw a error with a message
+// throw an error with a message
 // TODO: support more error type
 #define ERROR( ... )                                                         \
     {                                                                        \

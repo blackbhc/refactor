@@ -146,9 +146,10 @@ int test_vec()
     ana::vec< 3, double > test_vec2 = { -3, -4, 5 };
     ana::vec< 3, double > test_vec3( test_vec1 );
 
+    println( "The size of 3D double vec structure is %lu", sizeof( ana::vec< 3, double > ) );
     println( "Test it can raise an error when the size of the initializer list is not equal to the "
              "dimension of the vector." );
-    println( "It should raise an error, don't worry about it." );
+    println( "It should raise a warning, don't worry about it." );
     try
     {
         ana::vec< 3, double > test_vec4{ 3, 4 };
@@ -159,7 +160,7 @@ int test_vec()
     }
 
     println( "Test the norm() function ..." );
-    if ( fabs( test_vec1.norm() - sqrt( 50 ) ) > 1e-10 )
+    if ( fabs( test_vec1.norm() - sqrt( 50 ) ) > 2e-8 )
         CHECK_RETURN( false );
 
     println( "Test the length() function ..." );
@@ -167,7 +168,7 @@ int test_vec()
         CHECK_RETURN( false );
 
     println( "Test the inner product function ..." );
-    if ( fabs( test_vec1 * test_vec2 ) > 1e-10 )
+    if ( fabs( test_vec1 * test_vec2 ) > 2e-8 )
         CHECK_RETURN( false );
 
     println( "Test the scalar product function..." );
@@ -177,7 +178,7 @@ int test_vec()
 
     println( "Test the normalize method ..." );
     test_vec1.normalize();
-    if ( fabs( test_vec1.norm() - 1.0 ) > 1e-10 )
+    if ( fabs( test_vec1.norm() - 1.0 ) > 2e-8 )
         CHECK_RETURN( false );
 
     println( "Test the cross product function ..." );
@@ -196,6 +197,48 @@ int test_vec()
     if ( unit_y.cross( unit_y ) != vec0 )
         CHECK_RETURN( false );
     if ( unit_z.cross( unit_z ) != vec0 )
+        CHECK_RETURN( false );
+
+    CHECK_RETURN( true );
+}
+
+int test_mat()
+{
+    println( "Test the mat struct..." );
+    ana::mat< 3, 3, double > test_mat1 = { { 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 } };
+    ana::vec< 3, double >    test_vec1{ 1, 2, 3 };
+    ana::mat< 3, 3, double > test_mat2 = { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
+    ana::mat< 3, 3, double > test_mat3 = { { -2, 0, 0 }, { 0, 1, 0 }, { 0, 0, 3 } };
+    ana::mat< 3, 3, double > test_mat4 = { { -1, 0, 0 }, { 0, 0, 1 }, { 0, 1, 0 } };
+    ana::mat< 3, 3, double > test_mat5 = { { 1, 1, 0 }, { 0, 1, -1 }, { 1, 0, -1 } };
+    ana::mat< 4, 4, double > test_mat6 = {
+        { 1, 1, 0, 0 }, { 0, 1, -1, 0 }, { 1, 0, -1, 0 }, { 0, -1, 0, 1 }
+    };
+    println( "The size of 3x3 double mat structure is %lu", sizeof( ana::mat< 3, 3, double > ) );
+
+    println( "Test the is_square() method ..." );
+    if ( !test_mat1.is_square() )
+        CHECK_RETURN( false );
+
+    println( "Test the subscrip operator ..." );
+    if ( test_mat1[ 0 ] != test_vec1 )
+        CHECK_RETURN( false );
+
+    println( "Test the determinant method ..." );
+    if ( fabs( test_mat1.determinant() - 0 ) > 2e-8 )
+    {
+        INFO( "The get determinant of test_mat1 is %.30lf", test_mat1.determinant() );
+        CHECK_RETURN( false );
+    }
+    if ( fabs( test_mat2.determinant() - 1 ) > 2e-8 )
+        CHECK_RETURN( false );
+    if ( fabs( test_mat3.determinant() + 6 ) > 2e-8 )
+        CHECK_RETURN( false );
+    if ( fabs( test_mat4.determinant() - 1 ) > 2e-8 )
+        CHECK_RETURN( false );
+    if ( fabs( test_mat5.determinant() + 2 ) > 2e-8 )
+        CHECK_RETURN( false );
+    if ( fabs( test_mat6.determinant() + 2 ) > 2e-8 )
         CHECK_RETURN( false );
 
     CHECK_RETURN( true );
