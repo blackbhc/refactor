@@ -528,13 +528,15 @@ Note: all unit test of this module are designed for mpi mode, `make test` can no
 
 #### Utility functions: `src/analysis/utils.h` and `src/analysis/utils.cpp`
 
-These functions are used in the analysis module, which implement some common calculation, such as 2D binning
-statistics, smoothing, etc.
+These functions/class are used in the analysis module, which implement some common calculation, such as 2D binning
+statistics, smoothing, etc. All the followings are defined in the namespace `galotfa::analysis`.
 
 - `in_spheroid(...)`: check whether the particle is in the spheroid region, which is used to check whether
   the particle is in the target region of the pre-process part.
 - `in_cylinder(...)`: similar but for a cylinder region.
 - `in_box(...)`: similar but for a box region.
+- template struct `vec`: a template struct to implement the vector operation, such as norm, dot product, cross
+  product, etc. Most operations are implemented by operator overloading.
 
 #### Pre-process part
 
