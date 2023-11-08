@@ -536,7 +536,13 @@ statistics, smoothing, etc. All the followings are defined in the namespace `gal
 - `in_cylinder(...)`: similar but for a cylinder region.
 - `in_box(...)`: similar but for a box region.
 - template struct `vec`: a template struct to implement the vector operation, such as norm, dot product, cross
-  product, etc. Most operations are implemented by operator overloading.
+  product, etc. Most operations are implemented by operator overloading. Note that all self operation in this
+  class has no return value.
+- template struct `mat`: a template struct to implement the matrix operation, such as inverse, transpose, etc.
+  Again, most operations are implemented by operator overloading and the self operation has no return value.
+  - Note: as this is only a toy class, the inverse, determinant calculation are implemented at here, which
+    is not efficient and accurate. So if you want to use this class, please use it carefully. I choose to
+    implement them at here because I want to avoid all unnecessary dependency of other libraries.
 
 #### Pre-process part
 
