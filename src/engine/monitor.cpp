@@ -107,7 +107,7 @@ monitor::~monitor()
     }
 
 
-    if ( this->mpi_init_before_galotfa )
+    if ( !this->mpi_init_before_galotfa )
         MPI_Finalize();
 }
 

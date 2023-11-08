@@ -19,7 +19,7 @@ int ana::center_of_mass( unsigned long part_num, double masses[], double coords[
         center[ 2 ] += masses[ i ] * coords[ i ][ 2 ];
     }
     MPI_Allreduce( MPI_IN_PLACE, center, 3, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-    MPI_Allreduce( MPI_IN_PLACE, &masses, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+    MPI_Allreduce( MPI_IN_PLACE, &mass_sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
 
     // divide by the denominator
     if ( mass_sum > 0 )  // if there are particles
