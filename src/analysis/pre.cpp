@@ -32,21 +32,48 @@ int ana::center_of_mass( unsigned long part_num, double masses[], double coords[
     return 0;
 }  // namespace galotfa::analysis
 
-constexpr unsigned int as_const( unsigned int m )
+int ana::most_dense_pixel( unsigned long part_num, double coords[][ 3 ], double lower_bound_x,
+                           double upper_bound_x, double lower_bound_y, double upper_bound_y,
+                           double lower_bound_z, double upper_bound_z, unsigned int bin_num_x,
+                           unsigned int bin_num_y, unsigned int bin_num_z, double ( &center )[ 3 ] )
 {
-    return m;
-}
-
-int most_dense_pixel( unsigned long part_num, double coords[][ 3 ], double lower_bound_x,
-                      double upper_bound_x, double lower_bound_y, double upper_bound_y,
-                      double lower_bound_z, double upper_bound_z, unsigned int bin_num_x,
-                      unsigned int bin_num_y, unsigned int bin_num_z, double ( &center )[ 3 ] )
-{
+    double* x = new double[ part_num ];
+    double* y = new double[ part_num ];
+    double* z = new double[ part_num ];
     // calculate the most dense pixel of the given array of particles
-    const unsigned int             M = as_const( bin_num_x );
-    const unsigned int             N = as_const( bin_num_y );
-    ana::mat< M, N, unsigned int > density_map;
+    auto image_xy = ana::bin2d( part_num, x, y, z, lower_bound_x, upper_bound_x, lower_bound_y,
+                                upper_bound_y, bin_num_x, bin_num_y, ana::stats_method::count );
 
+    auto image_xz = ana::bin2d( part_num, x, z, z, lower_bound_x, upper_bound_x, lower_bound_z,
+                                upper_bound_z, bin_num_x, bin_num_z, ana::stats_method::count );
+
+    // find the max pixel's position
+    size_t max_x = 0, max_y = 0, max_z = 0;
+    for ( size_t i = 0; i < ( size_t )bin_num_x; ++i )
+    {
+        for ( size_t j = 0; j < ( size_t )bin_num_y; ++j )
+        {
+            if ( image_xy[ i ][ j ] > image_xy[ max_x ][ max_y ] )
+            {
+                max_x = i;
+                max_y = j;
+            }
+        }
+    }
+    for ( size_t i = 0; i < ( size_t )bin_num_z; ++i )
+    {
+        if ( image_xz[ max_x ][ i ] > image_xz[ max_x ][ max_z ] )
+        {
+            max_z = i;
+        }
+    }
+
+    center[ 0 ] =
+        ( double )max_x / ( double )bin_num_x * ( upper_bound_x - lower_bound_x ) + lower_bound_x;
+    center[ 1 ] =
+        ( double )max_y / ( double )bin_num_y * ( upper_bound_y - lower_bound_y ) + lower_bound_y;
+    center[ 2 ] =
+        ( double )max_z / ( double )bin_num_z * ( upper_bound_z - lower_bound_z ) + lower_bound_z;
     return 0;
 }
 

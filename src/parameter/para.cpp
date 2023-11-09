@@ -338,7 +338,7 @@ int para::check( void )
 
             IF_ONE_THEN_WARN( this->md_colors, invalid_color,
                               "The image option is enabled, but the color option is not "
-                              "supported.\nPlease check your ini file." );
+                              "given.\nPlease check your ini file." );
 
             auto invalid_m = []( int n ) -> bool { return n <= 0; };
 

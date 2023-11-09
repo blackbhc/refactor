@@ -102,7 +102,51 @@ int calculator::call_pre_module( unsigned long types[], double masses[], double 
         }
         break;
     case most_dense_pixel:
-        // TODO: to be implemented
+        for ( int i = 0; i < this->para->glb_max_iter; ++i )
+        {
+            // backup the old value of the system center
+            double offset[ 3 ] = { 0 };
+            offset[ 0 ]        = this->system_center[ 0 ];
+            offset[ 1 ]        = this->system_center[ 1 ];
+            offset[ 2 ]        = this->system_center[ 2 ];
+
+            // For calculation convenience, always treate the shape as box (but the extracted data
+            // may not, if pre_region_shape!="box")
+            static unsigned int bin_num_x = this->para->md_image_bins;
+            static unsigned int bin_num_y = bin_num_x;
+            static unsigned int bin_num_z =
+                ( unsigned int )bin_num_x * this->para->pre_region_ratio;
+            double lower_bound_x = this->system_center[ 0 ] - this->para->pre_region_size * 0.5;
+            double upper_bound_x = this->system_center[ 0 ] + this->para->pre_region_size * 0.5;
+            double lower_bound_y = this->system_center[ 1 ] - this->para->pre_region_size * 0.5;
+            double upper_bound_y = this->system_center[ 1 ] + this->para->pre_region_size * 0.5;
+            double lower_bound_z =
+                this->system_center[ 1 ]
+                - this->para->pre_region_size * 0.5 * this->para->pre_region_ratio;
+            double upper_bound_z =
+                this->system_center[ 1 ]
+                + this->para->pre_region_size * 0.5 * this->para->pre_region_ratio;
+
+            ana::most_dense_pixel( counter, anchor_coords, lower_bound_x, upper_bound_x,
+                                   lower_bound_y, upper_bound_y, lower_bound_z, upper_bound_z,
+                                   bin_num_x, bin_num_y, bin_num_z, this->system_center );
+
+            offset[ 0 ] -= this->system_center[ 0 ];
+            offset[ 1 ] -= this->system_center[ 1 ];
+            offset[ 2 ] -= this->system_center[ 2 ];
+
+            if ( this->para->glb_convergence_type == "relative" )
+            {
+                if ( ana::norm( offset ) / this->para->pre_region_size
+                     <= this->para->glb_convergence_threshold )
+                    break;
+            }
+            else
+            {  // convergence type = absolute
+                if ( ana::norm( offset ) <= this->para->glb_convergence_threshold )
+                    break;
+            }
+        }
         break;
     case most_bound_particle:
         WARN( "Most boud partcile is not implemented yet." );
