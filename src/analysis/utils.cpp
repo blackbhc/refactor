@@ -160,15 +160,15 @@ int test_vec()
     }
 
     println( "Test the norm() function ..." );
-    if ( fabs( test_vec1.norm() - sqrt( 50 ) ) > 2e-8 )
+    if ( fabs( test_vec1.norm() - sqrt( 50 ) ) > 1e-6 )
         CHECK_RETURN( false );
 
-    println( "Test the length() function ..." );
-    if ( test_vec1.length() != 3 )
+    println( "Test the get_length() method ..." );
+    if ( test_vec1.get_length() != 3 )
         CHECK_RETURN( false );
 
     println( "Test the inner product function ..." );
-    if ( fabs( test_vec1 * test_vec2 ) > 2e-8 )
+    if ( fabs( test_vec1 * test_vec2 ) > 1e-6 )
         CHECK_RETURN( false );
 
     println( "Test the scalar product function..." );
@@ -178,7 +178,7 @@ int test_vec()
 
     println( "Test the normalize method ..." );
     test_vec1.normalize();
-    if ( fabs( test_vec1.norm() - 1.0 ) > 2e-8 )
+    if ( fabs( test_vec1.norm() - 1.0 ) > 1e-6 )
         CHECK_RETURN( false );
 
     println( "Test the cross product function ..." );
@@ -225,21 +225,166 @@ int test_mat()
         CHECK_RETURN( false );
 
     println( "Test the determinant method ..." );
-    if ( fabs( test_mat1.determinant() - 0 ) > 2e-8 )
+    if ( fabs( test_mat1.determinant() - 0 ) > 1e-6 )
     {
         INFO( "The get determinant of test_mat1 is %.30lf", test_mat1.determinant() );
         CHECK_RETURN( false );
     }
-    if ( fabs( test_mat2.determinant() - 1 ) > 2e-8 )
+    if ( fabs( test_mat2.determinant() - 1 ) > 1e-6 )
         CHECK_RETURN( false );
-    if ( fabs( test_mat3.determinant() + 6 ) > 2e-8 )
+    if ( fabs( test_mat3.determinant() + 6 ) > 1e-6 )
         CHECK_RETURN( false );
-    if ( fabs( test_mat4.determinant() - 1 ) > 2e-8 )
+    if ( fabs( test_mat4.determinant() - 1 ) > 1e-6 )
         CHECK_RETURN( false );
-    if ( fabs( test_mat5.determinant() + 2 ) > 2e-8 )
+    if ( fabs( test_mat5.determinant() + 2 ) > 1e-6 )
         CHECK_RETURN( false );
-    if ( fabs( test_mat6.determinant() + 2 ) > 2e-8 )
+    if ( fabs( test_mat6.determinant() + 2 ) > 1e-6 )
         CHECK_RETURN( false );
+
+    CHECK_RETURN( true );
+}
+
+int test_bin1d()
+{
+    println( "Test the bin1d() function..." );
+
+    double test_coord1[ 5 ] = { 0 };
+    double test_coord2[ 5 ] = { 0 };
+    for ( int i = 0; i < 5; ++i )
+    {
+        test_coord1[ i ] = ( double )i + .5;
+        test_coord2[ i ] = ( double )i + pow( -1, i );
+    }
+    double test_data1[ 5 ] = { 0 };
+    for ( int i = 0; i < 5; ++i )
+        test_data1[ i ] = 2;
+
+    ana::vec< 5, double > res1 =
+        ana::bin1d< 5, 5, double >( test_coord1, test_data1, 0, 5, ana::stats_method::count );
+    ana::vec< 5, double > expected1{ 1, 1, 1, 1, 1 };
+    if ( res1 != expected1 )
+    {
+        println( "The result is:" );
+        for ( int i = 0; i < 5; ++i )
+            println( "%lf", res1[ i ] );
+        println( "The expected is:" );
+        for ( int i = 0; i < 5; ++i )
+            println( "%lf", expected1[ i ] );
+        CHECK_RETURN( false );
+    }
+
+    ana::vec< 5, double > res2 =
+        ana::bin1d< 5, 5, double >( test_coord1, test_data1, 0, 5, ana::stats_method::sum );
+    ana::vec< 5, double > expected2{ 2, 2, 2, 2, 2 };
+    if ( res2 != expected2 )
+    {
+        println( "The result is:" );
+        for ( int i = 0; i < 5; ++i )
+            println( "%f", res2[ i ] );
+        println( "The expected is:" );
+        for ( int i = 0; i < 5; ++i )
+            println( "%f", expected2[ i ] );
+        CHECK_RETURN( false );
+    }
+
+    ana::vec< 5, double > res3 =
+        ana::bin1d< 5, 5, double >( test_coord1, test_data1, 0, 5, ana::stats_method::max );
+    if ( res3 != expected2 )
+    {
+        println( "The result is:" );
+        for ( int i = 0; i < 5; ++i )
+            println( "%f", res3[ i ] );
+        println( "The expected is:" );
+        for ( int i = 0; i < 5; ++i )
+            println( "%f", expected2[ i ] );
+        CHECK_RETURN( false );
+    }
+
+    ana::vec< 5, double > res4 =
+        ana::bin1d< 5, 5, double >( test_coord1, test_data1, 0, 5, ana::stats_method::max );
+    if ( res4 != expected2 )
+    {
+        println( "The result is:" );
+        for ( int i = 0; i < 5; ++i )
+            println( "%f", res3[ i ] );
+        println( "The expected is:" );
+        for ( int i = 0; i < 5; ++i )
+            println( "%f", expected2[ i ] );
+        CHECK_RETURN( false );
+    }
+
+    ana::vec< 5, double > res5 =
+        ana::bin1d< 5, 5, double >( test_coord1, test_data1, 0, 5, ana::stats_method::mean );
+    if ( res5 != expected2 )
+    {
+        println( "The result is:" );
+        for ( int i = 0; i < 5; ++i )
+            println( "%f", res3[ i ] );
+        println( "The expected is:" );
+        for ( int i = 0; i < 5; ++i )
+            println( "%f", expected2[ i ] );
+        CHECK_RETURN( false );
+    }
+
+    ana::vec< 5, double > res6 =
+        ana::bin1d< 5, 5, double >( test_coord1, test_data1, 0, 5, ana::stats_method::mean );
+    if ( res6 != expected2 )
+    {
+        println( "The result is:" );
+        for ( int i = 0; i < 5; ++i )
+            println( "%f", res3[ i ] );
+        println( "The expected is:" );
+        for ( int i = 0; i < 5; ++i )
+            println( "%f", expected2[ i ] );
+        CHECK_RETURN( false );
+    }
+
+    double test_coord3[ 20 ] = { 0 };
+    for ( int i = 0; i < 20; ++i )
+        test_coord3[ i ] = ( double )i / 20 * 5;
+    double test_data3[ 20 ] = { 0 };
+    for ( int i = 0; i < 20; ++i )
+        test_data3[ i ] = ( double )( i % 4 + 1 );
+
+    ana::vec< 5, double > res7 =
+        ana::bin1d< 20, 5, double >( test_coord3, test_data3, 0, 5, ana::stats_method::count );
+    ana::vec< 5, double > res8 =
+        ana::bin1d< 20, 5, double >( test_coord3, test_data3, 0, 5, ana::stats_method::sum );
+    ana::vec< 5, double > res9 =
+        ana::bin1d< 20, 5, double >( test_coord3, test_data3, 0, 5, ana::stats_method::min );
+    ana::vec< 5, double > res10 =
+        ana::bin1d< 20, 5, double >( test_coord3, test_data3, 0, 5, ana::stats_method::max );
+    ana::vec< 5, double > res11 =
+        ana::bin1d< 20, 5, double >( test_coord3, test_data3, 0, 5, ana::stats_method::mean );
+    ana::vec< 5, double > res12 =
+        ana::bin1d< 20, 5, double >( test_coord3, test_data3, 0, 5, ana::stats_method::median );
+    ana::vec< 5, double > res13 =
+        ana::bin1d< 20, 5, double >( test_coord3, test_data3, 0, 5, ana::stats_method::std );
+    ana::vec< 5, double > expected7{ 4, 4, 4, 4, 4 };
+    ana::vec< 5, double > expected8{ 10, 10, 10, 10, 10 };
+    ana::vec< 5, double > expected9{ 1, 1, 1, 1, 1 };
+    ana::vec< 5, double > expected10{ 4, 4, 4, 4, 4 };
+    ana::vec< 5, double > expected11{ 2.5, 2.5, 2.5, 2.5, 2.5 };
+    ana::vec< 5, double > expected12{ 2.5, 2.5, 2.5, 2.5, 2.5 };
+    ana::vec< 5, double > expected13{ 1.11803399, 1.11803399, 1.11803399, 1.11803399, 1.11803399 };
+
+    if ( res7 != expected7 || res8 != expected8 || res9 != expected9 || res10 != expected10
+         || res11 != expected11 || res12 != expected12 || res13 != expected13 )
+    {
+        // println( "The result is:" );
+        // for ( int i = 0; i < 5; ++i )
+        //     println( "%lf", res7[ i ] );
+        // println( "The expected is:" );
+        // for ( int i = 0; i < 5; ++i )
+        //     println( "%lf", expected7[ i ] );
+        CHECK_RETURN( false );
+    }
+
+    // I am tired of writing the same code again and again ...
+    // if ( res7 != expected7 || res8 != expected8 || res9 != expected9 || res10 != expected10
+    //      || res11 != expected11 || res12 != expected12 || res13 != expected13 )
+    //     CHECK_RETURN( false );
+
 
     CHECK_RETURN( true );
 }

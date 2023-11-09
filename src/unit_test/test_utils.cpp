@@ -19,6 +19,7 @@ static std::vector< int > test_utils()
     COUNT( unit_test::test_in_cylinder() );
     COUNT( unit_test::test_vec() );
     COUNT( unit_test::test_mat() );
+    COUNT( unit_test::test_bin1d() );
     SUMMARY( "analysis utils" );
 
     std::vector< int > result = { 0, 0, 0 };
