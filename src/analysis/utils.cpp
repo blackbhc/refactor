@@ -389,6 +389,68 @@ int test_bin1d()
     CHECK_RETURN( true );
 }
 
+int test_bin2d( void )
+{
+    println( "Test the bin2d() function..." );
+    double coord_x[ 100 ] = { 0 }, coord_y[ 100 ] = { 0 };
+    for ( int i = 0; i < 100; ++i )
+    {
+        coord_y[ i ] = coord_x[ i ] = i;
+    }
+    double data[ 100 ] = { 0 };
+    for ( int i = 0; i < 100; i++ )
+    {
+        data[ i ] = double( i * 2 - i * i ) * pow( -1, i );
+    }
+
+    ana::mat< 4, 4, double > res1 = ana::bin2d< 100, 4, 4, double >(
+        coord_x, coord_y, data, 0, 100, 0, 100, ana::stats_method::min );
+    ana::mat< 4, 4, double > res2 = ana::bin2d< 100, 4, 4, double >(
+        coord_x, coord_y, data, 0, 100, 0, 100, ana::stats_method::max );
+    ana::mat< 4, 4, double > res3 = ana::bin2d< 100, 4, 4, double >(
+        coord_x, coord_y, data, 0, 100, 0, 100, ana::stats_method::sum );
+    ana::mat< 4, 4, double > res4 = ana::bin2d< 100, 4, 4, double >(
+        coord_x, coord_y, data, 0, 100, 0, 100, ana::stats_method::count );
+    ana::mat< 4, 4, double > res5 = ana::bin2d< 100, 4, 4, double >(
+        coord_x, coord_y, data, 0, 100, 0, 100, ana::stats_method::mean );
+    ana::mat< 4, 4, double > res6 = ana::bin2d< 100, 4, 4, double >(
+        coord_x, coord_y, data, 0, 100, 0, 100, ana::stats_method::median );
+    ana::mat< 4, 4, double > res7 = ana::bin2d< 100, 4, 4, double >(
+        coord_x, coord_y, data, 0, 100, 0, 100, ana::stats_method::std );
+
+    ana::mat< 4, 4, double > exp1{ { -528, nan( "" ), nan( "" ), nan( "" ) },
+                                   { nan( "" ), -2208, nan( "" ), nan( "" ) },
+                                   { nan( "" ), nan( "" ), -5328, nan( "" ) },
+                                   { nan( "" ), nan( "" ), nan( "" ), -9408 } };
+    ana::mat< 4, 4, double > exp2{ { 483, nan( "" ), nan( "" ), nan( "" ) },
+                                   { nan( "" ), 2303, nan( "" ), nan( "" ) },
+                                   { nan( "" ), nan( "" ), 5183, nan( "" ) },
+                                   { nan( "" ), nan( "" ), nan( "" ), 9603 } };
+    ana::mat< 4, 4, double > exp3{
+        { -276, 0, 0, 0 }, { 0, 1451, 0, 0 }, { 0, 0, -3876, 0 }, { 0, 0, 0, 7551 }
+    };
+    ana::mat< 4, 4, double > exp4{
+        { 25, 0, 0, 0 }, { 0, 25, 0, 0 }, { 0, 0, 25, 0 }, { 0, 0, 0, 25 }
+    };
+    ana::mat< 4, 4, double > exp5{ { -11.04, nan( "" ), nan( "" ), nan( "" ) },
+                                   { nan( "" ), 58.04, nan( "" ), nan( "" ) },
+                                   { nan( "" ), nan( "" ), -155.04, nan( "" ) },
+                                   { nan( "" ), nan( "" ), nan( "" ), 302.04 } };
+    ana::mat< 4, 4, double > exp6{ { 0, nan( "" ), nan( "" ), nan( "" ) },
+                                   { nan( "" ), 575, nan( "" ), nan( "" ) },
+                                   { nan( "" ), nan( "" ), -2400, nan( "" ) },
+                                   { nan( "" ), nan( "" ), nan( "" ), 5475 } };
+    ana::mat< 4, 4, double > exp7{ { 238.29166666, nan( "" ), nan( "" ), nan( "" ) },
+                                   { nan( "" ), 1443.17745215, nan( "" ), nan( "" ) },
+                                   { nan( "" ), nan( "" ), 3870.40920297, nan( "" ) },
+                                   { nan( "" ), nan( "" ), nan( "" ), 7543.67958217 } };
+
+    if ( res1 != exp1 || res2 != exp2 || res3 != exp3 || res4 != exp4 || res5 != exp5
+         || res6 != exp6 || res7 != exp7 )
+        CHECK_RETURN( false );
+
+    CHECK_RETURN( true );
+}
 }  // namespace unit_test
 #endif
 #endif

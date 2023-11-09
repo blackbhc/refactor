@@ -234,7 +234,9 @@ namespace analysis {
         // constructor from a single number
         mat( const Type& number )
         {
-            memset( data, number, sizeof( Type ) * M * N );
+            for ( unsigned int i = 0; i < M; ++i )
+                for ( unsigned int j = 0; j < N; ++j )
+                    this->data[ i ][ j ] = number;
         }
 
         // copy constructor
@@ -303,7 +305,11 @@ namespace analysis {
         inline bool operator==( const mat< M, N, Type >& rhs ) const
         {
             if ( M != rhs.row || N != rhs.col )
+            {
+                WARN( "For operator==: the size of the two matrices are not equal, treat them are  "
+                      "unequal." );
                 return false;
+            }
             for ( unsigned int i = 0; i < M; ++i )
                 for ( unsigned int j = 0; j < N; ++j )
                     if ( fabs( data[ i ][ j ] - rhs.data[ i ][ j ] ) > 1e-6 )
@@ -477,10 +483,12 @@ namespace analysis {
     vec< Bin_Num, Type > bin1d( double ( &coord )[ Array_Len ], double ( &data )[ Array_Len ],
                                 double lower_bound, double upper_bound, stats_method method )
     {
+        if ( Bin_Num == 0 )
+            ERROR( "The number of bins should be larger than 0." );
         vec< Bin_Num, Type > bins_1d( 0 );  // the final result
 
-        // the vector of (the index of the data points in each bin)
-        vector< vector< unsigned int > > bins( Bin_Num, vector< unsigned int >( Array_Len ) );
+        // the index of the data points in each bin
+        unsigned int bins[ Bin_Num ][ Array_Len ] = { 0 };
         // the counts of the data points in each bin
         unsigned int counts[ Bin_Num ] = { 0 };
 
@@ -507,19 +515,20 @@ namespace analysis {
         {
             double* data_points[ Bin_Num ];
 
-            for ( unsigned int i = 0; i < Bin_Num; ++i )
+            unsigned int i = 0, j = 0;
+            for ( i = 0; i < Bin_Num; ++i )
             {
                 if ( counts[ i ] > 0 )
                 {
                     data_points[ i ] = new double[ counts[ i ] ];
-                    for ( unsigned int j = 0; j < counts[ i ]; ++j )
+                    for ( j = 0; j < counts[ i ]; ++j )
                         data_points[ i ][ j ] = data[ bins[ i ][ j ] ];
                 }
             }
             switch ( method )
             {
             case stats_method::min: {
-                for ( unsigned int i = 0; i < Bin_Num; ++i )
+                for ( i = 0; i < Bin_Num; ++i )
                 {
                     if ( counts[ i ] == 0 )
                         bins_1d.data[ i ] = nan( "" );
@@ -530,7 +539,7 @@ namespace analysis {
                 break;
             }
             case stats_method::max: {
-                for ( unsigned int i = 0; i < Bin_Num; ++i )
+                for ( i = 0; i < Bin_Num; ++i )
                 {
                     if ( counts[ i ] == 0 )
                         bins_1d.data[ i ] = nan( "" );
@@ -541,7 +550,7 @@ namespace analysis {
                 break;
             }
             case stats_method::mean: {
-                for ( unsigned int i = 0; i < Bin_Num; ++i )
+                for ( i = 0; i < Bin_Num; ++i )
                 {
                     if ( counts[ i ] == 0 )
                         bins_1d.data[ i ] = nan( "" );
@@ -554,7 +563,7 @@ namespace analysis {
                 break;
             }
             case stats_method::median: {
-                for ( unsigned int i = 0; i < Bin_Num; ++i )
+                for ( i = 0; i < Bin_Num; ++i )
                 {
                     if ( counts[ i ] == 0 )
                         bins_1d.data[ i ] = nan( "" );
@@ -572,10 +581,10 @@ namespace analysis {
                 break;
             }
             case stats_method::sum: {
-                for ( unsigned int i = 0; i < Bin_Num; ++i )
+                for ( i = 0; i < Bin_Num; ++i )
                 {
                     if ( counts[ i ] == 0 )
-                        bins_1d.data[ i ] = nan( "" );
+                        bins_1d.data[ i ] = 0;
                     else
                         bins_1d.data[ i ] = ( Type )std::accumulate(
                             data_points[ i ], data_points[ i ] + counts[ i ], 0.0 );
@@ -583,7 +592,7 @@ namespace analysis {
                 break;
             }
             case stats_method::std: {
-                for ( unsigned int i = 0; i < Bin_Num; ++i )
+                for ( i = 0; i < Bin_Num; ++i )
                 {
                     if ( counts[ i ] == 0 )
                         bins_1d.data[ i ] = nan( "" );
@@ -593,7 +602,7 @@ namespace analysis {
                             std::accumulate( data_points[ i ], data_points[ i ] + counts[ i ], 0.0 )
                             / counts[ i ];
                         double sum = 0;
-                        for ( unsigned int j = 0; j < counts[ i ]; ++j )
+                        for ( j = 0; j < counts[ i ]; ++j )
                             sum +=
                                 ( data_points[ i ][ j ] - mean ) * ( data_points[ i ][ j ] - mean );
                         bins_1d.data[ i ] = ( Type )sqrt( sum / counts[ i ] );
@@ -604,7 +613,7 @@ namespace analysis {
             default:  // never reach here
                 break;
             }
-            for ( unsigned int i = 0; i < Bin_Num; ++i )
+            for ( i = 0; i < Bin_Num; ++i )
                 if ( counts[ i ] > 0 )
                     delete[] data_points[ i ];
         }
@@ -613,142 +622,165 @@ namespace analysis {
 
     template < unsigned int Array_Len, unsigned int Bin_Numx, unsigned int Bin_Numy, typename Type >
     mat< Bin_Numx, Bin_Numy, Type >
-    bin2d( double ( &data_x )[ Array_Len ], double ( &data_y )[ Array_Len ],
+    bin2d( double ( &coord_x )[ Array_Len ], double ( &coord_y )[ Array_Len ],
            double ( &data )[ Array_Len ], double lower_bound_x, double upper_bound_x,
            double lower_bound_y, double upper_bound_y, stats_method method )
     {
+        if ( Bin_Numx == 0 || Bin_Numy == 0 )
+            ERROR( "The number of bins should be larger than 0." );
+
         mat< Bin_Numx, Bin_Numy, Type > bins_2d( 0 );  // the final result
 
-        // // the vector of (the index of the data points in each bin)
-        // vector< vector< unsigned int > > bins( Bin_Num, vector< unsigned int >( Array_Len ) );
-        // // the counts of the data points in each bin
-        // unsigned int counts[ Bin_Num ] = { 0 };
-        //
-        // double range = upper_bound - lower_bound;
-        //
-        // // iterate over the data points
-        // for ( unsigned int i = 0; i < Array_Len; ++i )
-        // {
-        //     // the index of the bin
-        //     unsigned int bin_index =
-        //         ( unsigned int )( ( coord[ i ] - lower_bound ) / range * Bin_Num );
-        //     if ( bin_index == Bin_Num )
-        //         bin_index = Bin_Num - 1;  // avoid the overflow at the upper bound
-        //
-        //     bins[ bin_index ][ counts[ bin_index ]++ ] = i;
-        // }
-        //
-        // if ( method == stats_method::count )
-        // {
-        //     for ( unsigned int i = 0; i < Bin_Num; ++i )
-        //         bins_1d.data[ i ] = ( Type )counts[ i ];
-        // }
-        // else
-        // {
-        //     double* data_points[ Bin_Num ];
-        //
-        //     for ( unsigned int i = 0; i < Bin_Num; ++i )
-        //     {
-        //         if ( counts[ i ] > 0 )
-        //         {
-        //             data_points[ i ] = new double[ counts[ i ] ];
-        //             for ( unsigned int j = 0; j < counts[ i ]; ++j )
-        //                 data_points[ i ][ j ] = data[ bins[ i ][ j ] ];
-        //         }
-        //     }
-        //     switch ( method )
-        //     {
-        //     case stats_method::min: {
-        //         for ( unsigned int i = 0; i < Bin_Num; ++i )
-        //         {
-        //             if ( counts[ i ] == 0 )
-        //                 bins_1d.data[ i ] = nan( "" );
-        //             else
-        //                 bins_1d.data[ i ] = ( Type )*std::min_element(
-        //                     data_points[ i ], data_points[ i ] + counts[ i ] );
-        //         }
-        //         break;
-        //     }
-        //     case stats_method::max: {
-        //         for ( unsigned int i = 0; i < Bin_Num; ++i )
-        //         {
-        //             if ( counts[ i ] == 0 )
-        //                 bins_1d.data[ i ] = nan( "" );
-        //             else
-        //                 bins_1d.data[ i ] = ( Type )*std::max_element(
-        //                     data_points[ i ], data_points[ i ] + counts[ i ] );
-        //         }
-        //         break;
-        //     }
-        //     case stats_method::mean: {
-        //         for ( unsigned int i = 0; i < Bin_Num; ++i )
-        //         {
-        //             if ( counts[ i ] == 0 )
-        //                 bins_1d.data[ i ] = nan( "" );
-        //             else
-        //                 bins_1d.data[ i ] =
-        //                     ( Type )std::accumulate( data_points[ i ],
-        //                                              data_points[ i ] + counts[ i ], 0.0 )
-        //                     / counts[ i ];
-        //         }
-        //         break;
-        //     }
-        //     case stats_method::median: {
-        //         for ( unsigned int i = 0; i < Bin_Num; ++i )
-        //         {
-        //             if ( counts[ i ] == 0 )
-        //                 bins_1d.data[ i ] = nan( "" );
-        //             else
-        //             {
-        //                 std::sort( data_points[ i ], data_points[ i ] + counts[ i ] );
-        //                 if ( counts[ i ] % 2 == 0 )
-        //                     bins_1d.data[ i ] = ( Type )( data_points[ i ][ counts[ i ] / 2 - 1 ]
-        //                                                   + data_points[ i ][ counts[ i ] / 2 ] )
-        //                                         / 2;
-        //                 else
-        //                     bins_1d.data[ i ] = ( Type )data_points[ i ][ counts[ i ] / 2 ];
-        //             }
-        //         }
-        //         break;
-        //     }
-        //     case stats_method::sum: {
-        //         for ( unsigned int i = 0; i < Bin_Num; ++i )
-        //         {
-        //             if ( counts[ i ] == 0 )
-        //                 bins_1d.data[ i ] = nan( "" );
-        //             else
-        //                 bins_1d.data[ i ] = ( Type )std::accumulate(
-        //                     data_points[ i ], data_points[ i ] + counts[ i ], 0.0 );
-        //         }
-        //         break;
-        //     }
-        //     case stats_method::std: {
-        //         for ( unsigned int i = 0; i < Bin_Num; ++i )
-        //         {
-        //             if ( counts[ i ] == 0 )
-        //                 bins_1d.data[ i ] = nan( "" );
-        //             else
-        //             {
-        //                 double mean =
-        //                     std::accumulate( data_points[ i ], data_points[ i ] + counts[ i ],
-        //                     0.0 ) / counts[ i ];
-        //                 double sum = 0;
-        //                 for ( unsigned int j = 0; j < counts[ i ]; ++j )
-        //                     sum +=
-        //                         ( data_points[ i ][ j ] - mean ) * ( data_points[ i ][ j ] - mean
-        //                         );
-        //                 bins_1d.data[ i ] = ( Type )sqrt( sum / counts[ i ] );
-        //             }
-        //         }
-        //         break;
-        //     }
-        //     default:  // never reach here
-        //         break;
-        //     }
-        //     for ( unsigned int i = 0; i < Bin_Num; ++i )
-        //         if ( counts[ i ] > 0 )
-        //             delete[] data_points[ i ];
-        // }
+        // the index of the data points in each bin
+        unsigned int bins[ Bin_Numx ][ Bin_Numy ][ Array_Len ] = { 0 };
+        // the counts of the data points in each bin
+        unsigned int counts[ Bin_Numx ][ Bin_Numy ] = { 0 };
+
+        double range_x = upper_bound_x - lower_bound_x;
+        double range_y = upper_bound_y - lower_bound_y;
+
+        // iterate over the data points
+        for ( unsigned int i = 0; i < Array_Len; ++i )
+        {
+            // the index of the bin
+            unsigned int bin_index_x =
+                ( unsigned int )( ( coord_x[ i ] - lower_bound_x ) / range_x * Bin_Numx );
+            unsigned int bin_index_y =
+                ( unsigned int )( ( coord_y[ i ] - lower_bound_y ) / range_y * Bin_Numy );
+            if ( bin_index_x == Bin_Numx )
+                bin_index_x = Bin_Numx - 1;  // avoid the overflow at the upper bound
+            if ( bin_index_y == Bin_Numy )
+                bin_index_y = Bin_Numy - 1;  // avoid the overflow at the upper bound
+
+            bins[ bin_index_x ][ bin_index_y ][ counts[ bin_index_x ][ bin_index_y ]++ ] = i;
+        }
+
+        if ( method == stats_method::count )
+        {
+            for ( unsigned int i = 0; i < Bin_Numx; ++i )
+                for ( unsigned int j = 0; j < Bin_Numy; ++j )
+                    bins_2d.data[ i ][ j ] = ( Type )counts[ i ][ j ];
+        }
+        else
+        {
+            double* data_points[ Bin_Numx ][ Bin_Numy ];
+
+            unsigned int i = 0, j = 0, k = 0;
+            for ( i = 0; i < Bin_Numx; ++i )
+                for ( j = 0; j < Bin_Numy; ++j )
+                {
+                    if ( counts[ i ][ j ] > 0 )
+                    {
+                        data_points[ i ][ j ] = new double[ counts[ i ][ j ] ];
+                        for ( k = 0; k < counts[ i ][ j ]; ++k )
+                            data_points[ i ][ j ][ k ] = data[ bins[ i ][ j ][ k ] ];
+                    }
+                }
+            switch ( method )
+            {
+            case stats_method::min: {
+                for ( i = 0; i < Bin_Numx; ++i )
+                    for ( j = 0; j < Bin_Numy; ++j )
+                    {
+                        if ( counts[ i ][ j ] == 0 )
+                            bins_2d.data[ i ][ j ] = nan( "" );
+                        else
+                            bins_2d.data[ i ][ j ] = ( Type )*std::min_element(
+                                data_points[ i ][ j ], data_points[ i ][ j ] + counts[ i ][ j ] );
+                    }
+                break;
+            }
+            case stats_method::max: {
+                for ( i = 0; i < Bin_Numx; ++i )
+                    for ( j = 0; j < Bin_Numy; ++j )
+                    {
+                        if ( counts[ i ][ j ] == 0 )
+                            bins_2d.data[ i ][ j ] = nan( "" );
+                        else
+                            bins_2d.data[ i ][ j ] = ( Type )*std::max_element(
+                                data_points[ i ][ j ], data_points[ i ][ j ] + counts[ i ][ j ] );
+                    }
+                break;
+            }
+            case stats_method::mean: {
+                for ( i = 0; i < Bin_Numx; ++i )
+                    for ( j = 0; j < Bin_Numy; ++j )
+                    {
+                        if ( counts[ i ][ j ] == 0 )
+                            bins_2d.data[ i ][ j ] = nan( "" );
+                        else
+                            bins_2d.data[ i ][ j ] =
+                                ( Type )std::accumulate( data_points[ i ][ j ],
+                                                         data_points[ i ][ j ] + counts[ i ][ j ],
+                                                         0.0 )
+                                / counts[ i ][ j ];
+                    }
+                break;
+            }
+            case stats_method::median: {
+                for ( i = 0; i < Bin_Numx; ++i )
+                    for ( j = 0; j < Bin_Numy; ++j )
+                    {
+                        if ( counts[ i ][ j ] == 0 )
+                            bins_2d.data[ i ][ j ] = nan( "" );
+                        else
+                        {
+                            std::sort( data_points[ i ][ j ],
+                                       data_points[ i ][ j ] + counts[ i ][ j ] );
+                            if ( counts[ i ][ j ] % 2 == 0 )
+                                bins_2d.data[ i ][ j ] =
+                                    ( Type )( data_points[ i ][ j ][ counts[ i ][ j ] / 2 - 1 ]
+                                              + data_points[ i ][ j ][ counts[ i ][ j ] / 2 ] )
+                                    / 2;
+                            else
+                                bins_2d.data[ i ][ j ] =
+                                    ( Type )data_points[ i ][ j ][ counts[ i ][ j ] / 2 ];
+                        }
+                    }
+                break;
+            }
+            case stats_method::sum: {
+                for ( i = 0; i < Bin_Numx; ++i )
+                    for ( j = 0; j < Bin_Numy; ++j )
+                    {
+                        if ( counts[ i ][ j ] == 0 )
+                            bins_2d.data[ i ][ j ] = 0;
+                        else
+                            bins_2d.data[ i ][ j ] = ( Type )std::accumulate(
+                                data_points[ i ][ j ], data_points[ i ][ j ] + counts[ i ][ j ],
+                                0.0 );
+                    }
+                break;
+            }
+            case stats_method::std: {
+                for ( i = 0; i < Bin_Numx; ++i )
+                    for ( j = 0; j < Bin_Numy; ++j )
+                    {
+                        if ( counts[ i ][ j ] == 0 )
+                            bins_2d.data[ i ][ j ] = nan( "" );
+                        else
+                        {
+                            double mean =
+                                std::accumulate( data_points[ i ][ j ],
+                                                 data_points[ i ][ j ] + counts[ i ][ j ], 0.0 )
+                                / counts[ i ][ j ];
+                            double sum = 0;
+                            for ( k = 0; k < counts[ i ][ j ]; ++k )
+                                sum += ( data_points[ i ][ j ][ k ] - mean )
+                                       * ( data_points[ i ][ j ][ k ] - mean );
+                            bins_2d.data[ i ][ j ] = ( Type )sqrt( sum / counts[ i ][ j ] );
+                        }
+                    }
+                break;
+            }
+            default:  // never reach here
+                break;
+            }
+            for ( i = 0; i < Bin_Numx; ++i )
+                for ( j = 0; j < Bin_Numy; ++j )
+                    if ( counts[ i ][ j ] > 0 )
+                        delete[] data_points[ i ][ j ];
+        }
         return bins_2d;
     }
 }  // namespace analysis
