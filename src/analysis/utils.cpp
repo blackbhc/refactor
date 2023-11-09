@@ -24,7 +24,7 @@ double ana::norm( double ( &vec )[ 3 ] )
     return sqrt( vec[ 0 ] * vec[ 0 ] + vec[ 1 ] * vec[ 1 ] + vec[ 2 ] * vec[ 2 ] );
 }
 
-vector< double > ana::bin1d( unsigned int array_len, double coord[], double data[],
+vector< double > ana::bin1d( unsigned long array_len, double coord[], double data[],
                              double lower_bound, double upper_bound, unsigned int bin_num,
                              stats_method method )
 {
@@ -175,7 +175,7 @@ vector< double > ana::bin1d( unsigned int array_len, double coord[], double data
 }
 
 vector< vector< double > >
-ana::bin2d( unsigned int array_len, double coord_x[], double coord_y[ array_len ], double data[],
+ana::bin2d( unsigned long array_len, double coord_x[], double coord_y[ array_len ], double data[],
             double lower_bound_x, double upper_bound_x, double lower_bound_y, double upper_bound_y,
             unsigned int bin_numx, unsigned int bin_numy, ana::stats_method method )
 {

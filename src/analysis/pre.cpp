@@ -2,6 +2,9 @@
 #define GALOTFA_PRE_CPP
 #include "pre.h"
 #include "../analysis/utils.h"
+#ifdef debug_pre
+#include "../analysis/utils.cpp"
+#endif
 #include <mpi.h>
 #include <string.h>
 namespace ana = galotfa::analysis;
@@ -37,15 +40,29 @@ int ana::most_dense_pixel( unsigned long part_num, double coords[][ 3 ], double 
                            double lower_bound_z, double upper_bound_z, unsigned int bin_num_x,
                            unsigned int bin_num_y, unsigned int bin_num_z, double ( &center )[ 3 ] )
 {
-    double* x = new double[ part_num ];
-    double* y = new double[ part_num ];
-    double* z = new double[ part_num ];
+    double* x = new double[ part_num ]();
+    double* y = new double[ part_num ]();
+    double* z = new double[ part_num ]();
+    for ( unsigned long i = 0; i < part_num; ++i )
+    {
+        x[ i ] = coords[ i ][ 0 ];
+        y[ i ] = coords[ i ][ 1 ];
+        z[ i ] = coords[ i ][ 2 ];
+    }
     // calculate the most dense pixel of the given array of particles
-    auto image_xy = ana::bin2d( part_num, x, y, z, lower_bound_x, upper_bound_x, lower_bound_y,
-                                upper_bound_y, bin_num_x, bin_num_y, ana::stats_method::count );
+    vector< vector< double > > image_xy =
+        ana::bin2d( part_num, x, y, z, lower_bound_x, upper_bound_x, lower_bound_y, upper_bound_y,
+                    bin_num_x, bin_num_y, ana::stats_method::count );
 
-    auto image_xz = ana::bin2d( part_num, x, z, z, lower_bound_x, upper_bound_x, lower_bound_z,
-                                upper_bound_z, bin_num_x, bin_num_z, ana::stats_method::count );
+    vector< vector< double > > image_xz =
+        ana::bin2d( part_num, x, z, x, lower_bound_x, upper_bound_x, lower_bound_z, upper_bound_z,
+                    bin_num_x, bin_num_z, ana::stats_method::count );
+
+    // MPI Reduce
+    MPI_Allreduce( MPI_IN_PLACE, image_xy.data(), ( int )bin_num_x * ( int )bin_num_y,
+                   MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD );
+    MPI_Allreduce( MPI_IN_PLACE, image_xz.data(), ( int )bin_num_x * ( int )bin_num_z,
+                   MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD );
 
     // find the max pixel's position
     size_t max_x = 0, max_y = 0, max_z = 0;
@@ -68,12 +85,19 @@ int ana::most_dense_pixel( unsigned long part_num, double coords[][ 3 ], double 
         }
     }
 
+    INFO( "The final most dense pixel has count: %lf and %lf", image_xz[ max_x ][ max_z ],
+          image_xy[ max_x ][ max_y ] );
+    INFO( "The final most dense pixel at: (%lu, %lu, %lu)", max_x, max_y, max_z );
+
     center[ 0 ] =
-        ( double )max_x / ( double )bin_num_x * ( upper_bound_x - lower_bound_x ) + lower_bound_x;
+        ( ( double )max_x + 0.5 ) / ( double )bin_num_x * ( upper_bound_x - lower_bound_x )
+        + lower_bound_x;
     center[ 1 ] =
-        ( double )max_y / ( double )bin_num_y * ( upper_bound_y - lower_bound_y ) + lower_bound_y;
+        ( ( double )max_y + 0.5 ) / ( double )bin_num_y * ( upper_bound_y - lower_bound_y )
+        + lower_bound_y;
     center[ 2 ] =
-        ( double )max_z / ( double )bin_num_z * ( upper_bound_z - lower_bound_z ) + lower_bound_z;
+        ( ( double )max_z + 0.5 ) / ( double )bin_num_z * ( upper_bound_z - lower_bound_z )
+        + lower_bound_z;
     return 0;
 }
 
@@ -84,6 +108,7 @@ int ana::most_dense_pixel( unsigned long part_num, double coords[][ 3 ], double 
 namespace unit_test {
 int test_center_of_mass()
 {
+    println( "Testing the center of mass function ..." );
     int rank, size;
 
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
@@ -130,6 +155,67 @@ int test_center_of_mass()
         }
     }
     ana::center_of_mass( part_num, masses, coords, center );
+    if ( rank == 0 )
+    {
+        if ( fabs( center[ 0 ] - 4.5 ) > eps )
+            CHECK_RETURN( false );
+        if ( fabs( center[ 1 ] - 4.5 ) > eps )
+            CHECK_RETURN( false );
+        if ( fabs( center[ 2 ] - 4.5 ) > eps )
+            CHECK_RETURN( false );
+    }
+
+    CHECK_RETURN( true );
+}
+
+int test_most_dense_pixel()
+{
+    println( "Testing the most dense pixel function ..." );
+    int rank, size;
+
+    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+    MPI_Comm_size( MPI_COMM_WORLD, &size );
+    const int part_num                = 1000;
+    double    masses[ part_num ]      = { 0 };
+    double    coords[ part_num ][ 3 ] = { { 0 } };
+    double    center[ 3 ]             = { 0 };
+    double    eps                     = 1e-10;  // the numerical error
+
+    // a naive test: com = (0,0,0)
+    if ( rank == 0 )
+    {
+        for ( int i = 0; i < part_num; ++i )
+        {
+            masses[ i ]      = 1.0;
+            coords[ i ][ 0 ] = pow( -1, i );
+            coords[ i ][ 1 ] = pow( -1, i + 1 );
+            coords[ i ][ 2 ] = pow( -1, i + 2 );
+        }
+    }
+    ana::most_dense_pixel( part_num, coords, -1, 1, -1, 1, -1, 1, 10, 10, 10, center );
+
+    if ( rank == 0 )
+    {
+        if ( fabs( center[ 0 ] ) > eps )
+            CHECK_RETURN( false );
+        if ( fabs( center[ 1 ] ) > eps )
+            CHECK_RETURN( false );
+        if ( fabs( center[ 2 ] ) > eps )
+            CHECK_RETURN( false );
+    }
+
+    // a naive test: com = (1,1,1)
+    if ( rank == 0 )
+    {
+        for ( int i = 0; i < part_num; ++i )
+        {
+            masses[ i ]      = 1.0;
+            coords[ i ][ 0 ] = ( double )( i / 100 );
+            coords[ i ][ 1 ] = ( double )( ( i - ( i / 100 ) * 100 ) / 10 );
+            coords[ i ][ 2 ] = ( double )( i % 10 );
+        }
+    }
+    ana::most_dense_pixel( part_num, coords, -1, 1, -1, 1, -1, 1, 10, 10, 10, center );
     if ( rank == 0 )
     {
         if ( fabs( center[ 0 ] - 4.5 ) > eps )

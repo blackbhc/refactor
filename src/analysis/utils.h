@@ -479,12 +479,12 @@ namespace analysis {
 
     enum stats_method { mean, median, std, max, min, sum, count };
 
-    vector< double > bin1d( unsigned int array_len, double coord[], double data[],
+    vector< double > bin1d( unsigned long array_len, double coord[], double data[],
                             double lower_bound, double upper_bound, unsigned int bin_num,
                             stats_method method );
 
     vector< vector< double > >
-    bin2d( unsigned int array_len, double coord_x[], double coord_y[ array_len ], double data[],
+    bin2d( unsigned long array_len, double coord_x[], double coord_y[ array_len ], double data[],
            double lower_bound_x, double upper_bound_x, double lower_bound_y, double upper_bound_y,
            unsigned int bin_numx, unsigned int bin_numy, stats_method method );
 }  // namespace analysis

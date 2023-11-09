@@ -20,6 +20,7 @@ namespace analysis {
 #ifdef debug_analysis
 namespace unit_test {
 int test_center_of_mass();
-}
+int test_most_dense_pixel();
+}  // namespace unit_test
 #endif
 #endif
