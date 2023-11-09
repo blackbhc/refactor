@@ -526,7 +526,7 @@ All functions are non-member functions, which can be treated as a black box to f
 
 Note: all unit test of this module are designed for mpi mode, `make test` can not pass the compilation.
 
-#### Utility functions: `src/analysis/utils.h` and `src/analysis/utils.cpp`
+#### Utils: `src/analysis/utils.h` and `src/analysis/utils.cpp`
 
 These functions/class are used in the analysis module, which implement some common calculation, such as 2D binning
 statistics, smoothing, etc. All the followings are defined in the namespace `galotfa::analysis`.
@@ -543,6 +543,18 @@ statistics, smoothing, etc. All the followings are defined in the namespace `gal
   - Note: as this is only a toy class, the inverse, determinant calculation are implemented at here, which
     is not efficient and accurate. So if you want to use this class, please use it carefully. I choose to
     implement them at here because I want to avoid all unnecessary dependency of other libraries.
+- enumerate `stats_method`: the type of the statistics method, `mean`, `median`, `std`, `sum`, `min`, `max`, `count`.
+- two template functions for binning statistics: `bin1d` and `bin2d`, analogy to python `scipy.stats.binned_statistic` and
+  `scipy.stats.binned_statistic_2d`, which return `vec` or `mat` struct.
+  - There are 2 (for `bin1d`) or 3 (for `bin2d`) template arguments for these functions:, unsigned int for the length
+    of the data and coordinate(s) arrays, the number(s) of bins, and the type of the return data (namely template
+    argument of `vec` or `mat`)
+  - The functions' arguments are: data array(s) and lower/upper bound(s) of the bin(s), all in `double` type,
+    and the last argument is the statistics method, which is a `galotfa::analysis::stats_method` type (see above).
+  - The bins are defined as `[lower, upper)`, namely the lower bound is included and the upper bound is excluded.
+    Except the last bin, which is `[lower, upper]`.
+  - The return value will be forcedly converted to `vec` or `mat` type, pay attention to the cases of the integer
+    return value.
 
 #### Pre-process part
 
