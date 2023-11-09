@@ -494,7 +494,7 @@ namespace analysis {
 
         double range = upper_bound - lower_bound;
 
-        // iterate over the data points
+        // iterate over the data points to find its bin
         for ( unsigned int i = 0; i < Array_Len; ++i )
         {
             if ( coord[ i ] < lower_bound || coord[ i ] > upper_bound )
@@ -641,7 +641,7 @@ namespace analysis {
         double range_x = upper_bound_x - lower_bound_x;
         double range_y = upper_bound_y - lower_bound_y;
 
-        // iterate over the data points
+        // iterate over the data points to find its bin
         for ( unsigned int i = 0; i < Array_Len; ++i )
         {
             if ( coord_x[ i ] < lower_bound_x || coord_x[ i ] > upper_bound_x )
