@@ -109,6 +109,9 @@ int calculator::call_pre_module( unsigned long types[], double masses[], double 
     case most_dense_pixel:
         // TODO: to be implemented
         break;
+    case most_bound_particle:
+        WARN( "Most boud partcile is not implemented yet." );
+        break;
     }
     return 0;
 }

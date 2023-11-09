@@ -265,7 +265,10 @@ int para::check( void )
                           this->pre_recenter_method.c_str() );
 
             if ( this->pre_recenter_method == "potential" )
-                WARN( "The recenter method as potential is not supported yet. Use com instead." );
+            {
+                WARN( "The recenter method by potential is not supported yet. Use com instead." );
+                this->pre_recenter_method = "com";
+            }
         }
         else
         {
