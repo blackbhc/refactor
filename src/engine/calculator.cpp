@@ -51,30 +51,31 @@ int calculator::call_pre_module( unsigned long types[], double masses[], double 
     vector< unsigned long* > id_for_pre;   // the array index of pre-process section's target
                                            // particles in the simulation data
     vector< unsigned long > part_num_pre;  // the length of the array index
+
+    auto          ids     = new unsigned long[ partnum_total ];
+    unsigned long counter = 0;  // how many particles have been used in this iteration
+    for ( int j = 0; j < partnum_total; ++j )
+    {
+        if ( this->is_target_of_pre( types[ j ], coordinates[ j ][ 0 ], coordinates[ j ][ 1 ],
+                                     coordinates[ j ][ 2 ] ) )
+            ids[ counter++ ] = j;
+    }
+    double* anchor_masses         = new double[ counter ];
+    double( *anchor_coords )[ 3 ] = new double[ counter ][ 3 ];
+    // get the anchor particles' data
+    for ( int j = 0; j < counter; ++j )
+    {
+        anchor_masses[ j ]      = masses[ ids[ j ] ];
+        anchor_coords[ j ][ 0 ] = coordinates[ ids[ j ] ][ 0 ];
+        anchor_coords[ j ][ 1 ] = coordinates[ ids[ j ] ][ 1 ];
+        anchor_coords[ j ][ 2 ] = coordinates[ ids[ j ] ][ 2 ];
+    }
+
     switch ( this->recenter_method )
     {
     case center_of_mass:
         for ( int i = 0; i < this->para->glb_max_iter; ++i )
         {
-            auto          ids     = new unsigned long[ partnum_total ];
-            unsigned long counter = 0;  // how many particles have been used in this iteration
-            for ( int j = 0; j < partnum_total; ++j )
-            {
-                if ( this->is_target_of_pre( types[ j ], coordinates[ j ][ 0 ],
-                                             coordinates[ j ][ 1 ], coordinates[ j ][ 2 ] ) )
-                    ids[ counter++ ] = j;
-            }
-            double* anchor_masses         = new double[ counter ];
-            double( *anchor_coords )[ 3 ] = new double[ counter ][ 3 ];
-            // get the anchor particles' data
-            for ( int j = 0; j < counter; ++j )
-            {
-                anchor_masses[ j ]      = masses[ ids[ j ] ];
-                anchor_coords[ j ][ 0 ] = coordinates[ ids[ j ] ][ 0 ];
-                anchor_coords[ j ][ 1 ] = coordinates[ ids[ j ] ][ 1 ];
-                anchor_coords[ j ][ 2 ] = coordinates[ ids[ j ] ][ 2 ];
-            }
-
             // backup the old value of the system center
             double offset[ 3 ] = { 0 };
             offset[ 0 ]        = this->system_center[ 0 ];
@@ -82,12 +83,6 @@ int calculator::call_pre_module( unsigned long types[], double masses[], double 
             offset[ 2 ]        = this->system_center[ 2 ];
 
             ana::center_of_mass( counter, anchor_masses, anchor_coords, this->system_center );
-
-            // release the memory
-            delete[] ids;
-            delete[] anchor_masses;
-            delete[] anchor_coords;
-
 
             offset[ 0 ] -= this->system_center[ 0 ];
             offset[ 1 ] -= this->system_center[ 1 ];
@@ -113,6 +108,12 @@ int calculator::call_pre_module( unsigned long types[], double masses[], double 
         WARN( "Most boud partcile is not implemented yet." );
         break;
     }
+
+    // release the memory
+    delete[] ids;
+    delete[] anchor_masses;
+    delete[] anchor_coords;
+
     return 0;
 }
 

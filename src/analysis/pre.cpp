@@ -1,6 +1,7 @@
 #ifndef GALOTFA_PRE_CPP
 #define GALOTFA_PRE_CPP
 #include "pre.h"
+#include "../analysis/utils.h"
 #include <mpi.h>
 #include <string.h>
 namespace ana = galotfa::analysis;
@@ -30,6 +31,24 @@ int ana::center_of_mass( unsigned long part_num, double masses[], double coords[
     }
     return 0;
 }  // namespace galotfa::analysis
+
+constexpr unsigned int as_const( unsigned int m )
+{
+    return m;
+}
+
+int most_dense_pixel( unsigned long part_num, double coords[][ 3 ], double lower_bound_x,
+                      double upper_bound_x, double lower_bound_y, double upper_bound_y,
+                      double lower_bound_z, double upper_bound_z, unsigned int bin_num_x,
+                      unsigned int bin_num_y, unsigned int bin_num_z, double ( &center )[ 3 ] )
+{
+    // calculate the most dense pixel of the given array of particles
+    const unsigned int             M = as_const( bin_num_x );
+    const unsigned int             N = as_const( bin_num_y );
+    ana::mat< M, N, unsigned int > density_map;
+
+    return 0;
+}
 
 
 #ifdef debug_pre

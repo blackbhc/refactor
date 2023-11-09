@@ -8,8 +8,10 @@ namespace analysis {
 
     // calculate the center of mass of the given array of particles
 
-    int most_dense_pixel( unsigned long part_num, double masses[], double coords[][ 3 ],
-                          double ( &center )[ 3 ] );
+    int most_dense_pixel( unsigned long part_num, double coords[][ 3 ], double lower_bound_x,
+                          double upper_bound_x, double lower_bound_y, double upper_bound_y,
+                          double lower_bound_z, double upper_bound_z, unsigned int bin_num_x,
+                          unsigned int bin_num_y, unsigned int bin_num_z, double ( &center )[ 3 ] );
     // calculate the most dense pixel of the given array of particles
 }  // namespace analysis
 }  // namespace galotfa
