@@ -497,6 +497,8 @@ namespace analysis {
         // iterate over the data points
         for ( unsigned int i = 0; i < Array_Len; ++i )
         {
+            if ( coord[ i ] < lower_bound || coord[ i ] > upper_bound )
+                continue;
             // the index of the bin
             unsigned int bin_index =
                 ( unsigned int )( ( coord[ i ] - lower_bound ) / range * Bin_Num );
@@ -642,6 +644,10 @@ namespace analysis {
         // iterate over the data points
         for ( unsigned int i = 0; i < Array_Len; ++i )
         {
+            if ( coord_x[ i ] < lower_bound_x || coord_x[ i ] > upper_bound_x )
+                continue;
+            else if ( coord_y[ i ] < lower_bound_y || coord_y[ i ] > upper_bound_y )
+                continue;
             // the index of the bin
             unsigned int bin_index_x =
                 ( unsigned int )( ( coord_x[ i ] - lower_bound_x ) / range_x * Bin_Numx );
