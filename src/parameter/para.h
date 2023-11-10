@@ -25,20 +25,20 @@ struct para
     double      glb_convergence_threshold = 0.001, glb_equal_threshold = 1e-10;
 
     // pre section parameters
-    bool          pre_recenter = true, pre_align_bar = true;
-    double        pre_region_size = 20, pre_region_ratio = 1;
+    bool          pre_recenter    = true;
+    double        pre_region_size = 20, pre_axis_ratio = 1;
     std::string   pre_region_shape = "cylinder", pre_recenter_method = "density";
     vector< int > pre_recenter_anchors;
 
     // other model section parameters
     bool md_image = false, md_bar_major_axis = false, md_bar_length = false, md_sbar = false,
-         md_sbuckle = false, md_inertia_tensor = false;
+         md_sbuckle = false, md_inertia_tensor = false, md_align_bar = true;
     bool                    md_multiple = false;
     vector< int >           md_particle_types;
     vector< std::string >   md_classification;
     vector< vector< int > > md_target_sets;
     int                     md_image_bins  = 100;
-    double                  md_region_size = 20, md_region_ratio = 1;
+    double                  md_region_size = 20, md_axis_ratio = 1, md_bar_threshold = 0.15;
     std::string             md_region_shape = "cylinder";
     vector< int >           md_am;  // An, lowercase for ini key
     vector< std::string >   md_colors;

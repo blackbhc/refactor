@@ -72,10 +72,9 @@ para::para( ini_parser& parser )
     update( pre, recenter, Pre, bool );
     update( pre, recenter_anchors, Pre, ints );
     update( pre, region_shape, Pre, str );
-    update( pre, region_ratio, Pre, double );
+    update( pre, axis_ratio, Pre, double );
     update( pre, region_size, Pre, double );
     update( pre, recenter_method, Pre, str );
-    update( pre, align_bar, Pre, bool );
 
     // Model section
     update( md, switch_on, Model, bool );
@@ -84,8 +83,9 @@ para::para( ini_parser& parser )
     update( md, particle_types, Model, ints );
     update( md, multiple, Model, bool );
     update( md, classification, Model, strs );
+    update( md, align_bar, Model, bool );
     update( md, region_shape, Model, str );
-    update( md, region_ratio, Model, double );
+    update( md, axis_ratio, Model, double );
     update( md, region_size, Model, double );
     update( md, image, Model, bool );
     update( md, image_bins, Model, int );
@@ -93,6 +93,7 @@ para::para( ini_parser& parser )
     update( md, bar_major_axis, Model, bool );
     update( md, bar_length, Model, bool );
     update( md, sbar, Model, bool );
+    update( md, bar_threshold, Model, double );
     update( md, sbuckle, Model, bool );
     update( md, inertia_tensor, Model, bool );
     update( md, am, Model, ints );
@@ -254,7 +255,7 @@ int para::check( void )
                 "The region size for pre-process region is non-positive, which is not allowed." )
 
             IF_THEN_WARN(
-                this->pre_region_ratio <= 0,
+                this->pre_axis_ratio <= 0,
                 "The axis ratio for pre-process region is non-positive, which is not allowed." )
 
             IF_THEN_WARN( this->pre_recenter_method != "com"
@@ -270,17 +271,22 @@ int para::check( void )
                 this->pre_recenter_method = "com";
             }
         }
-        else
-        {
-            IF_THEN_WARN( this->pre_align_bar,
-                          "Try to align the x axis parallel to the bar major axis, "
-                          "but the recenter is not activated." );
-        }
     }
 
     // check the model section
     if ( this->md_switch_on )
     {
+        IF_THEN_WARN( this->md_align_bar && !this->pre_recenter,
+                      "Try to align the x axis parallel to the bar major axis, "
+                      "but the recenter is not activated." );
+
+        // if need to align the bar major axis, then ensure the major axis is enabled
+        if ( this->md_align_bar )
+        {
+            this->md_bar_major_axis = true;
+            this->md_sbar           = true;
+        }
+
         IF_THEN_WARN( this->md_period <= 0,
                       "The period of the model analysis is non-positive, which is not allowed." );
 
@@ -315,11 +321,14 @@ int para::check( void )
 
         IF_THEN_WARN(
             this->md_region_size <= 0,
-            "The axis ratio for model analysis region is non-positive, which is not allowed." )
+            "The axis ratio for model analysis region is non-positive, which is not allowed." );
 
         IF_THEN_WARN(
-            this->md_region_ratio <= 0,
-            "The axis ratio for model analysis region is non-positive, which is not allowed." )
+            this->md_axis_ratio <= 0,
+            "The axis ratio for model analysis region is non-positive, which is not allowed." );
+
+        IF_THEN_WARN( this->md_bar_threshold <= 0 || this->md_bar_threshold >= 1,
+                      "The bar threshold is not in the range of (0,1), which is not allowed." );
 
         if ( this->md_image )
         {
@@ -455,28 +464,30 @@ int para::test_print()
 
     // Pre section
     printi( pre, recenter );
+    printis( pre, recenter_anchors );
     prints( pre, region_shape );
-    printd( pre, region_ratio );
+    printd( pre, axis_ratio );
     printd( pre, region_size );
     prints( pre, recenter_method );
-    printi( pre, align_bar );
 
     // Model section
     printi( md, switch_on );
     prints( md, filename );
+    printi( md, period );
     printis( md, particle_types );
     printi( md, multiple );
     printss( md, classification );
-    printi( md, period );
     prints( md, region_shape );
-    printd( md, region_ratio );
+    printd( md, axis_ratio );
     printd( md, region_size );
+    printi( md, align_bar );
     printi( md, image );
     printi( md, image_bins );
     printss( md, colors );
     printi( md, bar_major_axis );
-    printi( md, bar_length );
     printi( md, sbar );
+    printd( md, bar_threshold );
+    printi( md, bar_length );
     printi( md, sbuckle );
     printi( md, inertia_tensor );
     printis( md, am );
@@ -485,6 +496,7 @@ int para::test_print()
     printi( ptc, switch_on );
     prints( ptc, filename );
     printi( ptc, period );
+    printis( ptc, particle_types );
     printi( ptc, circularity );
     printi( ptc, circularity_3d );
     printi( ptc, rg );
@@ -509,6 +521,7 @@ int para::test_print()
     printi( post, switch_on );
     prints( post, filename );
     printi( post, pattern_speed );
+
     CHECK_RETURN( true );
 }
 
