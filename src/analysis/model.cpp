@@ -1,0 +1,62 @@
+#ifndef GALOTFA_MODEL_CPP
+#define GALOTFA_MODEL_CPP
+#include "model.h"
+#include <complex>
+#include <math.h>
+#include <mpi.h>
+namespace ana = galotfa::analysis;
+complex< double > ana::An( unsigned int array_len, double mass[], double coord[][ 3 ],
+                           unsigned int order )
+{
+    complex< double > result = 0 + 0i;
+    complex< double > I      = 0 + 1i;
+    double            phi    = 0;  // the azimuthal angle
+
+    for ( unsigned int i = 0; i < array_len; i++ )
+    {
+        phi = atan2( coord[ i ][ 1 ], coord[ i ][ 0 ] );
+        result += mass[ i ] * exp( order * phi * I );
+    }
+
+    // MPI reduction
+    MPI_Allreduce( MPI_IN_PLACE, &result, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD );
+    return result;
+}
+
+
+double ana::s_bar( unsigned int array_len, double mass[], double coord[][ 3 ] )
+{
+    double s_bar = 0;
+    auto   A2    = An( array_len, mass, coord, 2 );
+    auto   A0    = An( array_len, mass, coord, 0 );
+    auto   Abar  = A2 / A0;
+    return abs( Abar );
+}
+
+double ana::s_buckle( unsigned int array_len, double mass[], double coord[][ 3 ] )
+{
+    complex< double > numerator   = 0 + 0i;
+    double            denominator = 0;
+    complex< double > I           = 0 + 1i;
+    double            phi         = 0;  // the azimuthal angle
+
+    for ( unsigned int i = 0; i < array_len; i++ )
+    {
+        phi = atan2( coord[ i ][ 1 ], coord[ i ][ 0 ] );
+        numerator += coord[ i ][ 2 ] * mass[ i ] * exp( 2 * phi * I );
+        denominator += mass[ i ];
+    }
+
+    // MPI reduction
+    MPI_Allreduce( MPI_IN_PLACE, &numerator, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD );
+    MPI_Allreduce( MPI_IN_PLACE, &denominator, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+
+    return abs( numerator / denominator );
+}
+
+double ana::bar_major_axis( unsigned int array_len, double mass[], double coord[][ 3 ] )
+{
+    auto A2 = An( array_len, mass, coord, 2 );
+    return arg( A2 ) / 2;  // divide by 2, as the argument of A2 is 2*phi
+}
+#endif

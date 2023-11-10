@@ -178,11 +178,11 @@ int monitor::save()
     int return_code = 0;
     if ( this->is_root() )
     {
-        galotfa::analysis_result res = this->calc->feedback();
+        galotfa::analysis_result* res = this->calc->feedback();
         for ( auto& single_model : this->writers.model_writers )
         {
             if ( this->para->pre_recenter )
-                single_model->push< double >( res.system_center, 3, "/Center" );
+                single_model->push< double >( res->system_center, 3, "/Center" );
         }
     }
 
@@ -529,9 +529,10 @@ inline int monitor::push_data call_without_tracer const
 {
     // This function should be called before the increment of the step counter
     if ( need_ana() )
-        this->calc->call_pre_module( types, masses, coordinates, particle_number );
-    // if ( need_ana_model() )
-    //     this->calc->call_md_module();
+        this->calc->call_pre_module( particle_number, types, masses, coordinates );
+    if ( need_ana_model() )
+        this->calc->call_md_module( particle_number, masses, coordinates, velocities,
+                                    this->id_for_model, this->part_num_model );
     if ( need_ana_particle() )
         this->calc->call_ptc_module();
     if ( need_log_orbit() )

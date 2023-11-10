@@ -20,16 +20,23 @@ using std::vector;
 // In summary, the argument list is:
 // id, type, mass, coordinate, velocity, time, particle_number
 // and an optional potential tracer type
-#define md_args                                                             \
-    ( double masses[], double coordiantes[][ 3 ], double velocities[][ 3 ], \
-      unsigned long& particle_number, vector< unsigned long* >& id_for_pre, \
+#define md_args                                                                   \
+    ( unsigned long& particle_number, double masses[], double coordiantes[][ 3 ], \
+      double velocities[][ 3 ], vector< unsigned long* >& id_for_pre,             \
       vector< unsigned long >& part_num_pre )
 
 namespace galotfa {
 
 struct analysis_result
 {
+    // pre-process part
     double* system_center = nullptr;
+    // model part, all support multiple analysis sets
+    vector< double > bar_marjor_axis;  // by argument of A2
+    vector< double > s_bar;
+    vector< double > s_buckle;
+    vector< double > Ans[ 7 ];  // the An of each order, from 0 to 6
+    vector< double > bar_length;
 };
 
 
@@ -44,29 +51,30 @@ private:
     double         convergence_threshold;  // the convergence threshold
     enum method { center_of_mass, most_dense_pixel, most_bound_particle };  // the recenter method
     enum region_shape { sphere, cylinder, box };  // the recenter region shape
-    method          recenter_method;              // the recenter method
-    region_shape    recenter_region_shape;        // the recenter region shape
-    region_shape    model_region_shape;
-    analysis_result ptrs_of_results;
+    method           recenter_method;             // the recenter method
+    region_shape     recenter_region_shape;       // the recenter region shape
+    region_shape     model_region_shape;
+    analysis_result* ptrs_of_results;
 
     // private methods
 private:
     // the analysis wrappers: call the analysis modules, and restore the results
     inline int  shuffle();
     inline bool in_recenter_region() const;
+    void        setup_res();
 
 public:
     calculator( galotfa::para* parameter );
-    ~calculator() = default;
-    galotfa::analysis_result feedback() const;
-    bool                     is_target_of_pre( unsigned long& type, double& coordx, double& coordy,
+    ~calculator();
+    galotfa::analysis_result* feedback() const;
+    bool                      is_target_of_pre( unsigned long& type, double& coordx, double& coordy,
+                                                double& coordz ) const;
+    bool                      is_target_of_md( unsigned long& type, double& coordx, double& coordy,
                                                double& coordz ) const;
-    bool                     is_target_of_md( unsigned long& type, double& coordx, double& coordy,
-                                              double& coordz ) const;
     // the apis between the analysis engine and the real analysis codes
     // TODO: the version with the potential tracer for the following methods
-    int call_pre_module( unsigned long types[], double masses[], double coordinates[][ 3 ],
-                         unsigned long& particle_num ) const;
+    int call_pre_module( unsigned long& particle_num, unsigned long types[], double masses[],
+                         double coordinates[][ 3 ] ) const;
     int call_md_module md_args const;
     int                call_ptc_module() const;
     int                call_orb_module() const;

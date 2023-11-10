@@ -30,7 +30,7 @@ using std::vector;
 
 namespace galotfa {
 
-struct writer_integration
+struct writes
 {
     vector< galotfa::writer* > model_writers;
     galotfa::writer*           particle_writer = nullptr;
@@ -50,7 +50,7 @@ private:
     // model, particle, orbit, group, post
     // nested vector of the data writers to be written: due to there may be multiple analysis
     // sets
-    writer_integration       writers;
+    writes                   writers;
     int                      galotfa_rank;  // the global rank of the MPI process
     int                      galotfa_size;  // the global size of the MPI process
     vector< int >            include_particle_types;

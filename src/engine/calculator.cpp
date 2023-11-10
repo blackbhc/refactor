@@ -30,10 +30,34 @@ calculator::calculator( galotfa::para* parameter ) : para( parameter )
         this->recenter_region_shape = box;
     }
 
-    // assign the value of the ptrs_of_results
+    this->ptrs_of_results = new analysis_result;
+    this->setup_res();
+}
+
+calculator::~calculator()
+{
+    delete this->ptrs_of_results;
+}
+
+void calculator::setup_res()
+{
+    // assign the value of the pre-process part
     if ( this->para->pre_recenter )
     {
-        this->ptrs_of_results.system_center = this->system_center;
+        this->ptrs_of_results->system_center = this->system_center;
+    }
+    // assign the value of the model analysis part
+    if ( this->para->md_switch_on )
+    {
+        // set the vector of the results has size == the number of target analysis sets
+        if ( this->para->md_bar_major_axis )
+            this->ptrs_of_results->bar_marjor_axis.resize( this->para->md_target_sets.size() );
+        if ( this->para->md_bar_length )
+            this->ptrs_of_results->bar_length.resize( this->para->md_target_sets.size() );
+        if ( this->para->md_sbar )
+            this->ptrs_of_results->s_bar.resize( this->para->md_target_sets.size() );
+        if ( this->para->md_sbuckle )
+            this->ptrs_of_results->s_buckle.resize( this->para->md_target_sets.size() );
     }
 }
 
@@ -45,8 +69,8 @@ inline int shuffle()
     return 0;
 }
 
-int calculator::call_pre_module( unsigned long types[], double masses[], double coordinates[][ 3 ],
-                                 unsigned long& partnum_total ) const
+int calculator::call_pre_module( unsigned long& partnum_total, unsigned long types[],
+                                 double masses[], double coordinates[][ 3 ] ) const
 {
     vector< unsigned long* > id_for_pre;   // the array index of pre-process section's target
                                            // particles in the simulation data
@@ -114,18 +138,15 @@ int calculator::call_pre_module( unsigned long types[], double masses[], double 
             // may not, if pre_region_shape!="box")
             static unsigned int bin_num_x = this->para->md_image_bins;
             static unsigned int bin_num_y = bin_num_x;
-            static unsigned int bin_num_z =
-                ( unsigned int )bin_num_x * this->para->pre_region_ratio;
+            static unsigned int bin_num_z = ( unsigned int )bin_num_x * this->para->pre_axis_ratio;
             double lower_bound_x = this->system_center[ 0 ] - this->para->pre_region_size * 0.5;
             double upper_bound_x = this->system_center[ 0 ] + this->para->pre_region_size * 0.5;
             double lower_bound_y = this->system_center[ 1 ] - this->para->pre_region_size * 0.5;
             double upper_bound_y = this->system_center[ 1 ] + this->para->pre_region_size * 0.5;
-            double lower_bound_z =
-                this->system_center[ 1 ]
-                - this->para->pre_region_size * 0.5 * this->para->pre_region_ratio;
-            double upper_bound_z =
-                this->system_center[ 1 ]
-                + this->para->pre_region_size * 0.5 * this->para->pre_region_ratio;
+            double lower_bound_z = this->system_center[ 1 ]
+                                   - this->para->pre_region_size * 0.5 * this->para->pre_axis_ratio;
+            double upper_bound_z = this->system_center[ 1 ]
+                                   + this->para->pre_region_size * 0.5 * this->para->pre_axis_ratio;
 
             ana::most_dense_pixel( counter, anchor_coords, lower_bound_x, upper_bound_x,
                                    lower_bound_y, upper_bound_y, lower_bound_z, upper_bound_z,
@@ -163,7 +184,7 @@ int calculator::call_pre_module( unsigned long types[], double masses[], double 
 
 int calculator::call_md_module md_args const
 {
-    INFO( "Mock the behavior of model analysis module." );
+
     return 0;
 }
 
@@ -191,7 +212,7 @@ int calculator::call_post_module() const
     return 0;
 }
 
-galotfa::analysis_result calculator::feedback() const
+galotfa::analysis_result* calculator::feedback() const
 {
     return this->ptrs_of_results;
 }
@@ -213,17 +234,15 @@ bool calculator::is_target_of_pre( unsigned long& type, double& coordx, double& 
     switch ( this->recenter_region_shape )
     {
     case sphere:
-        if ( !ana::in_spheroid( offset, this->para->pre_region_size,
-                                this->para->pre_region_ratio ) )
+        if ( !ana::in_spheroid( offset, this->para->pre_region_size, this->para->pre_axis_ratio ) )
             return false;
         break;
     case box:
-        if ( !ana::in_box( offset, this->para->pre_region_size, this->para->pre_region_ratio ) )
+        if ( !ana::in_box( offset, this->para->pre_region_size, this->para->pre_axis_ratio ) )
             return false;
         break;
     case cylinder:
-        if ( !ana::in_cylinder( offset, this->para->pre_region_size,
-                                this->para->pre_region_ratio ) )
+        if ( !ana::in_cylinder( offset, this->para->pre_region_size, this->para->pre_axis_ratio ) )
             return false;
         break;
     }
@@ -247,15 +266,15 @@ bool calculator::is_target_of_md( unsigned long& type, double& coordx, double& c
     switch ( this->model_region_shape )
     {
     case sphere:
-        if ( !ana::in_spheroid( offset, this->para->md_region_size, this->para->md_region_ratio ) )
+        if ( !ana::in_spheroid( offset, this->para->md_region_size, this->para->md_axis_ratio ) )
             return false;
         break;
     case box:
-        if ( !ana::in_box( offset, this->para->md_region_size, this->para->md_region_ratio ) )
+        if ( !ana::in_box( offset, this->para->md_region_size, this->para->md_axis_ratio ) )
             return false;
         break;
     case cylinder:
-        if ( !ana::in_cylinder( offset, this->para->md_region_size, this->para->md_region_ratio ) )
+        if ( !ana::in_cylinder( offset, this->para->md_region_size, this->para->md_axis_ratio ) )
             return false;
         break;
     }
