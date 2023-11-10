@@ -222,7 +222,7 @@ which will combine other modules together to finish the on-the-fly analysis.
 
 - struct `analysis_results`: the analysis results of the analysis engine, just design to be a symbolic integration
   of the pointer of the analysis resutls' container in the `calculator` class.
-- struct `writer_integration`: the integration of writers for different analysis modules, as there may be
+- struct `writers`: the integration of writers for different analysis modules, as there may be
   more than one (and unknown) output files in the model and group level analysis modules.
 - class `monitor`: the virtual analysis engine's monitor, which will take over the analysis period and the
   extract of the target particles of analysis.
@@ -394,6 +394,8 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
    lack of the new parameter.
 5. Use the new parameter in the analysis code.
 
+Steps to change the parameter's name or usage are similar.
+
 ### `src/output`: <a id="src_output"></a> <a href="#list_of_modules"><font size=4>(src list)</font></a>
 
 #### Public APIs
@@ -553,17 +555,17 @@ statistics, smoothing, etc. All the followings are defined in the namespace `gal
   - The bins are defined as `[lower, upper)`, namely the lower bound is included and the upper bound is excluded.
     Except the last bin, which is `[lower, upper]`.
 
-#### Pre-process part
+#### Pre-process part: `src/analysis/pre.h` and `src/analysis/pre.cpp`
 
 - `center_by_com(...)`: calculate the system's center of mass as the system center.
 - `most_dense_pixle(...)`: calculate the most dense pixel in the image matrices x-y and x-z as the system center,
   note that the final system center is the center of the most dense pixel, so choose the bin size carefully.
   For example, if the number of bins is small, then an odd number of bins is better.
 
-#### Model analysis part
+#### Model analysis part: `src/analysis/model.h` and `src/analysis/model.cpp`
 
 - `An(...)`: the Fourier coefficient of surface density's symmetric component (see formula in the
-  development/computation.md).
+  development-manual/computation.md).
 - `s_bar`: the bar strength, $A_2/A_0$.
 - `s_buckle(...)`: the buckling strength.
 - `bar_major_axis(...)`: calculate the major axis of the bar, which is defined as the argument of $A_2$.

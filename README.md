@@ -204,17 +204,19 @@ to see their explanation.
 |            | <a href="#classification">`classification`</a>               | Strings    | empty         | see in the <a href="#classification">text</a>               |
 |            | <a href="#region_shape_m">`region_shape`</a>                 | String     | `cylinder`    | `sphere`, `cylinder` or `box`.                              |
 |            | <a href="#axis_ratio_m">`axis_ratio`</a>                     | Float      | 1.0           | $>0$                                                        |
-|            | <a href="#align_bar">`align_bar`</a>                         | Boolean    | `on`          | `on` or `off`                                               |
 |            | <a href="#size_m">`region_size`</a>                          | Float      | 20.0          | $>0$                                                        |
+|            | <a href="#align_bar">`align_bar`</a>                         | Boolean    | `on`          | `on` or `off`                                               |
 |            | <a href="#image">`image`</a>                                 | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#image_bins">`image_bins`</a>                       | Integer    | 100           | $>0$                                                        |
 |            | <a href="#colors">`colors`</a>                               | String(s)  |               | see in the <a href="#colors">text</a>                       |
 |            | <a href="#bar_major_axis">`bar_major_axis`</a>               | Boolean    | `off`         | `on` of `off`                                               |
-|            | <a href="#bar_length">`bar_length`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#sbar">`sbar`</a>                                   | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#bar_threshold">`bar_threshold`</a>                 | Float      | 0.15          | $(0, 1)$                                                    |
+|            | <a href="#bar_length">`bar_length`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#sbuckle">`sbuckle`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#An">`An`</a>                                       | Integer(s) |               | > 0                                                         |
 |            | <a href="#inertia_tensor">`inertia_tensor`</a>               | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#dispersion_tensor">`dispersion_tensor`</a>         | Boolean    | `off`         | `on` or `off`                                               |
 | `Particle` |                                                              |            |               |                                                             |
 |            | <a href="#switch_on_p">`switch_on`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#filename_p">`filename`</a>                         | String     | `particle`    | Any valid filename prefix.                                  |
@@ -308,9 +310,6 @@ major axis to the $x$-axis.
     the `region_method` = `density`, then the `image` option in the `Model` section will be automatically
     turned on and `surface_density` will be automatically added to the `colors` parameter in the `Model` section.
   - `recenter_method` = `potential`: future feature.
-- <a id="align_bar"></a>`align_bar`: whether rotate the coordinates to align the $x$-axis to the bar major axis,
-  this option is only available when the bar is detected. It's may be useful to align the bar major axis to the
-  $x$-axis for some analysis or visualization.
 
 ##### Model
 
@@ -355,6 +354,17 @@ The model level on-the-fly analysis of the target particles. The most common cas
     `axis_ratio` $\times$ `region_size`.
   - `region_shape` = `box`: the region is a cube with side length $L=$ `region_size`, and stretched along the
     $z$-axis with $L_z=$ `axis_ratio` $\times$ `region_size`.
+- <a id="align_bar"></a>`align_bar`: whether rotate the coordinates to align the $x$-axis to the bar major axis
+  after recentering the target particles. This is only done when the bar is detected (see in `bar_threshold`).
+  It's may be useful to align the bar major axis to the $x$-axis for some analysis or visualization. Note
+  that if this option is activated then the `bar_major_axis` and `sbar` will be automatically activated in
+  the `Model` section, and the `recenter` in `Pre` section should be switched on otherwise the program will
+  raise an error.
+
+<font color="red">**Note:**</font> all the following bar related quantities are calculated in the x-y plane,
+namely they doesn't consider the case that the bar is inclined to the x-y plane. The possible correction
+is available with the inertia tensor.
+
 - <a id="image"></a>`image`: whether to output the image matrices of the target particles.
   - The particles will be divided into bins in each axis (according to the `region_shape`) and do some statistics
     in each bin, such as the mean value of some quantity, the number of particles in each bin, etc. The bin number
@@ -370,21 +380,30 @@ The model level on-the-fly analysis of the target particles. The most common cas
   - `number_density`: the number of particles in each bin.
   - `surface_density`: the surface density of the particles in each bin. The unit is $[M]/[L]^2$, $[M]$ and
     $[L]$ are the internal unit of mass and length in the simulation, the same below.
-  - `mean_velocity`: the mean velocity of the particles in each bin, one component for each axis.
-  - `dispersion`: the velocity dispersion of the particles in each bin, one component for each axis.
-  - `dispersion_tensor`: the velocity dispersion tensor of the particles in each bin.
+  - `mean_velocity`: the mean velocity of the particles in each bin, depends on the region shape, one
+    component for <font color="red">**each axis**</font>.
+  - `dispersion`: the velocity dispersion of the particles in each bin, one component for
+    <font color="red">**each axis**</font>.
 - <a id="bar_major_axis"></a>`bar_major_axis`: whether calculate the bar major axis in the target particles,
   if detected a bar, defined as the phase angle of the $m$=2 Fourier component of the surface density after
   projection into the equatorial plane, $\arg(A_2)$.
-- <a id="bar_length"></a>`bar_length`: whether calculate the bar length in the target particles,
-  if detected a bar.
-- <a id="inerita_tensor"></a>`inertia_tensor`: whether calculate the inertia tensor of the target particles.
 - <a id="sbar"></a>`sbar`: whether calculate the bar strength parameter, where $S_{\rm{bar}}$ is defined
   as $A_2/A_0$.
+- <a id="bar_threshold"></a>`bar_threshold`: the threshold to detect a bar, namely if $S_{\rm bar}>$ this
+  value, the program will consider that a bar is detected, where $S_{\rm bar}$ is the bar strength parameter.
+  - In general, a range in $[0.1, 0.2]$ is recommended, but it depends on the simulation.
+- <a id="bar_length"></a>`bar_length`: whether calculate the bar length in the target particles,
+  if detected a bar, this is calculated with many methods. See in the development-manual/computation.md.
 - <a id="sbuckle"></a>`sbuckle`: whether calculate the buckling strength parameter, where $S_{\rm{buckle}}$
   is defined as $\sum m_i z_i \exp(-2i \phi_i) / \sum m_i$.
 - <a id="An"></a>`An`: whether calculate the $A_n$ parameters, where $A_n$ is the $n$-th Fourier component of the
-  surface density after projection into the equatorial plane.
+  surface density after projection into the equatorial plane. Note that actually only 0 - 6 are supported,
+  as higher order Fourier components are not so meaningful. So if you really want to calculate $A_n$ with $n>6$,
+  you need to change the code by yourself.
+- <a id="inerita_tensor"></a>`inertia_tensor`: whether calculate the inertia tensor of the target particles.
+- <a id="dispersion_tensor"></a>`dispersion_tensor`: the velocity dispersion tensor of the particles in
+  each bin, the three axes are dependent on the region shape. Its spatial resolution is the same as the
+  `image_bins`.
 
 ##### Particle
 
