@@ -6,10 +6,10 @@ in the codes.
 ## Content <a name="content"></a>
 
 1. <a href="#pre-process">Pre-process</a>
-2. <a href="#model">Model</a>
-3. <a href="#particle">Particle</a>
-4. <a href="#group">Group</a>
-5. <a href="#orbit">Orbit</a>
+2. <a href="#model">Model Analysis</a>
+3. <a href="#particle">Particle Analysis</a>
+4. <a href="#group">Group Analysis</a>
+5. <a href="#orbit">Orbit Log</a>
 
 ---
 
@@ -39,3 +39,19 @@ method is not reliable for the system with two or more satellites.
 The center of the densest pixel is the pixel with maximum number density, where its exact value is the
 center of such pixel. Note that this method is sensitive to the image matrix's pixel size, which is
 inferred from `image_bins` in the `Model` section of the ini file.
+
+## Model Analysis <a name="model"></a><a href="#contents"><font size=4>(content)</font></a>
+
+### Density Fourier Symmetry Mode
+
+$A_n=\sum_i^N {m_i\cdot\exp{(in\phi_i)}}$, $N$ is the number of particles, $m_i$ is the mass of the
+$i$-th particle, $\phi_i$ is the azimuthal angle of the $i$-th particle in cylindrical coordinate, $n$ is
+the order of the mode.
+
+### Bar strength
+
+$S_{\rm bar}=|A_2/A_0|$
+
+### Buckling strength
+
+$S_{\rm buckle}=|\sum_i^N {z_i\,m_i\cdot\exp{(2i\phi_i)}}/A_0|$

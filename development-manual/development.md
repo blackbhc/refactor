@@ -559,3 +559,11 @@ statistics, smoothing, etc. All the followings are defined in the namespace `gal
 - `most_dense_pixle(...)`: calculate the most dense pixel in the image matrices x-y and x-z as the system center,
   note that the final system center is the center of the most dense pixel, so choose the bin size carefully.
   For example, if the number of bins is small, then an odd number of bins is better.
+
+#### Model analysis part
+
+- `An(...)`: the Fourier coefficient of surface density's symmetric component (see formula in `development/computation.md`).
+- `s_bar`: the bar strength, $A_2/A_0$.
+- `s_buckle(...)`: the buckling strength.
+- `bar_major_axis(...)`: calculate the major axis of the bar, which is defined as the argument of $A_2$.
+  The return value in the range $(-\pi/2, \pi/2]$.
