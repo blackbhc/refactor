@@ -106,6 +106,7 @@ public:
     ~monitor();
     // interface of the simulation data: without potential tracer
     int run_with call_without_tracer;
+    inline void  post_analysis();  // TODO: to be implemented
 };
 }  // namespace galotfa
 #endif

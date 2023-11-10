@@ -67,7 +67,6 @@ void monitor::init()
 monitor::~monitor()
 {
     // call the post analysis module of the calculator
-    this->calc->call_post_module();
     if ( this->para != nullptr )
     {
         delete this->para;

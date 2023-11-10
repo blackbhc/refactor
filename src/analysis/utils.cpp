@@ -34,7 +34,10 @@ vector< double > ana::bin1d( unsigned long array_len, double coord[], double dat
         ERROR( "The number of bins should be larger than 0." );
     }
     else if ( array_len == 0 )
-        ERROR( "The length of the array should be larger than 0." );
+    {
+        WARN( "The length of array for binning is 0, return a vector of 0." );
+        return vector< double >( bin_num, 0 );
+    }
 
     // the final result
     vector< double > results( bin_num );
@@ -215,7 +218,10 @@ vector< vector< double > > ana::bin2d( unsigned long array_len, double coord_x[]
         ERROR( "The number of bins should be larger than 0." );
     }
     else if ( array_len == 0 )
-        ERROR( "The length of the array should be larger than 0." );
+    {
+        WARN( "The length of array for binning is 0, return a vector of 0." );
+        return vector< vector< double > >( bin_numx, vector< double >( bin_numy, 0 ) );
+    }
 
     // the final result
     vector< vector< double > > results( bin_numx, vector< double >( bin_numy ) );

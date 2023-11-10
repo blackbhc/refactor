@@ -5,14 +5,12 @@
 
 // for normal build mode, always use the mpi vertion prompts
 #ifndef DO_UNIT_TEST
-// if its header only, then other headers will include mpi.h
-#if !defined( GALOTFA_HEADER_ONLY ) && !defined( MPI_INCLUDED )
 #include <mpi.h>
-#endif
+#define MPI_INCLUDED_LOCAL 1
 #endif
 
 // print a message for warning
-#ifndef MPI_INCLUDED
+#ifndef MPI_INCLUDED_LOCAL
 // a single processor version printf
 #define println( ... )         \
     {                          \

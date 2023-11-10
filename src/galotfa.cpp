@@ -33,6 +33,13 @@ void galotfa_with_pot_tracer( unsigned long pot_tracer_type, unsigned long parti
 
 {
     // TODO: to be implemented
+    ( void )pot_tracer_type;
+    static galotfa::monitor otf_monitor;
+
+    int run_failed = otf_monitor.run_with( particle_ids, types, masses, coordiantes, velocities,
+                                           time, particle_number );
+    if ( run_failed )
+        WARN( "Failed to run galotfa at some steps!" );
     return;
 }
 }
