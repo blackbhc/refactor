@@ -58,6 +58,9 @@ void calculator::setup_res()
             this->ptrs_of_results->s_bar.resize( this->para->md_target_sets.size() );
         if ( this->para->md_sbuckle )
             this->ptrs_of_results->s_buckle.resize( this->para->md_target_sets.size() );
+        if ( this->para->md_am.size() > 0 )
+            for ( auto& n : this->para->md_am )
+                this->ptrs_of_results->Ans[ n ].resize( this->para->md_target_sets.size() );
     }
 }
 
@@ -184,7 +187,58 @@ int calculator::call_pre_module( unsigned long& partnum_total, unsigned long typ
 
 int calculator::call_md_module md_args const
 {
+    for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
+    {  // analysis of each target set
+        double( *coords )[ 3 ] = new double[ part_num_md[ i ] ][ 3 ];
+        double( *velos )[ 3 ]  = new double[ part_num_md[ i ] ][ 3 ];
+        double* masses         = new double[ part_num_md[ i ] ];
+        // extract the data of the target set
+        for ( int j = 0; j < ( int )part_num_md[ j ]; ++j )
+        {
+            {
+                coords[ j ][ 0 ] =
+                    coordinates[ id_for_md[ i ][ j ] ][ 0 ] - this->system_center[ 0 ];
+                coords[ j ][ 1 ] =
+                    coordinates[ id_for_md[ i ][ j ] ][ 1 ] - this->system_center[ 1 ];
+                coords[ j ][ 2 ] = coordinates[ id_for_md[ i ][ j ] ][ 2 ]
+                                   - this->system_center[ 2 ] * this->para->md_axis_ratio;
+                velos[ j ][ 0 ] = velocities[ id_for_md[ i ][ j ] ][ 0 ];
+                velos[ j ][ 1 ] = velocities[ id_for_md[ i ][ j ] ][ 1 ];
+                velos[ j ][ 2 ] = velocities[ id_for_md[ i ][ j ] ][ 2 ];
+                masses[ j ]     = masses[ id_for_md[ i ][ j ] ];
+            }
+        }
+        if ( this->para->md_bar_major_axis )
+            this->ptrs_of_results->bar_marjor_axis[ i ] =
+                ana::bar_major_axis( part_num_md[ i ], masses, coords );
+        if ( this->para->md_bar_length )
+            this->ptrs_of_results->bar_length[ i ] =
+                ana::bar_length( part_num_md[ i ], masses, coords );  // TODO: to be implemented
+        if ( this->para->md_sbar )
+            this->ptrs_of_results->s_bar[ i ] = ana::s_bar( part_num_md[ i ], masses, coords );
+        if ( this->para->md_sbuckle )
+            this->ptrs_of_results->s_buckle[ i ] =
+                ana::s_buckle( part_num_md[ i ], masses, coords );
+        if ( this->para->md_am.size() > 0 )
+            for ( auto& n : this->para->md_am )
+            {
+                this->ptrs_of_results->Ans[ n ][ i ] =
+                    ana::An( part_num_md[ i ], masses, coords, n );
+            }
 
+        if ( this->para->md_align_bar )
+        {
+            double phi = this->ptrs_of_results->bar_marjor_axis[ i ];
+            double x, y;  // tmp variables
+            for ( int j = 0; j < part_num_md[ i ]; ++j )
+            {
+                x                = coords[ j ][ 0 ];
+                y                = coords[ j ][ 1 ];
+                coords[ j ][ 0 ] = x * cos( phi ) - y * sin( phi );
+                coords[ j ][ 1 ] = x * sin( phi ) + y * cos( phi );
+            }
+        }
+    }
     return 0;
 }
 

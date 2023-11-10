@@ -45,7 +45,8 @@ private:
     int                  mpi_init_before_galotfa = 0;
     galotfa::para*       para                    = nullptr;  // pointer to the parameter class
     galotfa::calculator* calc                    = nullptr;
-    unsigned long long   step = 0;  // the current step of the simulation/analysis
+    unsigned long long   step = 0;    // the current step of the simulation/analysis
+    double               time = 0.0;  // the current time of the simulation/analysis
     // array of pointers to the writers: 5 possible output files
     // model, particle, orbit, group, post
     // nested vector of the data writers to be written: due to there may be multiple analysis

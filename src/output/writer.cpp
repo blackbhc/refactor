@@ -408,8 +408,8 @@ template < typename T > int writer::push( T* ptr, unsigned long len, std::string
             target_len *= dims[ i ];
         if ( target_len != len )
         {
-            WARN( "The length of the target dataset different (%d) is different from the input "
-                  "(%lu)!",
+            WARN( "The length of the target dataset (%d) is different from the input data"
+                  " (%lu)!",
                   target_len, len );
             return 1;
         }

@@ -59,4 +59,10 @@ double ana::bar_major_axis( unsigned int array_len, double mass[], double coord[
     auto A2 = An( array_len, mass, coord, 2 );
     return arg( A2 ) / 2;  // divide by 2, as the argument of A2 is 2*phi
 }
+
+double ana::bar_length( unsigned int array_len, double* mass, double ( *coord )[ 3 ] )
+{
+    // TODO: to be implemented
+    return 0;
+}
 #endif

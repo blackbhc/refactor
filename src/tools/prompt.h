@@ -7,6 +7,11 @@
 #ifndef DO_UNIT_TEST
 #include <mpi.h>
 #define MPI_INCLUDED_LOCAL 1
+#else
+#ifdef MPI_TEST
+#include <mpi.h>
+#define MPI_INCLUDED_LOCAL 1
+#endif
 #endif
 
 // print a message for warning

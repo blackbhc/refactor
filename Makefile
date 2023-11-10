@@ -53,7 +53,7 @@ test: check test_dir/test
 
 mpi_test: check test_dir/mpi_test
 	@echo "Testing units: " $(TEST_TARGET)
-	@cd $(PROJECT_ROOT)/test_dir && mpirun -np 2 ./mpi_test
+	@cd $(PROJECT_ROOT)/test_dir && mpirun -np 8 ./mpi_test
 
 
 build: check $(TARGET)

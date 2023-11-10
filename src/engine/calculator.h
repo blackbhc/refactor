@@ -13,17 +13,18 @@
 #include "../analysis/post.h"
 #include "../analysis/pre.h"
 // include the vector
+#include <complex>
 #include <vector>
+using std::complex;
 using std::vector;
 
 // I don't want to write this verbose argument list again and again ...
 // In summary, the argument list is:
 // id, type, mass, coordinate, velocity, time, particle_number
 // and an optional potential tracer type
-#define md_args                                                                   \
-    ( unsigned long& particle_number, double masses[], double coordiantes[][ 3 ], \
-      double velocities[][ 3 ], vector< unsigned long* >& id_for_pre,             \
-      vector< unsigned long >& part_num_pre )
+#define md_args                                                             \
+    ( double masses[], double coordinates[][ 3 ], double velocities[][ 3 ], \
+      vector< unsigned long* >& id_for_md, vector< unsigned long >& part_num_md )
 
 namespace galotfa {
 
@@ -32,11 +33,11 @@ struct analysis_result
     // pre-process part
     double* system_center = nullptr;
     // model part, all support multiple analysis sets
-    vector< double > bar_marjor_axis;  // by argument of A2
-    vector< double > s_bar;
-    vector< double > s_buckle;
-    vector< double > Ans[ 7 ];  // the An of each order, from 0 to 6
-    vector< double > bar_length;
+    vector< double >            bar_marjor_axis;  // by argument of A2
+    vector< double >            s_bar;
+    vector< double >            s_buckle;
+    vector< complex< double > > Ans[ 7 ];    // the An of each order, from 0 to 6
+    vector< double >            bar_length;  // TODO: to be implemented with multiple method
 };
 
 

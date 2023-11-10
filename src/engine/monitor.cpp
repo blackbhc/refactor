@@ -2,6 +2,7 @@
 #define GALOTFA_MONITOR_CPP
 #include "monitor.h"
 #include <hdf5.h>
+#include <math.h>
 #include <mpi.h>
 #include <stdio.h>
 #include <string>
@@ -178,11 +179,39 @@ int monitor::save()
     int return_code = 0;
     if ( this->is_root() )
     {
-        galotfa::analysis_result* res = this->calc->feedback();
+        galotfa::analysis_result* res = this->calc->feedback();  // get the analysis results
+        int                       i   = 0;  // index of the target model analysis sets
         for ( auto& single_model : this->writers.model_writers )
         {
+            single_model->push< double >( &this->time, 1, "/Times" );
+
             if ( this->para->pre_recenter )
                 single_model->push< double >( res->system_center, 3, "/Center" );
+            if ( this->para->md_bar_major_axis )
+                single_model->push< double >( &res->bar_marjor_axis[ i ], 1, "/Bar/MajorAxis" );
+            if ( this->para->md_sbar )
+                single_model->push< double >( &res->s_bar[ i ], 1, "/Bar/SBar" );
+            if ( this->para->md_sbuckle )
+                single_model->push< double >( &res->s_buckle[ i ], 1, "/Bar/SBuckle" );
+            if ( this->para->md_am.size() > 0 )
+                for ( auto& m : this->para->md_am )
+                {
+                    double real = res->Ans[ m ][ i ].real();
+                    double imag = res->Ans[ m ][ i ].real();
+                    single_model->push< double >( &real, 1,
+                                                  "/Bar/A" + std::to_string( m ) + "(real)" );
+                    single_model->push< double >( &imag, 1,
+                                                  "/Bar/A" + std::to_string( m ) + "(imag)" );
+                }
+            if ( this->para->md_bar_length )
+                single_model->push< double >( &res->bar_length[ i ], 1, "/Bar/Length" );
+            // if ( this->para->md_image )
+            // {
+            //     single_model->create_dataset( "/Image/Size", image_info );
+            //     for ( auto& color : this->para->md_colors )
+            //         single_model->create_dataset( "/Image/" + color, single_vector_info );
+            // }
+            ++i;
         }
     }
 
@@ -213,14 +242,8 @@ inline void monitor::create_model_file_datasets()
         single_model->create_dataset( "/Times", single_scaler_info );
         if ( this->para->pre_recenter )
             single_model->create_dataset( "/Center", single_vector_info );
-        if ( this->para->md_image )
-        {
-            single_model->create_dataset( "/Image/Size", image_info );
-            for ( auto& color : this->para->md_colors )
-                single_model->create_dataset( "/Image/" + color, single_vector_info );
-        }
         if ( this->para->md_bar_major_axis )
-            single_model->create_dataset( "/Bar/MajorAxis", single_vector_info );
+            single_model->create_dataset( "/Bar/MajorAxis", single_scaler_info );
         if ( this->para->md_bar_length )
             single_model->create_dataset( "/Bar/Length", single_scaler_info );
         if ( this->para->md_sbar )
@@ -229,7 +252,18 @@ inline void monitor::create_model_file_datasets()
             single_model->create_dataset( "/Bar/SBuckle", single_scaler_info );
         if ( this->para->md_am.size() > 0 )
             for ( auto& m : this->para->md_am )
-                single_model->create_dataset( "/Bar/A" + std::to_string( m ), single_scaler_info );
+            {
+                single_model->create_dataset( "/Bar/A" + std::to_string( m ) + "(real)",
+                                              single_scaler_info );
+                single_model->create_dataset( "/Bar/A" + std::to_string( m ) + "(imag)",
+                                              single_scaler_info );
+            }
+        if ( this->para->md_image )
+        {
+            single_model->create_dataset( "/Image/Size", image_info );
+            for ( auto& color : this->para->md_colors )
+                single_model->create_dataset( "/Image/" + color, single_vector_info );
+        }
     }
 }
 
@@ -356,6 +390,8 @@ int monitor::run_with call_without_tracer
 {
     if ( !this->para->glb_switch_on )  // if galotfa is disabled, just return 0
         return 0;
+
+    this->time = time;
 
     if ( this->need_ana() )
         this->extractor( particle_number, types, particle_ids,
@@ -531,8 +567,8 @@ inline int monitor::push_data call_without_tracer const
     if ( need_ana() )
         this->calc->call_pre_module( particle_number, types, masses, coordinates );
     if ( need_ana_model() )
-        this->calc->call_md_module( particle_number, masses, coordinates, velocities,
-                                    this->id_for_model, this->part_num_model );
+        this->calc->call_md_module( masses, coordinates, velocities, this->id_for_model,
+                                    this->part_num_model );
     if ( need_ana_particle() )
         this->calc->call_ptc_module();
     if ( need_log_orbit() )
