@@ -555,4 +555,7 @@ statistics, smoothing, etc. All the followings are defined in the namespace `gal
 
 #### Pre-process part
 
-- `center_by_com(...)`: calculate the system's center of mass.
+- `center_by_com(...)`: calculate the system's center of mass as the system center.
+- `most_dense_pixle(...)`: calculate the most dense pixel in the image matrices x-y and x-z as the system center,
+  note that the final system center is the center of the most dense pixel, so choose the bin size carefully.
+  For example, if the number of bins is small, then an odd number of bins is better.
