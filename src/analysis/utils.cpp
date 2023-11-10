@@ -120,6 +120,11 @@ vector< double > ana::bin1d( unsigned long array_len, double coord[], double dat
         }
     }
 
+    // erase the extra memory
+    if ( method == stats_method::median || method == stats_method::std )
+        for ( i = 0; i < bin_num; ++i )
+            data_in_each_bin[ i ].resize( counts[ i ] );
+
     switch ( method )
     {
     case stats_method::count: {
@@ -199,10 +204,11 @@ vector< double > ana::bin1d( unsigned long array_len, double coord[], double dat
     return results;
 }
 
-vector< vector< double > >
-ana::bin2d( unsigned long array_len, double coord_x[], double coord_y[ array_len ], double data[],
-            double lower_bound_x, double upper_bound_x, double lower_bound_y, double upper_bound_y,
-            unsigned int bin_numx, unsigned int bin_numy, ana::stats_method method )
+vector< vector< double > > ana::bin2d( unsigned long array_len, double coord_x[], double coord_y[],
+                                       double data[], double lower_bound_x, double upper_bound_x,
+                                       double lower_bound_y, double upper_bound_y,
+                                       unsigned int bin_numx, unsigned int bin_numy,
+                                       ana::stats_method method )
 {
     if ( bin_numx == 0 || bin_numy == 0 )
     {
@@ -310,6 +316,12 @@ ana::bin2d( unsigned long array_len, double coord_x[], double coord_y[ array_len
         }
         }
     }
+
+    // erase the extra memory
+    if ( method == stats_method::median || method == stats_method::std )
+        for ( i = 0; i < bin_numx; ++i )
+            for ( j = 0; j < bin_numy; ++j )
+                data_in_each_bin[ i ][ j ].resize( counts[ i * bin_numy + j ] );
 
     switch ( method )
     {

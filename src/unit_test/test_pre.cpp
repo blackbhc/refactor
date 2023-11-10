@@ -15,7 +15,7 @@ static std::vector< int > test_pre()
     int fail    = 0;
     int unknown = 0;
     COUNT( unit_test::test_center_of_mass() );
-    // COUNT( unit_test::test_most_dense_pixel() );
+    COUNT( unit_test::test_most_dense_pixel() );
     SUMMARY( "pre-processing" );
 
     std::vector< int > result = { 0, 0, 0 };
