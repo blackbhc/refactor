@@ -1,6 +1,7 @@
 #ifndef GALOTFA_ANALYSIS_UNTILS_CPP
 #define GALOTFA_ANALYSIS_UNTILS_CPP
 #include "utils.h"
+#include <limits>
 #include <math.h>
 namespace ana = galotfa::analysis;
 bool ana::in_spheroid( double ( &pos )[ 3 ], double& size, double& ratio )
@@ -26,24 +27,48 @@ double ana::norm( double ( &vec )[ 3 ] )
 
 vector< double > ana::bin1d( unsigned long array_len, double coord[], double data[],
                              double lower_bound, double upper_bound, unsigned int bin_num,
-                             stats_method method )
+                             ana::stats_method method )
 {
-    if ( bin_num == 0 || array_len == 0 )
+    if ( bin_num == 0 )
+    {
         ERROR( "The number of bins should be larger than 0." );
-    vector< double > bins_1d( bin_num );  // the final result
+    }
+    else if ( array_len == 0 )
+        ERROR( "The length of the array should be larger than 0." );
 
-    // the index of the data points in each bin
-    // unsigned int bins[ bin_num ][ array_len ] = { 0 };
-    unsigned int** bins = new unsigned int*[ bin_num ]();
-    for ( unsigned int i = 0; i < bin_num; ++i )
-        bins[ i ] = new unsigned int[ array_len ]();
-    // the counts of the data points in each bin
-    unsigned int* counts = new unsigned int[ bin_num ]();
+    // the final result
+    vector< double > results( bin_num );
 
-    double range = upper_bound - lower_bound;
+    double*                    sum    = nullptr;  // summation of the data points in each bin
+    double*                    min    = nullptr;  // minimum of the data points in each bin
+    double*                    max    = nullptr;  // maximum of the data points in each bin
+    unsigned int*              counts = nullptr;  // the counts of the data points in each bin
+    vector< vector< double > > data_in_each_bin(
+        bin_num );  // the data points in each bin, only used for median and std
+    if ( method == stats_method::count || method == stats_method::mean
+         || method == stats_method::std || method == stats_method::median )
+        counts = new unsigned int[ bin_num ]();
+    if ( method == stats_method::sum || method == stats_method::std
+         || method == stats_method::mean )
+        sum = new double[ bin_num ]();
+    if ( method == stats_method::min )
+    {
+        min = new double[ bin_num ]();
+        for ( unsigned int i = 0; i < bin_num; ++i )
+            min[ i ] = std::numeric_limits< double >::max();
+    }
+    if ( method == stats_method::max )
+    {
+        max = new double[ bin_num ]();
+        for ( unsigned int i = 0; i < bin_num; ++i )
+            max[ i ] = std::numeric_limits< double >::min();
+    }
+
+    unsigned int i, j;  // array index
+    double       range = upper_bound - lower_bound;
 
     // iterate over the data points to find its bin
-    for ( unsigned int i = 0; i < array_len; ++i )
+    for ( i = 0; i < array_len; ++i )
     {
         if ( coord[ i ] < lower_bound || coord[ i ] > upper_bound )
             continue;
@@ -52,157 +77,183 @@ vector< double > ana::bin1d( unsigned long array_len, double coord[], double dat
         if ( bin_index == bin_num )
             bin_index = bin_num - 1;  // avoid the overflow at the upper bound
 
-        bins[ bin_index ][ counts[ bin_index ]++ ] = i;
-    }
-
-    if ( method == stats_method::count )
-    {
-        for ( unsigned int i = 0; i < bin_num; ++i )
-            bins_1d[ i ] = ( double )counts[ i ];
-    }
-    else
-    {
-        double* data_points[ bin_num ];
-
-        unsigned int i = 0, j = 0;
-        for ( i = 0; i < bin_num; ++i )
-        {
-            if ( counts[ i ] > 0 )
-            {
-                data_points[ i ] = new double[ counts[ i ] ];
-                for ( j = 0; j < counts[ i ]; ++j )
-                    data_points[ i ][ j ] = data[ bins[ i ][ j ] ];
-            }
-        }
         switch ( method )
         {
-        case stats_method::min: {
-            for ( i = 0; i < bin_num; ++i )
-            {
-                if ( counts[ i ] == 0 )
-                    bins_1d[ i ] = nan( "" );
-                else
-                    bins_1d[ i ] = ( double )*std::min_element( data_points[ i ],
-                                                                data_points[ i ] + counts[ i ] );
-            }
-            break;
-        }
-        case stats_method::max: {
-            for ( i = 0; i < bin_num; ++i )
-            {
-                if ( counts[ i ] == 0 )
-                    bins_1d[ i ] = nan( "" );
-                else
-                    bins_1d[ i ] = ( double )*std::max_element( data_points[ i ],
-                                                                data_points[ i ] + counts[ i ] );
-            }
-            break;
-        }
-        case stats_method::mean: {
-            for ( i = 0; i < bin_num; ++i )
-            {
-                if ( counts[ i ] == 0 )
-                    bins_1d[ i ] = nan( "" );
-                else
-                    bins_1d[ i ] = ( double )std::accumulate( data_points[ i ],
-                                                              data_points[ i ] + counts[ i ], 0.0 )
-                                   / counts[ i ];
-            }
-            break;
-        }
-        case stats_method::median: {
-            for ( i = 0; i < bin_num; ++i )
-            {
-                if ( counts[ i ] == 0 )
-                    bins_1d[ i ] = nan( "" );
-                else
-                {
-                    std::sort( data_points[ i ], data_points[ i ] + counts[ i ] );
-                    if ( counts[ i ] % 2 == 0 )
-                        bins_1d[ i ] = ( double )( data_points[ i ][ counts[ i ] / 2 - 1 ]
-                                                   + data_points[ i ][ counts[ i ] / 2 ] )
-                                       / 2;
-                    else
-                        bins_1d[ i ] = ( double )data_points[ i ][ counts[ i ] / 2 ];
-                }
-            }
+        case stats_method::count: {
+            ++counts[ bin_index ];
             break;
         }
         case stats_method::sum: {
-            for ( i = 0; i < bin_num; ++i )
-            {
-                if ( counts[ i ] == 0 )
-                    bins_1d[ i ] = 0;
-                else
-                    bins_1d[ i ] = ( double )std::accumulate( data_points[ i ],
-                                                              data_points[ i ] + counts[ i ], 0.0 );
-            }
+            sum[ bin_index ] += data[ i ];
+            break;
+        }
+        case stats_method::mean: {
+            sum[ bin_index ] += data[ i ];
+            ++counts[ bin_index ];
+            break;
+        }
+        case stats_method::min: {
+            if ( min[ bin_index ] > data[ i ] )
+                min[ bin_index ] = data[ i ];
+            break;
+        }
+        case stats_method::max: {
+            if ( max[ bin_index ] < data[ i ] )
+                max[ bin_index ] = data[ i ];
             break;
         }
         case stats_method::std: {
-            for ( i = 0; i < bin_num; ++i )
-            {
-                if ( counts[ i ] == 0 )
-                    bins_1d[ i ] = nan( "" );
-                else
-                {
-                    double mean =
-                        std::accumulate( data_points[ i ], data_points[ i ] + counts[ i ], 0.0 )
-                        / counts[ i ];
-                    double sum = 0;
-                    for ( j = 0; j < counts[ i ]; ++j )
-                        sum += ( data_points[ i ][ j ] - mean ) * ( data_points[ i ][ j ] - mean );
-                    bins_1d[ i ] = ( double )sqrt( sum / counts[ i ] );
-                }
-            }
+            sum[ bin_index ] += data[ i ];
+            if ( counts[ bin_index ] + 1 > ( unsigned int )data_in_each_bin[ bin_index ].size() )
+                data_in_each_bin[ bin_index ].resize( counts[ bin_index ] + 1 + 20 );
+            data_in_each_bin[ bin_index ][ counts[ bin_index ]++ ] =
+                data[ i ];  // NOTE: test this index carefullly
             break;
         }
-        default:  // never reach here
+        case stats_method::median: {
+            if ( counts[ bin_index ] + 1 > ( unsigned int )data_in_each_bin[ bin_index ].size() )
+                data_in_each_bin[ bin_index ].resize( counts[ bin_index ] + 1 + 20 );
+            data_in_each_bin[ bin_index ][ counts[ bin_index ]++ ] =
+                data[ i ];  // NOTE: test this index carefullly
             break;
         }
-        for ( i = 0; i < bin_num; ++i )
-            if ( counts[ i ] > 0 )
-                delete[] data_points[ i ];
+        }
     }
+
+    // erase the extra memory
+    if ( method == stats_method::median || method == stats_method::std )
+        for ( i = 0; i < bin_num; ++i )
+            data_in_each_bin[ i ].resize( counts[ i ] );
+
+    switch ( method )
+    {
+    case stats_method::count: {
+        for ( i = 0; i < bin_num; ++i )
+            results[ i ] = ( double )counts[ i ];
+        break;
+    }
+    case stats_method::sum: {
+        for ( i = 0; i < bin_num; ++i )
+            results[ i ] = sum[ i ];
+        break;
+    }
+    case stats_method::mean: {
+        for ( i = 0; i < bin_num; ++i )
+            results[ i ] = sum[ i ] / ( double )counts[ i ];
+        break;
+    }
+    case stats_method::min: {
+        for ( i = 0; i < bin_num; ++i )
+            results[ i ] = min[ i ];
+        break;
+    }
+    case stats_method::max: {
+        for ( i = 0; i < bin_num; ++i )
+            results[ i ] = max[ i ];
+        break;
+    }
+    case stats_method::median: {
+        for ( i = 0; i < bin_num; ++i )
+        {
+            if ( counts[ i ] == 0 )
+                results[ i ] = nan( "" );
+            else
+            {
+                std::sort( data_in_each_bin[ i ].begin(),
+                           data_in_each_bin[ i ].begin() + counts[ i ] );
+                if ( counts[ i ] % 2 == 0 )
+                    results[ i ] = ( data_in_each_bin[ i ][ counts[ i ] / 2 - 1 ]
+                                     + data_in_each_bin[ i ][ counts[ i ] / 2 ] )
+                                   / 2;
+                else
+                    results[ i ] = data_in_each_bin[ i ][ counts[ i ] / 2 ];
+            }
+        }
+        break;
+    }
+    case stats_method::std: {
+        for ( i = 0; i < bin_num; ++i )
+        {
+            if ( counts[ i ] == 0 )
+                results[ i ] = nan( "" );
+            else
+            {
+                double mean   = sum[ i ] / ( double )counts[ i ];
+                double error2 = 0;
+                for ( j = 0; j < counts[ i ]; ++j )
+                    error2 += ( data_in_each_bin[ i ][ j ] - mean )
+                              * ( data_in_each_bin[ i ][ j ] - mean );
+                results[ i ] = sqrt( error2 / counts[ i ] );
+            }
+        }
+    }
+    }
+
 
     // release the memory
-    for ( unsigned int i = 0; i < bin_num; ++i )
-        delete[] bins[ i ];
-    delete[] bins;
-    delete[] counts;
+    if ( counts != nullptr )
+        delete[] counts;
+    if ( sum != nullptr )
+        delete[] sum;
+    if ( min != nullptr )
+        delete[] min;
+    if ( max != nullptr )
+        delete[] max;
+    data_in_each_bin.clear();
 
-    return bins_1d;
+    return results;
 }
 
-vector< vector< double > >
-ana::bin2d( unsigned long array_len, double coord_x[], double coord_y[ array_len ], double data[],
-            double lower_bound_x, double upper_bound_x, double lower_bound_y, double upper_bound_y,
-            unsigned int bin_numx, unsigned int bin_numy, ana::stats_method method )
+vector< vector< double > > ana::bin2d( unsigned long array_len, double coord_x[], double coord_y[],
+                                       double data[], double lower_bound_x, double upper_bound_x,
+                                       double lower_bound_y, double upper_bound_y,
+                                       unsigned int bin_numx, unsigned int bin_numy,
+                                       ana::stats_method method )
 {
     if ( bin_numx == 0 || bin_numy == 0 )
-        ERROR( "The number of bins should be larger than 0." );
-
-    vector< vector< double > > bins_2d( bin_numx,
-                                        vector< double >( bin_numy ) );  // the final result
-
-    // the index of the data points in each bin
-    unsigned int*** bins = new unsigned int**[ bin_numx ];
-    for ( unsigned int i = 0; i < bin_numx; ++i )
     {
-        bins[ i ] = new unsigned int*[ bin_numy ];
-        for ( unsigned int j = 0; j < bin_numy; ++j )
-            bins[ i ][ j ] = new unsigned int[ array_len ]();
+        ERROR( "The number of bins should be larger than 0." );
     }
-    // the counts of the data points in each bin
-    unsigned int** counts = new unsigned int*[ bin_numx ];
-    for ( unsigned int i = 0; i < bin_numx; ++i )
-        counts[ i ] = new unsigned int[ bin_numy ]();
+    else if ( array_len == 0 )
+        ERROR( "The length of the array should be larger than 0." );
+
+    // the final result
+    vector< vector< double > > results( bin_numx, vector< double >( bin_numy ) );
+
+    double*       sum    = nullptr;  // summation of the data points in each bin
+    double*       min    = nullptr;  // minimum of the data points in each bin
+    double*       max    = nullptr;  // maximum of the data points in each bin
+    unsigned int* counts = nullptr;  // the counts of the data points in each bin
+    vector< vector< vector< double > > > data_in_each_bin(
+        bin_numx, vector< vector< double > >(
+                      bin_numy ) );  // the data points in each bin, only used for median and std
+
+    if ( method == stats_method::count || method == stats_method::mean
+         || method == stats_method::std || method == stats_method::median )
+        counts = new unsigned int[ bin_numx * bin_numy ]();
+    if ( method == stats_method::sum || method == stats_method::std
+         || method == stats_method::mean )
+        sum = new double[ bin_numx * bin_numy ]();
+    if ( method == stats_method::min )
+    {
+        min = new double[ bin_numx * bin_numy ]();
+        for ( unsigned int i = 0; i < bin_numx * bin_numy; ++i )
+            min[ i ] = std::numeric_limits< double >::max();
+    }
+    if ( method == stats_method::max )
+    {
+        max = new double[ bin_numx * bin_numy ]();
+        for ( unsigned int i = 0; i < bin_numx * bin_numy; ++i )
+            max[ i ] = std::numeric_limits< double >::min();
+    }
 
     double range_x = upper_bound_x - lower_bound_x;
     double range_y = upper_bound_y - lower_bound_y;
 
-    // iterate over the data points to find its bin
-    for ( unsigned int i = 0; i < array_len; ++i )
+    unsigned int i, j, k;  // array index
+
+    // iterate over the data points
+    for ( i = 0; i < array_len; ++i )
     {
         if ( coord_x[ i ] < lower_bound_x || coord_x[ i ] > upper_bound_x )
             continue;
@@ -217,145 +268,146 @@ ana::bin2d( unsigned long array_len, double coord_x[], double coord_y[ array_len
             bin_index_x = bin_numx - 1;  // avoid the overflow at the upper bound
         if ( bin_index_y == bin_numy )
             bin_index_y = bin_numy - 1;  // avoid the overflow at the upper bound
-
-        bins[ bin_index_x ][ bin_index_y ][ counts[ bin_index_x ][ bin_index_y ]++ ] = i;
-    }
-
-    if ( method == stats_method::count )
-    {
-        for ( unsigned int i = 0; i < bin_numx; ++i )
-            for ( unsigned int j = 0; j < bin_numy; ++j )
-                bins_2d[ i ][ j ] = ( double )counts[ i ][ j ];
-    }
-    else
-    {
-        double* data_points[ bin_numx ][ bin_numy ];
-
-        unsigned int i = 0, j = 0, k = 0;
-        for ( i = 0; i < bin_numx; ++i )
-            for ( j = 0; j < bin_numy; ++j )
-            {
-                if ( counts[ i ][ j ] > 0 )
-                {
-                    data_points[ i ][ j ] = new double[ counts[ i ][ j ] ];
-                    for ( k = 0; k < counts[ i ][ j ]; ++k )
-                        data_points[ i ][ j ][ k ] = data[ bins[ i ][ j ][ k ] ];
-                }
-            }
         switch ( method )
         {
-        case stats_method::min: {
-            for ( i = 0; i < bin_numx; ++i )
-                for ( j = 0; j < bin_numy; ++j )
-                {
-                    if ( counts[ i ][ j ] == 0 )
-                        bins_2d[ i ][ j ] = nan( "" );
-                    else
-                        bins_2d[ i ][ j ] = *std::min_element(
-                            data_points[ i ][ j ], data_points[ i ][ j ] + counts[ i ][ j ] );
-                }
-            break;
-        }
-        case stats_method::max: {
-            for ( i = 0; i < bin_numx; ++i )
-                for ( j = 0; j < bin_numy; ++j )
-                {
-                    if ( counts[ i ][ j ] == 0 )
-                        bins_2d[ i ][ j ] = nan( "" );
-                    else
-                        bins_2d[ i ][ j ] = *std::max_element(
-                            data_points[ i ][ j ], data_points[ i ][ j ] + counts[ i ][ j ] );
-                }
-            break;
-        }
-        case stats_method::mean: {
-            for ( i = 0; i < bin_numx; ++i )
-                for ( j = 0; j < bin_numy; ++j )
-                {
-                    if ( counts[ i ][ j ] == 0 )
-                        bins_2d[ i ][ j ] = nan( "" );
-                    else
-                        bins_2d[ i ][ j ] = ( double )std::accumulate(
-                                                data_points[ i ][ j ],
-                                                data_points[ i ][ j ] + counts[ i ][ j ], 0.0 )
-                                            / counts[ i ][ j ];
-                }
-            break;
-        }
-        case stats_method::median: {
-            for ( i = 0; i < bin_numx; ++i )
-                for ( j = 0; j < bin_numy; ++j )
-                {
-                    if ( counts[ i ][ j ] == 0 )
-                        bins_2d[ i ][ j ] = nan( "" );
-                    else
-                    {
-                        std::sort( data_points[ i ][ j ],
-                                   data_points[ i ][ j ] + counts[ i ][ j ] );
-                        if ( counts[ i ][ j ] % 2 == 0 )
-                            bins_2d[ i ][ j ] = ( data_points[ i ][ j ][ counts[ i ][ j ] / 2 - 1 ]
-                                                  + data_points[ i ][ j ][ counts[ i ][ j ] / 2 ] )
-                                                / 2;
-                        else
-                            bins_2d[ i ][ j ] = data_points[ i ][ j ][ counts[ i ][ j ] / 2 ];
-                    }
-                }
+        case stats_method::count: {
+            ++counts[ bin_index_x * bin_numy + bin_index_y ];
             break;
         }
         case stats_method::sum: {
-            for ( i = 0; i < bin_numx; ++i )
-                for ( j = 0; j < bin_numy; ++j )
-                {
-                    if ( counts[ i ][ j ] == 0 )
-                        bins_2d[ i ][ j ] = 0;
-                    else
-                        bins_2d[ i ][ j ] = std::accumulate(
-                            data_points[ i ][ j ], data_points[ i ][ j ] + counts[ i ][ j ], 0.0 );
-                }
+            sum[ bin_index_x * bin_numy + bin_index_y ] += data[ i ];
+            break;
+        }
+        case stats_method::mean: {
+            sum[ bin_index_x * bin_numy + bin_index_y ] += data[ i ];
+            ++counts[ bin_index_x * bin_numy + bin_index_y ];
+            break;
+        }
+        case stats_method::min: {
+            if ( min[ bin_index_x * bin_numy + bin_index_y ] > data[ i ] )
+                min[ bin_index_x * bin_numy + bin_index_y ] = data[ i ];
+            break;
+        }
+        case stats_method::max: {
+            if ( max[ bin_index_x * bin_numy + bin_index_y ] < data[ i ] )
+                max[ bin_index_x * bin_numy + bin_index_y ] = data[ i ];
+            break;
+        }
+        case stats_method::median: {
+            if ( counts[ bin_index_x * bin_numy + bin_index_y ] + 1
+                 > ( unsigned int )data_in_each_bin[ bin_index_x ][ bin_index_y ].size() )
+                data_in_each_bin[ bin_index_x ][ bin_index_y ].resize(
+                    counts[ bin_index_x * bin_numy + bin_index_y ] + 1 + 20 );
+            data_in_each_bin[ bin_index_x ][ bin_index_y ]
+                            [ counts[ bin_index_x * bin_numy + bin_index_y ]++ ] =
+                                data[ i ];  // NOTE: test this index carefullly
             break;
         }
         case stats_method::std: {
-            for ( i = 0; i < bin_numx; ++i )
-                for ( j = 0; j < bin_numy; ++j )
-                {
-                    if ( counts[ i ][ j ] == 0 )
-                        bins_2d[ i ][ j ] = nan( "" );
-                    else
-                    {
-                        double mean =
-                            std::accumulate( data_points[ i ][ j ],
-                                             data_points[ i ][ j ] + counts[ i ][ j ], 0.0 )
-                            / counts[ i ][ j ];
-                        double sum = 0;
-                        for ( k = 0; k < counts[ i ][ j ]; ++k )
-                            sum += ( data_points[ i ][ j ][ k ] - mean )
-                                   * ( data_points[ i ][ j ][ k ] - mean );
-                        bins_2d[ i ][ j ] = sqrt( sum / counts[ i ][ j ] );
-                    }
-                }
+            sum[ bin_index_x * bin_numy + bin_index_y ] += data[ i ];
+            if ( counts[ bin_index_x * bin_numy + bin_index_y ] + 1
+                 > ( unsigned int )data_in_each_bin[ bin_index_x ][ bin_index_y ].size() )
+                data_in_each_bin[ bin_index_x ][ bin_index_y ].resize(
+                    counts[ bin_index_x * bin_numy + bin_index_y ] + 1 + 20 );
+            data_in_each_bin[ bin_index_x ][ bin_index_y ]
+                            [ counts[ bin_index_x * bin_numy + bin_index_y ]++ ] =
+                                data[ i ];  // NOTE: test this index carefullly
             break;
         }
-        default:  // never reach here
-            break;
         }
+    }
+
+    // erase the extra memory
+    if ( method == stats_method::median || method == stats_method::std )
         for ( i = 0; i < bin_numx; ++i )
             for ( j = 0; j < bin_numy; ++j )
-                if ( counts[ i ][ j ] > 0 )
-                    delete[] data_points[ i ][ j ];
+                data_in_each_bin[ i ][ j ].resize( counts[ i * bin_numy + j ] );
+
+    switch ( method )
+    {
+    case stats_method::count: {
+        for ( i = 0; i < bin_numx; ++i )
+            for ( j = 0; j < bin_numx; ++j )
+                results[ i ][ j ] = ( double )counts[ i * bin_numy + j ];
+        break;
+    }
+    case stats_method::sum: {
+        for ( i = 0; i < bin_numx; ++i )
+            for ( j = 0; j < bin_numx; ++j )
+                results[ i ][ j ] = ( double )sum[ i * bin_numy + j ];
+        break;
+    }
+    case stats_method::mean: {
+        for ( i = 0; i < bin_numx; ++i )
+            for ( j = 0; j < bin_numx; ++j )
+                results[ i ][ j ] = sum[ i * bin_numy + j ] / ( double )counts[ i * bin_numy + j ];
+        break;
+    }
+    case stats_method::min: {
+        for ( i = 0; i < bin_numx; ++i )
+            for ( j = 0; j < bin_numx; ++j )
+                results[ i ][ j ] = ( double )min[ i * bin_numy + j ];
+        break;
+    }
+    case stats_method::max: {
+        for ( i = 0; i < bin_numx; ++i )
+            for ( j = 0; j < bin_numx; ++j )
+                results[ i ][ j ] = ( double )max[ i * bin_numy + j ];
+        break;
+    }
+    case stats_method::median: {
+        for ( i = 0; i < bin_numx; ++i )
+            for ( j = 0; j < bin_numx; ++j )
+            {
+                if ( counts[ i * bin_numy + j ] == 0 )
+                    results[ i ][ j ] = nan( "" );
+                else
+                {
+                    std::sort( data_in_each_bin[ i ][ j ].begin(),
+                               data_in_each_bin[ i ][ j ].begin() + counts[ i * bin_numy + j ] );
+                    if ( counts[ i * bin_numy + j ] % 2 == 0 )
+                        results[ i ][ j ] =
+                            ( data_in_each_bin[ i ][ j ][ counts[ i * bin_numy + j ] / 2 - 1 ]
+                              + data_in_each_bin[ i ][ j ][ counts[ i * bin_numy + j ] / 2 ] )
+                            / 2;
+                    else
+                        results[ i ][ j ] =
+                            data_in_each_bin[ i ][ j ][ counts[ i * bin_numy + j ] / 2 ];
+                }
+            }
+        break;
+    }
+    case stats_method::std: {
+        for ( i = 0; i < bin_numx; ++i )
+            for ( j = 0; j < bin_numx; ++j )
+            {
+                if ( counts[ i ] == 0 )
+                    results[ i ][ j ] = nan( "" );
+                else
+                {
+                    double mean   = sum[ i ] / ( double )counts[ i ];
+                    double error2 = 0;
+                    for ( k = 0; k < counts[ i * bin_numy + j ]; ++k )
+                        error2 += ( data_in_each_bin[ i ][ j ][ k ] - mean )
+                                  * ( data_in_each_bin[ i ][ j ][ k ] - mean );
+                    results[ i ][ j ] = sqrt( error2 / counts[ i * bin_numy + j ] );
+                }
+            }
+    }
     }
 
     // release the memory
-    for ( unsigned int i = 0; i < bin_numx; ++i )
-    {
-        for ( unsigned int j = 0; j < bin_numy; ++j )
-            delete[] bins[ i ][ j ];
-        delete[] bins[ i ];
-    }
-    delete[] bins;
-    for ( unsigned int i = 0; i < bin_numx; ++i )
-        delete[] counts[ i ];
-    delete[] counts;
-    return bins_2d;
+    if ( counts != nullptr )
+        delete[] counts;
+    if ( sum != nullptr )
+        delete[] sum;
+    if ( min != nullptr )
+        delete[] min;
+    if ( max != nullptr )
+        delete[] max;
+    data_in_each_bin.clear();
+
+    return results;
 }
 
 
@@ -481,7 +533,8 @@ int test_vec()
     ana::vec< 3, double > test_vec3( test_vec1 );
 
     println( "The size of 3D double vec structure is %lu", sizeof( ana::vec< 3, double > ) );
-    println( "Test it can raise an error when the size of the initializer list is not equal to the "
+    println( "Test it can raise an error when the size of the initializer list is not "
+             "equal to the "
              "dimension of the ana::vec." );
     println( "It should raise a warning, don't worry about it." );
     try
@@ -701,11 +754,18 @@ int test_bin1d()
     vector< double > expected12{ 2.5, 2.5, 2.5, 2.5, 2.5 };
     vector< double > expected13{ 1.11803399, 1.11803399, 1.11803399, 1.11803399, 1.11803399 };
 
-    // I am tired of writing the same code again and again ...
-    if ( res7 != expected7 || res8 != expected8 || res9 != expected9 || res10 != expected10
-         || res11 != expected11 || res12 != expected12 )
+    if ( res7 != expected7 )
         CHECK_RETURN( false );
-
+    if ( res8 != expected8 )
+        CHECK_RETURN( false );
+    if ( res9 != expected9 )
+        CHECK_RETURN( false );
+    if ( res10 != expected10 )
+        CHECK_RETURN( false );
+    if ( res11 != expected11 )
+        CHECK_RETURN( false );
+    if ( res12 != expected12 )
+        CHECK_RETURN( false );
     for ( size_t i = 0; i < 5; ++i )
         if ( fabs( res13[ i ] - expected13[ i ] ) > 1e-6 )
             CHECK_RETURN( false );

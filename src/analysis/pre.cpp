@@ -51,7 +51,7 @@ int ana::most_dense_pixel( unsigned long part_num, double coords[][ 3 ], double 
     }
     // calculate the most dense pixel of the given array of particles
     vector< vector< double > > image_xy =
-        ana::bin2d( part_num, x, y, z, lower_bound_x, upper_bound_x, lower_bound_y, upper_bound_y,
+        ana::bin2d( part_num, x, y, x, lower_bound_x, upper_bound_x, lower_bound_y, upper_bound_y,
                     bin_num_x, bin_num_y, ana::stats_method::count );
 
     vector< vector< double > > image_xz =
@@ -59,10 +59,13 @@ int ana::most_dense_pixel( unsigned long part_num, double coords[][ 3 ], double 
                     bin_num_x, bin_num_z, ana::stats_method::count );
 
     // MPI Reduce
-    MPI_Allreduce( MPI_IN_PLACE, image_xy.data(), ( int )bin_num_x * ( int )bin_num_y,
-                   MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD );
-    MPI_Allreduce( MPI_IN_PLACE, image_xz.data(), ( int )bin_num_x * ( int )bin_num_z,
-                   MPI_UNSIGNED_LONG, MPI_SUM, MPI_COMM_WORLD );
+    for ( size_t i = 0; i < bin_num_x; ++i )
+    {
+        MPI_Allreduce( MPI_IN_PLACE, image_xy[ i ].data(), ( int )bin_num_y, MPI_DOUBLE, MPI_SUM,
+                       MPI_COMM_WORLD );
+        MPI_Allreduce( MPI_IN_PLACE, image_xz[ i ].data(), ( int )bin_num_z, MPI_DOUBLE, MPI_SUM,
+                       MPI_COMM_WORLD );
+    }
 
     // find the max pixel's position
     size_t max_x = 0, max_y = 0, max_z = 0;
@@ -77,6 +80,7 @@ int ana::most_dense_pixel( unsigned long part_num, double coords[][ 3 ], double 
             }
         }
     }
+
     for ( size_t i = 0; i < ( size_t )bin_num_z; ++i )
     {
         if ( image_xz[ max_x ][ i ] > image_xz[ max_x ][ max_z ] )
@@ -84,20 +88,16 @@ int ana::most_dense_pixel( unsigned long part_num, double coords[][ 3 ], double 
             max_z = i;
         }
     }
+    double pos_x = ( double )max_x + 0.5, pos_y = ( double )max_y + 0.5,
+           pos_z = ( double )max_z + 0.5;
+    center[ 0 ]  = pos_x / ( double )bin_num_x * ( upper_bound_x - lower_bound_x ) + lower_bound_x;
+    center[ 1 ]  = pos_y / ( double )bin_num_y * ( upper_bound_y - lower_bound_y ) + lower_bound_y;
+    center[ 2 ]  = pos_z / ( double )bin_num_z * ( upper_bound_z - lower_bound_z ) + lower_bound_z;
 
-    INFO( "The final most dense pixel has count: %lf and %lf", image_xz[ max_x ][ max_z ],
-          image_xy[ max_x ][ max_y ] );
-    INFO( "The final most dense pixel at: (%lu, %lu, %lu)", max_x, max_y, max_z );
-
-    center[ 0 ] =
-        ( ( double )max_x + 0.5 ) / ( double )bin_num_x * ( upper_bound_x - lower_bound_x )
-        + lower_bound_x;
-    center[ 1 ] =
-        ( ( double )max_y + 0.5 ) / ( double )bin_num_y * ( upper_bound_y - lower_bound_y )
-        + lower_bound_y;
-    center[ 2 ] =
-        ( ( double )max_z + 0.5 ) / ( double )bin_num_z * ( upper_bound_z - lower_bound_z )
-        + lower_bound_z;
+    // release memory
+    delete[] x;
+    delete[] y;
+    delete[] z;
     return 0;
 }
 
@@ -121,49 +121,39 @@ int test_center_of_mass()
 
 
     // a naive test: com = (0,0,0)
-    if ( rank == 0 )
+    for ( int i = 0; i < part_num; ++i )
     {
-        for ( int i = 0; i < part_num; ++i )
-        {
-            masses[ i ]      = 1.0;
-            coords[ i ][ 0 ] = pow( -1, i );
-            coords[ i ][ 1 ] = pow( -1, i + 1 );
-            coords[ i ][ 2 ] = pow( -1, i + 2 );
-        }
+        masses[ i ]      = 1.0;
+        coords[ i ][ 0 ] = pow( -1, i );
+        coords[ i ][ 1 ] = pow( -1, i + 1 );
+        coords[ i ][ 2 ] = pow( -1, i + 2 );
     }
+
     ana::center_of_mass( part_num, masses, coords, center );
 
-    if ( rank == 0 )
-    {
-        if ( fabs( center[ 0 ] ) > eps )
-            CHECK_RETURN( false );
-        if ( fabs( center[ 1 ] ) > eps )
-            CHECK_RETURN( false );
-        if ( fabs( center[ 2 ] ) > eps )
-            CHECK_RETURN( false );
-    }
+    if ( fabs( center[ 0 ] ) > eps )
+        CHECK_RETURN( false );
+    if ( fabs( center[ 1 ] ) > eps )
+        CHECK_RETURN( false );
+    if ( fabs( center[ 2 ] ) > eps )
+        CHECK_RETURN( false );
 
     // a naive test: com = (1,1,1)
-    if ( rank == 0 )
+    for ( int i = 0; i < part_num; ++i )
     {
-        for ( int i = 0; i < part_num; ++i )
-        {
-            masses[ i ]      = 1.0;
-            coords[ i ][ 0 ] = ( double )( i / 100 );
-            coords[ i ][ 1 ] = ( double )( ( i - ( i / 100 ) * 100 ) / 10 );
-            coords[ i ][ 2 ] = ( double )( i % 10 );
-        }
+        masses[ i ]      = 1.0;
+        coords[ i ][ 0 ] = ( double )( i / 100 );
+        coords[ i ][ 1 ] = ( double )( ( i - ( i / 100 ) * 100 ) / 10 );
+        coords[ i ][ 2 ] = ( double )( i % 10 );
     }
+
     ana::center_of_mass( part_num, masses, coords, center );
-    if ( rank == 0 )
-    {
-        if ( fabs( center[ 0 ] - 4.5 ) > eps )
-            CHECK_RETURN( false );
-        if ( fabs( center[ 1 ] - 4.5 ) > eps )
-            CHECK_RETURN( false );
-        if ( fabs( center[ 2 ] - 4.5 ) > eps )
-            CHECK_RETURN( false );
-    }
+    if ( fabs( center[ 0 ] - 4.5 ) > eps )
+        CHECK_RETURN( false );
+    if ( fabs( center[ 1 ] - 4.5 ) > eps )
+        CHECK_RETURN( false );
+    if ( fabs( center[ 2 ] - 4.5 ) > eps )
+        CHECK_RETURN( false );
 
     CHECK_RETURN( true );
 }
@@ -176,55 +166,43 @@ int test_most_dense_pixel()
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
     MPI_Comm_size( MPI_COMM_WORLD, &size );
     const int part_num                = 1000;
-    double    masses[ part_num ]      = { 0 };
     double    coords[ part_num ][ 3 ] = { { 0 } };
     double    center[ 3 ]             = { 0 };
-    double    eps                     = 1e-10;  // the numerical error
+    double    eps                     = 0.5;  // the numerical error, the most dense pixel is not
+                                              // so accurate, so we set a larger error
 
-    // a naive test: com = (0,0,0)
-    if ( rank == 0 )
+    // a naive test: com = (-1, 1, -1)
+    for ( int i = 0; i < part_num; ++i )
     {
-        for ( int i = 0; i < part_num; ++i )
-        {
-            masses[ i ]      = 1.0;
-            coords[ i ][ 0 ] = pow( -1, i );
-            coords[ i ][ 1 ] = pow( -1, i + 1 );
-            coords[ i ][ 2 ] = pow( -1, i + 2 );
-        }
+        coords[ i ][ 0 ] = pow( -1, i );
+        coords[ i ][ 1 ] = pow( -1, i + 1 );
+        coords[ i ][ 2 ] = pow( -1, i + 2 );
     }
-    ana::most_dense_pixel( part_num, coords, -1, 1, -1, 1, -1, 1, 10, 10, 10, center );
+    ana::most_dense_pixel( part_num, coords, -1, 1, -1, 1, -1, 1, 9, 9, 9, center );
 
-    if ( rank == 0 )
+
+    if ( fabs( center[ 0 ] - -1 ) > eps )
+        CHECK_RETURN( false );
+    if ( fabs( center[ 1 ] - 1 ) > eps )
+        CHECK_RETURN( false );
+    if ( fabs( center[ 2 ] - -1 ) > eps )
+        CHECK_RETURN( false );
+
+    // a naive test: com = (0, 0, 0)
+    for ( int i = 0; i < part_num; ++i )
     {
-        if ( fabs( center[ 0 ] ) > eps )
-            CHECK_RETURN( false );
-        if ( fabs( center[ 1 ] ) > eps )
-            CHECK_RETURN( false );
-        if ( fabs( center[ 2 ] ) > eps )
-            CHECK_RETURN( false );
+        coords[ i ][ 0 ] = ( double )( i / 100 );
+        coords[ i ][ 1 ] = ( double )( ( i - ( i / 100 ) * 100 ) / 10 );
+        coords[ i ][ 2 ] = ( double )( i % 10 );
     }
 
-    // a naive test: com = (1,1,1)
-    if ( rank == 0 )
-    {
-        for ( int i = 0; i < part_num; ++i )
-        {
-            masses[ i ]      = 1.0;
-            coords[ i ][ 0 ] = ( double )( i / 100 );
-            coords[ i ][ 1 ] = ( double )( ( i - ( i / 100 ) * 100 ) / 10 );
-            coords[ i ][ 2 ] = ( double )( i % 10 );
-        }
-    }
-    ana::most_dense_pixel( part_num, coords, -1, 1, -1, 1, -1, 1, 10, 10, 10, center );
-    if ( rank == 0 )
-    {
-        if ( fabs( center[ 0 ] - 4.5 ) > eps )
-            CHECK_RETURN( false );
-        if ( fabs( center[ 1 ] - 4.5 ) > eps )
-            CHECK_RETURN( false );
-        if ( fabs( center[ 2 ] - 4.5 ) > eps )
-            CHECK_RETURN( false );
-    }
+    ana::most_dense_pixel( part_num, coords, -1, 1, -1, 1, -1, 1, 9, 9, 9, center );
+    if ( fabs( center[ 0 ] ) > eps )
+        CHECK_RETURN( false );
+    if ( fabs( center[ 1 ] ) > eps )
+        CHECK_RETURN( false );
+    if ( fabs( center[ 2 ] ) > eps )
+        CHECK_RETURN( false );
 
     CHECK_RETURN( true );
 }
