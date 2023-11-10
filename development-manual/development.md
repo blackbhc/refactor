@@ -562,7 +562,8 @@ statistics, smoothing, etc. All the followings are defined in the namespace `gal
 
 #### Model analysis part
 
-- `An(...)`: the Fourier coefficient of surface density's symmetric component (see formula in `development/computation.md`).
+- `An(...)`: the Fourier coefficient of surface density's symmetric component (see formula in the
+  development/computation.md).
 - `s_bar`: the bar strength, $A_2/A_0$.
 - `s_buckle(...)`: the buckling strength.
 - `bar_major_axis(...)`: calculate the major axis of the bar, which is defined as the argument of $A_2$.
