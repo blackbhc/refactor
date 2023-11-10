@@ -58,8 +58,8 @@ void calculator::setup_res()
             this->ptrs_of_results->s_bar.resize( this->para->md_target_sets.size() );
         if ( this->para->md_sbuckle )
             this->ptrs_of_results->s_buckle.resize( this->para->md_target_sets.size() );
-        if ( this->para->md_am.size() > 0 )
-            for ( auto& n : this->para->md_am )
+        if ( this->para->md_an.size() > 0 )
+            for ( auto& n : this->para->md_an )
                 this->ptrs_of_results->Ans[ n ].resize( this->para->md_target_sets.size() );
     }
 }
@@ -219,14 +219,15 @@ int calculator::call_md_module md_args const
         if ( this->para->md_sbuckle )
             this->ptrs_of_results->s_buckle[ i ] =
                 ana::s_buckle( part_num_md[ i ], masses, coords );
-        if ( this->para->md_am.size() > 0 )
-            for ( auto& n : this->para->md_am )
+        if ( this->para->md_an.size() > 0 )
+            for ( auto& n : this->para->md_an )
             {
                 this->ptrs_of_results->Ans[ n ][ i ] =
                     ana::An( part_num_md[ i ], masses, coords, n );
             }
 
-        if ( this->para->md_align_bar )
+        if ( this->para->md_align_bar
+             && this->ptrs_of_results->s_bar[ i ] > this->para->md_bar_threshold )
         {
             double phi = this->ptrs_of_results->bar_marjor_axis[ i ];
             double x, y;  // tmp variables
@@ -237,6 +238,55 @@ int calculator::call_md_module md_args const
                 coords[ j ][ 0 ] = x * cos( phi ) - y * sin( phi );
                 coords[ j ][ 1 ] = x * sin( phi ) + y * cos( phi );
             }
+        }
+        if ( this->para->md_image )
+        {
+            double *x, *y, *z, *vx, *vy, *vz;
+            x  = new double[ part_num_md[ i ] ];
+            y  = new double[ part_num_md[ i ] ];
+            z  = new double[ part_num_md[ i ] ];
+            vx = new double[ part_num_md[ i ] ];
+            vy = new double[ part_num_md[ i ] ];
+            vz = new double[ part_num_md[ i ] ];
+
+            for ( int j = 0; j < part_num_md[ i ]; ++j )
+            {
+                x[ j ]  = coords[ j ][ 0 ];
+                y[ j ]  = coords[ j ][ 1 ];
+                z[ j ]  = coords[ j ][ 2 ];
+                vx[ j ] = velos[ j ][ 0 ];
+                vy[ j ] = velos[ j ][ 1 ];
+                vz[ j ] = velos[ j ][ 2 ];
+            }
+
+            double       base_size   = this->para->md_region_size;
+            unsigned int base_binnum = this->para->md_image_bins;
+            double       third_size  = base_size * this->para->md_axis_ratio;
+            unsigned int third_binnum =
+                ( unsigned int )this->para->md_image_bins * this->para->md_axis_ratio;
+
+            if ( std::find( this->para->md_colors.begin(), this->para->md_colors.end(),
+                            "number_density" )
+                 != this->para->md_colors.end() )
+            {
+                auto image_xy =
+                    ana::bin2d( part_num_md[ i ], x, y, x, -base_size, base_size, -base_size,
+                                base_size, base_binnum, base_binnum, ana::stats_method::count );
+                auto image_xz =
+                    ana::bin2d( part_num_md[ i ], x, z, x, -base_size, base_size, -third_size,
+                                third_size, base_binnum, third_binnum, ana::stats_method::count );
+                auto image_yz =
+                    ana::bin2d( part_num_md[ i ], y, z, x, -base_size, base_size, -third_size,
+                                third_size, base_binnum, third_binnum, ana::stats_method::count );
+            }
+
+            // release the memory
+            delete[] x;
+            delete[] y;
+            delete[] z;
+            delete[] vx;
+            delete[] vy;
+            delete[] vz;
         }
     }
     return 0;

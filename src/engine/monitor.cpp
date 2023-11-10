@@ -193,8 +193,8 @@ int monitor::save()
                 single_model->push< double >( &res->s_bar[ i ], 1, "/Bar/SBar" );
             if ( this->para->md_sbuckle )
                 single_model->push< double >( &res->s_buckle[ i ], 1, "/Bar/SBuckle" );
-            if ( this->para->md_am.size() > 0 )
-                for ( auto& m : this->para->md_am )
+            if ( this->para->md_an.size() > 0 )
+                for ( auto& m : this->para->md_an )
                 {
                     double real = res->Ans[ m ][ i ].real();
                     double imag = res->Ans[ m ][ i ].real();
@@ -250,8 +250,8 @@ inline void monitor::create_model_file_datasets()
             single_model->create_dataset( "/Bar/SBar", single_scaler_info );
         if ( this->para->md_sbuckle )
             single_model->create_dataset( "/Bar/SBuckle", single_scaler_info );
-        if ( this->para->md_am.size() > 0 )
-            for ( auto& m : this->para->md_am )
+        if ( this->para->md_an.size() > 0 )
+            for ( auto& m : this->para->md_an )
             {
                 single_model->create_dataset( "/Bar/A" + std::to_string( m ) + "(real)",
                                               single_scaler_info );
@@ -260,9 +260,12 @@ inline void monitor::create_model_file_datasets()
             }
         if ( this->para->md_image )
         {
-            single_model->create_dataset( "/Image/Size", image_info );
             for ( auto& color : this->para->md_colors )
-                single_model->create_dataset( "/Image/" + color, single_vector_info );
+            {
+                single_model->create_dataset( "/Image/" + color + "(xy)", image_info );
+                single_model->create_dataset( "/Image/" + color + "(xz)", image_info );
+                single_model->create_dataset( "/Image/" + color + "(yz)", image_info );
+            }
         }
     }
 }

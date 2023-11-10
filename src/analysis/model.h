@@ -3,6 +3,7 @@
 #define GALOTFA_ANALYSIS_MODEL_H
 #include <complex>
 #include <math.h>
+#include <string>
 using std::complex;
 namespace galotfa {
 namespace analysis {
@@ -16,6 +17,7 @@ namespace analysis {
     double bar_major_axis( unsigned int array_len, double mass[], double coord[][ 3 ] );
 
     double bar_length( unsigned int array_len, double mass[], double coord[][ 3 ] );
+
 }  // namespace analysis
 }  // namespace galotfa
 #endif

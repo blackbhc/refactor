@@ -1,10 +1,15 @@
 #ifndef GALOTFA_MODEL_CPP
 #define GALOTFA_MODEL_CPP
 #include "model.h"
+#include "utils.h"
 #include <complex>
 #include <math.h>
 #include <mpi.h>
+#include <vector>
+
+using std::complex;
 namespace ana = galotfa::analysis;
+
 complex< double > ana::An( unsigned int array_len, double mass[], double coord[][ 3 ],
                            unsigned int order )
 {
@@ -65,4 +70,5 @@ double ana::bar_length( unsigned int array_len, double* mass, double ( *coord )[
     // TODO: to be implemented
     return 0;
 }
+
 #endif

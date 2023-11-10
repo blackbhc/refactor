@@ -95,8 +95,9 @@ para::para( ini_parser& parser )
     update( md, sbar, Model, bool );
     update( md, bar_threshold, Model, double );
     update( md, sbuckle, Model, bool );
+    update( md, an, Model, ints );
     update( md, inertia_tensor, Model, bool );
-    update( md, am, Model, ints );
+    update( md, dispersion_tensor, Model, bool );
 
     // Particle section
     update( ptc, switch_on, Particle, bool );
@@ -352,7 +353,7 @@ int para::check( void )
             auto invalid_m = []( int n ) -> bool { return n <= 0; };
 
             IF_ONE_THEN_WARN(
-                this->md_am, invalid_m,
+                this->md_an, invalid_m,
                 "Try to calculate the amplitude of Fourier symmetry modes, but the order invalid: "
                 "get a non-positive value.\n Please check your ini file." );
         }
@@ -489,8 +490,9 @@ int para::test_print()
     printd( md, bar_threshold );
     printi( md, bar_length );
     printi( md, sbuckle );
+    printis( md, an );
     printi( md, inertia_tensor );
-    printis( md, am );
+    printi( md, dispersion_tensor );
 
     // Particle section
     printi( ptc, switch_on );

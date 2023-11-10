@@ -32,7 +32,8 @@ struct para
 
     // other model section parameters
     bool md_image = false, md_bar_major_axis = false, md_bar_length = false, md_sbar = false,
-         md_sbuckle = false, md_inertia_tensor = false, md_align_bar = true;
+         md_sbuckle = false, md_inertia_tensor = false, md_align_bar = true,
+         md_dispersion_tensor           = false;
     bool                    md_multiple = false;
     vector< int >           md_particle_types;
     vector< std::string >   md_classification;
@@ -40,7 +41,7 @@ struct para
     int                     md_image_bins  = 100;
     double                  md_region_size = 20, md_axis_ratio = 1, md_bar_threshold = 0.15;
     std::string             md_region_shape = "cylinder";
-    vector< int >           md_am;  // An, lowercase for ini key
+    vector< int >           md_an;  // An, lowercase for ini key
     vector< std::string >   md_colors;
 
     // other particle section parameters
