@@ -59,7 +59,7 @@ $S_{\rm buckle}=|\sum_i^N {z_i\,m_i\cdot\exp{(2i\phi_i)}}/A_0|$
 ### Dispersion tensor
 
 $\sigma_{ij}^2=<v_i\,v_j> - <v_i><v_j>$, in which $v_i$ is the $i$-th component of the velocity, and this
-quantity is defined at every pixel of specified analysis region.
+quantity is defined at every pixel of specified analysis region: summation is over each pixel.
 
 ### Inertia tensor
 
@@ -74,3 +74,5 @@ $I_{xy}=I_{yx}=-\sum_i^N {m_i\,x_i\,y_i}$
 $I_{xz}=I_{zx}=-\sum_i^N {m_i\,x_i\,z_i}$
 
 $I_{yz}=I_{zy}=-\sum_i^N {m_i\,y_i\,z_i}$
+
+This quantity is defined in the specified analysis region: summation is over the whole region.
