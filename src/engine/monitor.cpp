@@ -277,9 +277,11 @@ int monitor::save()
                 if ( this->para->md_dispersion_tensor )
                 {
                     unsigned long binnum = this->para->md_image_bins;
+                    unsigned long binnum_third =
+                        ( unsigned long )this->para->md_image_bins * this->para->md_axis_ratio;
                     single_model->push< double >( res->dispersion_tensor[ i ],
-                                                  binnum * binnum * binnum * 3 * 3,
-                                                  "/DispersionTensor" );
+                                                  binnum * binnum * binnum_third * 3 * 3,
+                                                  "/DispersionTensor", 5 );
                 }
                 ++i;
             }
@@ -304,12 +306,13 @@ inline void monitor::create_model_file_datasets()
         // for 3D vectors
         galotfa::hdf5::size_info single_vector_info = { H5T_NATIVE_DOUBLE, 1, { 3 } };
         // for image matrix
-        size_t                   binnum     = ( size_t )this->para->md_image_bins;
+        size_t binnum       = ( size_t )this->para->md_image_bins;
+        size_t binnum_third = ( size_t )this->para->md_image_bins * this->para->md_axis_ratio;
         galotfa::hdf5::size_info image_info = { H5T_NATIVE_DOUBLE, 2, { binnum, binnum } };
         // for tensor
         galotfa::hdf5::size_info tensor_info = { H5T_NATIVE_DOUBLE,
                                                  5,
-                                                 { binnum, binnum, binnum, 3, 3 } };
+                                                 { binnum, binnum, binnum_third, 3, 3 } };
         // 5 dimensions: x, y, z, (i, j) of the tensor
 
         single_model->create_dataset( "/Times", single_scaler_info );
@@ -381,7 +384,8 @@ inline void monitor::create_model_file_datasets()
         }
 
         if ( this->para->md_dispersion_tensor )
-            single_model->create_dataset( "/DispersionTensor", tensor_info );
+            single_model->create_dataset( "/DispersionTensor", tensor_info, 5 );
+        // use a smaller chunk size to avoid the memory error
     }
 }
 

@@ -277,7 +277,8 @@ int writer::create_group( std::string group_name )
     return 0;
 }
 
-int writer::create_dataset( std::string dataset_name, hdf5::size_info& info )
+int writer::create_dataset( std::string dataset_name, hdf5::size_info& info,
+                            unsigned int chunk_size )
 {
     // first check the size of the size_info is consistent
     if ( ( size_t )info.rank != info.dims.size() )
@@ -320,7 +321,8 @@ int writer::create_dataset( std::string dataset_name, hdf5::size_info& info )
     // create the dataset
     if ( parent_path == "" )
     {
-        auto data_node_ptr = create_datanode( *this->nodes.at( "/" ), strings.back(), info );
+        auto data_node_ptr =
+            create_datanode( *this->nodes.at( "/" ), strings.back(), info, chunk_size );
         // insert the node
         this->nodes.insert(
             std::pair< std::string, galotfa::hdf5::node* >( "/" + strings.back(), data_node_ptr ) );
@@ -328,7 +330,7 @@ int writer::create_dataset( std::string dataset_name, hdf5::size_info& info )
     else
     {
         auto data_node_ptr =
-            create_datanode( *this->nodes.at( parent_path ), strings.back(), info );
+            create_datanode( *this->nodes.at( parent_path ), strings.back(), info, chunk_size );
         // insert the node
         this->nodes.insert( std::pair< std::string, galotfa::hdf5::node* >(
             parent_path + "/" + strings.back(), data_node_ptr ) );
@@ -337,7 +339,7 @@ int writer::create_dataset( std::string dataset_name, hdf5::size_info& info )
 }
 
 inline hdf5::node* writer::create_datanode( hdf5::node& parent, std::string& dataset,
-                                            hdf5::size_info& info )
+                                            hdf5::size_info& info, unsigned int chunk_size )
 {
     // check the size of the size_info is consistent: done in the caller-function create_file(
     // ...)
@@ -358,7 +360,7 @@ inline hdf5::node* writer::create_datanode( hdf5::node& parent, std::string& dat
     for ( size_t i = 0; i < info.rank; ++i )
         data_dims[ i + 1 ] = max_dims[ i + 1 ] = chunk_dims[ i + 1 ] = info.dims[ i ];
     data_dims[ 0 ]  = 0;
-    chunk_dims[ 0 ] = VIRTUAL_STACK_SIZE;
+    chunk_dims[ 0 ] = chunk_size;
     max_dims[ 0 ]   = H5S_UNLIMITED;
 
     // create property list and set chunk and compression
@@ -387,7 +389,8 @@ inline hdf5::node* writer::create_datanode( hdf5::node& parent, std::string& dat
     return datanode_ptr;
 }
 
-template < typename T > int writer::push( T* ptr, unsigned long len, std::string dataset_name )
+template < typename T >
+int writer::push( T* ptr, unsigned long len, std::string dataset_name, unsigned int chunk_size )
 {
     // check whether the dataset exists
     if ( this->nodes.find( dataset_name ) == this->nodes.end() )
@@ -460,8 +463,8 @@ template < typename T > int writer::push( T* ptr, unsigned long len, std::string
 
     delete[] offset;
 
-    // flush the buffer if the stack is "full"
-    if ( stack_counter[ dataset_name ] % VIRTUAL_STACK_SIZE == 0 )
+    // flush the buffer if the "stack" is "full"
+    if ( stack_counter[ dataset_name ] % chunk_size == 0 )
         H5Dflush( this->nodes.at( dataset_name )->get_hid() );
 
     ++stack_counter[ dataset_name ];
@@ -474,10 +477,12 @@ template < typename T > int writer::push( T* ptr, unsigned long len, std::string
 }
 
 // ensure the template function is instantiated
-template int writer::push< int >( int* ptr, unsigned long len, std::string dataset_name );
-template int writer::push< double >( double* ptr, unsigned long len, std::string dataset_name );
+template int writer::push< int >( int* ptr, unsigned long len, std::string dataset_name,
+                                  unsigned int chunk_size );
+template int writer::push< double >( double* ptr, unsigned long len, std::string dataset_name,
+                                     unsigned int chunk_size );
 template int writer::push< unsigned int >( unsigned int* ptr, unsigned long len,
-                                           std::string dataset_name );
+                                           std::string dataset_name, unsigned int chunk_size );
 
 #ifdef debug_output
 int writer::test_node( void )

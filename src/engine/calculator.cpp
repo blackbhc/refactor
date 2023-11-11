@@ -2,6 +2,7 @@
 #define GALOTFA_CALCULATOR_CPP
 #include "calculator.h"
 #include "../analysis/utils.h"
+#include <cstring>
 namespace ana = galotfa::analysis;
 namespace galotfa {
 
@@ -78,6 +79,13 @@ calculator::~calculator()
                         delete[] this->ptrs_of_results->images[ k ][ 2 ][ i ];
                     }
             }
+        }
+    }
+    if ( this->para->md_dispersion_tensor )
+    {
+        for ( size_t i = 0; i < this->para->md_target_sets.size(); i++ )
+        {
+            delete[] this->ptrs_of_results->dispersion_tensor[ i ];
         }
     }
     delete this->ptrs_of_results;
@@ -187,7 +195,18 @@ void calculator::setup_res()
         }
 
         if ( this->para->md_dispersion_tensor )
+        {
+            unsigned int base_binnum = this->para->md_image_bins;
+            unsigned int third_binnum =
+                ( unsigned int )this->para->md_image_bins * this->para->md_axis_ratio;
+
             this->ptrs_of_results->dispersion_tensor.resize( this->para->md_target_sets.size() );
+            for ( size_t i = 0; i < this->para->md_target_sets.size(); i++ )
+            {
+                double* tensor_ptr = new double[ base_binnum * base_binnum * third_binnum * 3 * 3 ];
+                this->ptrs_of_results->dispersion_tensor[ i ] = tensor_ptr;
+            }
+        }
     }
 }
 
