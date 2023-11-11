@@ -19,11 +19,11 @@ namespace analysis {
 
     double bar_length( unsigned int array_len, double mass[], double x[], double y[] );
 
-    int dispersion_tensor( unsigned int array_len, double mass[], double x[], double y[],
-                           double z[], double vx[], double vy[], double vz[], double lower_bound_x,
-                           double upper_bound_x, double lower_bound_y, double upper_bound_y,
-                           double lower_bound_z, double upper_bound_z, unsigned int num_bins_x,
-                           unsigned int num_bins_y, unsigned int num_bins_z, double* tensor );
+    int dispersion_tensor( unsigned int array_len, double x[], double y[], double z[], double vx[],
+                           double vy[], double vz[], double lower_bound_x, double upper_bound_x,
+                           double lower_bound_y, double upper_bound_y, double lower_bound_z,
+                           double upper_bound_z, unsigned int num_bins_x, unsigned int num_bins_y,
+                           unsigned int num_bins_z, double* tensor );
 
 }  // namespace analysis
 }  // namespace galotfa

@@ -163,7 +163,14 @@ inline void writer::clean_nodes( void )
 
 writer::~writer( void )
 {
-    // TODO: flush the buffer before closing the file
+    // flush the buffer before closing the file
+    for ( auto& node : this->nodes )
+    {
+        // flush the buffer if the node is a dataset
+        if ( node.second->is_dataset() )
+            H5Dflush( node.second->get_hid() );
+    }
+    H5Fflush( this->nodes.at( "/" )->get_hid(), H5F_SCOPE_GLOBAL );
     clean_nodes();
     this->stack_counter.clear();
 }

@@ -14,15 +14,13 @@ using std::vector;
 // In summary, the argument list is:
 // id, type, mass, coordinate, velocity, time, particle_number
 // and an optional potential tracer type
-#define call_without_tracer                                                 \
-    ( unsigned long particle_ids[], unsigned long types[], double masses[], \
-      double coordinates[][ 3 ], double velocities[][ 3 ], double& time,    \
-      unsigned long particle_number )
+#define call_without_tracer                                                        \
+    ( int particle_ids[], int types[], double masses[], double coordinates[][ 3 ], \
+      double velocities[][ 3 ], double& time, int particle_number )
 
-#define call_with_tracer                                                                  \
-    ( unsigned long pot_tracer_type, unsigned long particle_ids[], unsigned long types[], \
-      double masses[], double coordinates[][ 3 ], double velocities[][ 3 ], double& time, \
-      unsigned long particle_number )
+#define call_with_tracer                                                     \
+    ( int pot_tracer_type, int particle_ids[], int types[], double masses[], \
+      double coordinates[][ 3 ], double velocities[][ 3 ], double& time, int particle_number )
 
 #define no_tracer ( particle_ids, types, masses, coordinates, velocities, time, particle_number )
 #define has_tracer ( particle_ids, types, masses, coordinates, velocities, time, particle_number )
@@ -56,14 +54,14 @@ private:
     int                      galotfa_size;  // the global size of the MPI process
     vector< int >            include_particle_types;
     vector< vector< int >* > classifications;
-    unsigned long orbit_part_num = 0;  // the number of target particles for orbital curve log
-    vector< unsigned long >          orbit_log_ids;  // the particle ids for orbital curve log
-    mutable vector< unsigned long* > id_for_model;   // similar but for model analysis section
-    mutable vector< unsigned long >  part_num_model;
-    mutable vector< unsigned long* > id_for_particle;  // simlar but for particle analysis
-    mutable vector< unsigned long >  part_num_particle;
-    mutable unsigned long*           id_for_orbit   = nullptr;  // similar but for orbital curve log
-    mutable unsigned long            part_num_orbit = 0;
+    int           orbit_part_num = 0;     // the number of target particles for orbital curve log
+    vector< int > orbit_log_ids;          // the particle ids for orbital curve log
+    mutable vector< int* > id_for_model;  // similar but for model analysis section
+    mutable vector< int >  part_num_model;
+    mutable vector< int* > id_for_particle;  // simlar but for particle analysis
+    mutable vector< int >  part_num_particle;
+    mutable int*           id_for_orbit   = nullptr;  // similar but for orbital curve log
+    mutable int            part_num_orbit = 0;
     // mutable unsigned long*           id_for_group   = nullptr;  // similar but for group
     // analysis mutable unsigned long            part_num_group = 0;
 
@@ -77,13 +75,13 @@ private:
     }
 
     // the push data API with potential tracer
-    inline int push_data call_without_tracer const;
-    inline int push_data call_with_tracer const;
-    int                  create_writers();              // create the writers
-    inline void          create_files();                // create the output files
-    inline void          create_model_file_datasets();  // create the datasets in the model file
-    void                 create_particle_file_datasets(
-                        vector< unsigned long >& particle_ana_nums );  // create the datasets in the particle file
+    inline int inject_data call_without_tracer const;
+    inline int inject_data call_with_tracer const;
+    int                    create_writers();              // create the writers
+    inline void            create_files();                // create the output files
+    inline void            create_model_file_datasets();  // create the datasets in the model file
+    void                   create_particle_file_datasets(
+                          vector< unsigned long >& particle_ana_nums );  // create the datasets in the particle file
     inline void create_orbit_file_datasets();  // create the datasets in the orbit file
     inline void create_group_file_datasets();  // create the datasets in the group file
     inline void create_post_file_datasets();   // create the datasets in the post file
@@ -91,9 +89,8 @@ private:
     inline void init();
     inline void check_filesize( long int size ) const;
     // extract the target particles from the simulation data
-    void        extractor( unsigned long& partnum_total, unsigned long types[], unsigned long ids[],
-                           double coordinates[][ 3 ] ) const;
-    void        release_once() const;  // release the resource alloacted in extractor()
+    void extractor( int& partnum_total, int types[], int ids[], double coordinates[][ 3 ] ) const;
+    void release_once() const;  // release the resource alloacted in extractor()
     inline bool need_ana_model() const;
     inline bool need_ana_particle() const;
     inline bool need_log_orbit() const;

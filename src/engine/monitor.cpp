@@ -533,8 +533,8 @@ int monitor::run_with call_without_tracer
             this->create_particle_file_datasets( particle_ana_nums );  // create the datasets
     }
 
-    push_data no_tracer;
-    int       return_code = this->save();
+    inject_data no_tracer;
+    int         return_code = this->save();
     if ( return_code != 0 )
     {
         WARN( "Failed to save analysis results to the output files." );
@@ -615,7 +615,7 @@ void monitor::release_once() const
         } */
 }
 
-void monitor::extractor( unsigned long& partnum_total, unsigned long types[], unsigned long ids[],
+void monitor::extractor( int& partnum_total, int types[], int ids[],
                          double coordinates[][ 3 ] ) const
 {
     // NOTE: the pre-process data will always be extracted, so the extractor should be called
@@ -625,16 +625,16 @@ void monitor::extractor( unsigned long& partnum_total, unsigned long types[], un
     if ( this->need_ana_model() )
     {
         for ( auto& ids : this->id_for_model )
-            ids = new unsigned long[ partnum_total ];
+            ids = new int[ partnum_total ];
     }
     if ( this->need_ana_particle() )
     {
         for ( auto& ids : this->id_for_particle )
-            ids = new unsigned long[ partnum_total ];
+            ids = new int[ partnum_total ];
     }
     if ( this->need_log_orbit() )
     {
-        this->id_for_orbit = new unsigned long[ this->orbit_part_num ];
+        this->id_for_orbit = new int[ this->orbit_part_num ];
     }
 
     /* if ( this->need_ana_group() )
@@ -642,9 +642,9 @@ void monitor::extractor( unsigned long& partnum_total, unsigned long types[], un
         this->id_for_group = new unsigned long[ partnum_total ];
     } */
 
-    static unsigned long i = 0;  // a static temporary variable
-    static size_t        j = 0;  // a static temporary variable
-    static size_t        k = 0;  // a static temporary variable
+    static int    i = 0;  // a static temporary variable
+    static size_t j = 0;  // a static temporary variable
+    static size_t k = 0;  // a static temporary variable
     // i: index for iterating all the particles
     // j: index for iterating all the target sets
     // k: index for iterating all the members in each target set
@@ -673,7 +673,7 @@ void monitor::extractor( unsigned long& partnum_total, unsigned long types[], un
 
         if ( this->need_log_orbit() )
         {
-            for ( size_t j = 0; j < this->orbit_part_num; ++j )
+            for ( int j = 0; j < this->orbit_part_num; ++j )
             {
                 if ( ids[ i ] == this->orbit_log_ids[ j ] )
                     this->id_for_orbit[ this->part_num_orbit++ ] = i;
@@ -682,8 +682,10 @@ void monitor::extractor( unsigned long& partnum_total, unsigned long types[], un
     }
 }
 
-inline int monitor::push_data call_without_tracer const
+inline int monitor::inject_data call_without_tracer const
 {
+    ( void )time;  // avoid the warning of unused variable
+    ( void )particle_ids;
     // This function should be called before the increment of the step counter
     if ( need_ana() )
         this->calc->call_pre_module( particle_number, types, masses, coordinates );

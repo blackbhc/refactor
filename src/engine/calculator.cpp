@@ -43,7 +43,7 @@ calculator::~calculator()
         {
             if ( color == "number_density" )
             {
-                for ( size_t i = 0; i < this->para->md_target_sets.size(); i++ )
+                for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
                 {
                     delete[] this->ptrs_of_results->images[ 0 ][ 0 ][ i ];
                     delete[] this->ptrs_of_results->images[ 0 ][ 1 ][ i ];
@@ -52,7 +52,7 @@ calculator::~calculator()
             }
             else if ( color == "surface_density" )
             {
-                for ( size_t i = 0; i < this->para->md_target_sets.size(); i++ )
+                for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
                 {
                     delete[] this->ptrs_of_results->images[ 1 ][ 0 ][ i ];
                     delete[] this->ptrs_of_results->images[ 1 ][ 1 ][ i ];
@@ -61,7 +61,7 @@ calculator::~calculator()
             }
             else if ( color == "mean_velocity" )
             {
-                for ( size_t i = 0; i < this->para->md_target_sets.size(); i++ )
+                for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
                     for ( int k = 2; k < 5; ++k )
                     {
                         delete[] this->ptrs_of_results->images[ k ][ 0 ][ i ];
@@ -71,7 +71,7 @@ calculator::~calculator()
             }
             else  // ( color == "velocity_dispersion" )
             {
-                for ( size_t i = 0; i < this->para->md_target_sets.size(); i++ )
+                for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
                     for ( int k = 5; k < 8; ++k )
                     {
                         delete[] this->ptrs_of_results->images[ k ][ 0 ][ i ];
@@ -83,7 +83,7 @@ calculator::~calculator()
     }
     if ( this->para->md_dispersion_tensor )
     {
-        for ( size_t i = 0; i < this->para->md_target_sets.size(); i++ )
+        for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
         {
             delete[] this->ptrs_of_results->dispersion_tensor[ i ];
         }
@@ -116,9 +116,7 @@ void calculator::setup_res()
         if ( this->para->md_image )
         {
             this->colors             = this->para->md_colors;
-            double       base_size   = this->para->md_region_size;
             unsigned int base_binnum = this->para->md_image_bins;
-            double       third_size  = base_size * this->para->md_axis_ratio;
             unsigned int third_binnum =
                 ( unsigned int )this->para->md_image_bins * this->para->md_axis_ratio;
             for ( auto& color : this->colors )
@@ -128,11 +126,11 @@ void calculator::setup_res()
                     for ( int j = 0; j < 3; ++j )
                         this->ptrs_of_results->images[ 0 ][ j ].resize(
                             this->para->md_target_sets.size() );
-                    for ( size_t i = 0; i < this->para->md_target_sets.size(); i++ )
+                    for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
                     {
                         double* image_xy_ptr = new double[ base_binnum * base_binnum ];
-                        double* image_xz_ptr = new double[ base_binnum * base_binnum ];
-                        double* image_yz_ptr = new double[ base_binnum * base_binnum ];
+                        double* image_xz_ptr = new double[ base_binnum * third_binnum ];
+                        double* image_yz_ptr = new double[ base_binnum * third_binnum ];
                         this->ptrs_of_results->images[ 0 ][ 0 ][ i ] = image_xy_ptr;
                         this->ptrs_of_results->images[ 0 ][ 1 ][ i ] = image_xz_ptr;
                         this->ptrs_of_results->images[ 0 ][ 2 ][ i ] = image_yz_ptr;
@@ -143,11 +141,11 @@ void calculator::setup_res()
                     for ( int j = 0; j < 3; ++j )
                         this->ptrs_of_results->images[ 1 ][ j ].resize(
                             this->para->md_target_sets.size() );
-                    for ( size_t i = 0; i < this->para->md_target_sets.size(); i++ )
+                    for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
                     {
                         double* image_xy_ptr = new double[ base_binnum * base_binnum ];
-                        double* image_xz_ptr = new double[ base_binnum * base_binnum ];
-                        double* image_yz_ptr = new double[ base_binnum * base_binnum ];
+                        double* image_xz_ptr = new double[ base_binnum * third_binnum ];
+                        double* image_yz_ptr = new double[ base_binnum * third_binnum ];
                         this->ptrs_of_results->images[ 1 ][ 0 ][ i ] = image_xy_ptr;
                         this->ptrs_of_results->images[ 1 ][ 1 ][ i ] = image_xz_ptr;
                         this->ptrs_of_results->images[ 1 ][ 2 ][ i ] = image_yz_ptr;
@@ -159,13 +157,13 @@ void calculator::setup_res()
                         for ( int k = 2; k < 5; ++k )
                             this->ptrs_of_results->images[ k ][ j ].resize(
                                 this->para->md_target_sets.size() );
-                    for ( size_t i = 0; i < this->para->md_target_sets.size(); i++ )
+                    for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
                     {
                         for ( int k = 2; k < 5; ++k )
                         {
                             double* image_xy_ptr = new double[ base_binnum * base_binnum ];
-                            double* image_xz_ptr = new double[ base_binnum * base_binnum ];
-                            double* image_yz_ptr = new double[ base_binnum * base_binnum ];
+                            double* image_xz_ptr = new double[ base_binnum * third_binnum ];
+                            double* image_yz_ptr = new double[ base_binnum * third_binnum ];
                             this->ptrs_of_results->images[ k ][ 0 ][ i ] = image_xy_ptr;
                             this->ptrs_of_results->images[ k ][ 1 ][ i ] = image_xz_ptr;
                             this->ptrs_of_results->images[ k ][ 2 ][ i ] = image_yz_ptr;
@@ -178,13 +176,13 @@ void calculator::setup_res()
                         for ( int k = 5; k < 8; ++k )
                             this->ptrs_of_results->images[ k ][ j ].resize(
                                 this->para->md_target_sets.size() );
-                    for ( size_t i = 0; i < this->para->md_target_sets.size(); i++ )
+                    for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
                     {
                         for ( int k = 5; k < 8; ++k )
                         {
                             double* image_xy_ptr = new double[ base_binnum * base_binnum ];
-                            double* image_xz_ptr = new double[ base_binnum * base_binnum ];
-                            double* image_yz_ptr = new double[ base_binnum * base_binnum ];
+                            double* image_xz_ptr = new double[ base_binnum * third_binnum ];
+                            double* image_yz_ptr = new double[ base_binnum * third_binnum ];
                             this->ptrs_of_results->images[ k ][ 0 ][ i ] = image_xy_ptr;
                             this->ptrs_of_results->images[ k ][ 1 ][ i ] = image_xz_ptr;
                             this->ptrs_of_results->images[ k ][ 2 ][ i ] = image_yz_ptr;
@@ -201,7 +199,7 @@ void calculator::setup_res()
                 ( unsigned int )this->para->md_image_bins * this->para->md_axis_ratio;
 
             this->ptrs_of_results->dispersion_tensor.resize( this->para->md_target_sets.size() );
-            for ( size_t i = 0; i < this->para->md_target_sets.size(); i++ )
+            for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
             {
                 double* tensor_ptr = new double[ base_binnum * base_binnum * third_binnum * 3 * 3 ];
                 this->ptrs_of_results->dispersion_tensor[ i ] = tensor_ptr;
@@ -210,15 +208,15 @@ void calculator::setup_res()
     }
 }
 
-int calculator::call_pre_module( unsigned long& partnum_total, unsigned long types[],
-                                 double masses[], double coordinates[][ 3 ] ) const
+int calculator::call_pre_module( int& partnum_total, int types[], double masses[],
+                                 double coordinates[][ 3 ] ) const
 {
     vector< unsigned long* > id_for_pre;   // the array index of pre-process section's target
                                            // particles in the simulation data
     vector< unsigned long > part_num_pre;  // the length of the array index
 
-    auto          ids     = new unsigned long[ partnum_total ];
-    unsigned long counter = 0;  // how many particles have been used in this iteration
+    auto ids     = new unsigned long[ partnum_total ];
+    int  counter = 0;  // how many particles have been used in this iteration
     for ( int j = 0; j < partnum_total; ++j )
     {
         if ( this->is_target_of_pre( types[ j ], coordinates[ j ][ 0 ], coordinates[ j ][ 1 ],
@@ -325,8 +323,10 @@ int calculator::call_pre_module( unsigned long& partnum_total, unsigned long typ
 
 int calculator::call_md_module md_args const
 {
+    // analysis of each target set
     for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
-    {  // analysis of each target set
+    {
+        // hte mass of the target set
         double* mass = new double[ part_num_md[ i ] ];
         // the coordinates used in the bin2d function
         double* x = new double[ part_num_md[ i ] ];
@@ -379,10 +379,10 @@ int calculator::call_md_module md_args const
                 _y             = y[ j ];
                 x[ j ]         = _x * cos( phi ) - _y * sin( phi );
                 y[ j ]         = _x * sin( phi ) + _y * cos( phi );
-                _x             = vels[ j ][ 0 ];
-                _y             = vels[ j ][ 1 ];
-                vels[ j ][ 0 ] = _x * cos( phi ) - _y * sin( phi );
-                vels[ j ][ 1 ] = _x * sin( phi ) + _y * cos( phi );
+                _x             = vels[ 0 ][ j ];
+                _y             = vels[ 1 ][ j ];
+                vels[ 0 ][ j ] = _x * cos( phi ) - _y * sin( phi );
+                vels[ 1 ][ j ] = _x * sin( phi ) + _y * cos( phi );
             }
         }
 
@@ -394,7 +394,7 @@ int calculator::call_md_module md_args const
             unsigned int third_binnum =
                 ( unsigned int )this->para->md_image_bins * this->para->md_axis_ratio;
 
-            int k, m, n;  // tmp variables for the loop
+            unsigned int k, m, n;  // tmp variables for the loop
             for ( auto& color : this->colors )
             {
                 if ( color == "number_density" )
@@ -408,8 +408,8 @@ int calculator::call_md_module md_args const
                     auto image_yz = ana::bin2d( part_num_md[ i ], y, z, x, -base_size, base_size,
                                                 -third_size, third_size, base_binnum, third_binnum,
                                                 ana::stats_method::count );
-                    for ( k = 0; k < base_binnum; k++ )
-                        for ( m = 0; m < third_binnum; m++ )
+                    for ( k = 0; k < base_binnum; ++k )
+                        for ( m = 0; m < third_binnum; ++m )
                         {
                             this->ptrs_of_results->images[ 0 ][ 0 ][ i ][ k * base_binnum + m ] =
                                 image_xy[ k ][ m ];
@@ -433,8 +433,8 @@ int calculator::call_md_module md_args const
                     auto image_yz = ana::bin2d( part_num_md[ i ], y, z, mass, -base_size, base_size,
                                                 -third_size, third_size, base_binnum, third_binnum,
                                                 ana::stats_method::sum );
-                    for ( k = 0; k < base_binnum; k++ )
-                        for ( m = 0; m < third_binnum; m++ )
+                    for ( k = 0; k < base_binnum; ++k )
+                        for ( m = 0; m < third_binnum; ++m )
                         {
                             this->ptrs_of_results->images[ 1 ][ 0 ][ i ][ k * base_binnum + m ] =
                                 image_xy[ k ][ m ] / area_xy;
@@ -457,8 +457,8 @@ int calculator::call_md_module md_args const
                         auto image_yz = ana::bin2d( part_num_md[ i ], y, z, vels[ n ], -base_size,
                                                     base_size, -third_size, third_size, base_binnum,
                                                     third_binnum, ana::stats_method::mean );
-                        for ( k = 0; k < base_binnum; k++ )
-                            for ( m = 0; m < third_binnum; m++ )
+                        for ( k = 0; k < base_binnum; ++k )
+                            for ( m = 0; m < third_binnum; ++m )
                             {
                                 this->ptrs_of_results
                                     ->images[ 2 + n ][ 0 ][ i ][ k * base_binnum + m ] =
@@ -485,8 +485,8 @@ int calculator::call_md_module md_args const
                         auto image_yz = ana::bin2d( part_num_md[ i ], y, z, vels[ n ], -base_size,
                                                     base_size, -third_size, third_size, base_binnum,
                                                     third_binnum, ana::stats_method::std );
-                        for ( k = 0; k < base_binnum; k++ )
-                            for ( m = 0; m < third_binnum; m++ )
+                        for ( k = 0; k < base_binnum; ++k )
+                            for ( m = 0; m < third_binnum; ++m )
                             {
                                 this->ptrs_of_results
                                     ->images[ 5 + n ][ 0 ][ i ][ k * base_binnum + m ] =
@@ -510,16 +510,18 @@ int calculator::call_md_module md_args const
             unsigned int third_binnum =
                 ( unsigned int )this->para->md_image_bins * this->para->md_axis_ratio;
             if ( this->para->md_region_shape == "box" )
-                ana::dispersion_tensor(
-                    part_num_md[ i ], mass, x, y, z, vels[ 0 ], vels[ 1 ], vels[ 2 ], -base_size,
-                    base_size, -base_size, base_size, -third_size, third_size, base_binnum,
-                    base_binnum, third_binnum, this->ptrs_of_results->dispersion_tensor[ i ] );
+            {
+                ana::dispersion_tensor( part_num_md[ i ], x, y, z, vels[ 0 ], vels[ 1 ], vels[ 2 ],
+                                        -base_size, base_size, -base_size, base_size, -third_size,
+                                        third_size, base_binnum, base_binnum, third_binnum,
+                                        this->ptrs_of_results->dispersion_tensor[ i ] );
+            }
             else if ( this->para->md_region_shape == "sphere" )
             {
                 double* v_r     = new double[ part_num_md[ i ] ];
                 double* v_phi   = new double[ part_num_md[ i ] ];
                 double* v_theta = new double[ part_num_md[ i ] ];
-                for ( unsigned long j = 0; j < part_num_md[ i ]; ++j )
+                for ( int j = 0; j < part_num_md[ i ]; ++j )
                 {
                     v_r[ j ] = ( vels[ 0 ][ j ] * x[ j ] + vels[ 1 ][ j ] * y[ j ]
                                  + vels[ 2 ][ j ] * z[ j ] )
@@ -530,9 +532,9 @@ int calculator::call_md_module md_args const
                                      + vels[ 2 ][ j ] * ( x[ j ] * x[ j ] + y[ j ] * y[ j ] ) )
                                    / sqrt( x[ j ] * x[ j ] + y[ j ] * y[ j ] + z[ j ] * z[ j ] );
                 }
-                ana::dispersion_tensor( part_num_md[ i ], mass, x, y, z, v_r, v_phi, v_theta,
-                                        -base_size, base_size, -base_size, base_size, -third_size,
-                                        third_size, base_binnum, base_binnum, third_binnum,
+                ana::dispersion_tensor( part_num_md[ i ], x, y, z, v_r, v_phi, v_theta, -base_size,
+                                        base_size, -base_size, base_size, -third_size, third_size,
+                                        base_binnum, base_binnum, third_binnum,
                                         this->ptrs_of_results->dispersion_tensor[ i ] );
                 delete[] v_r;
                 delete[] v_phi;
@@ -543,14 +545,14 @@ int calculator::call_md_module md_args const
 
                 double* v_R   = new double[ part_num_md[ i ] ];
                 double* v_phi = new double[ part_num_md[ i ] ];
-                for ( unsigned long j = 0; j < part_num_md[ i ]; ++j )
+                for ( int j = 0; j < part_num_md[ i ]; ++j )
                 {
                     v_R[ j ] = ( vels[ 0 ][ j ] * x[ j ] + vels[ 1 ][ j ] * y[ j ] )
                                / sqrt( x[ j ] * x[ j ] + y[ j ] * y[ j ] );
                     v_phi[ j ] = ( -vels[ 0 ][ j ] * y[ j ] + vels[ 1 ][ j ] * x[ j ] )
                                  / sqrt( x[ j ] * x[ j ] + y[ j ] * y[ j ] );
                 }
-                ana::dispersion_tensor( part_num_md[ i ], mass, x, y, z, v_R, v_phi, vels[ 2 ],
+                ana::dispersion_tensor( part_num_md[ i ], x, y, z, v_R, v_phi, vels[ 2 ],
                                         -base_size, base_size, -base_size, base_size, -third_size,
                                         third_size, base_binnum, base_binnum, third_binnum,
                                         this->ptrs_of_results->dispersion_tensor[ i ] );
@@ -598,8 +600,7 @@ galotfa::analysis_result* calculator::feedback() const
     return this->ptrs_of_results;
 }
 
-bool calculator::is_target_of_pre( unsigned long& type, double& coordx, double& coordy,
-                                   double& coordz ) const
+bool calculator::is_target_of_pre( int& type, double& coordx, double& coordy, double& coordz ) const
 {
     double offset[ 3 ] = { 0 };  // the offset w.r.t. the system centers
     offset[ 0 ]        = coordx - this->system_center[ 0 ];
@@ -630,8 +631,7 @@ bool calculator::is_target_of_pre( unsigned long& type, double& coordx, double& 
     return true;
 }
 
-bool calculator::is_target_of_md( unsigned long& type, double& coordx, double& coordy,
-                                  double& coordz ) const
+bool calculator::is_target_of_md( int& type, double& coordx, double& coordy, double& coordz ) const
 {
     double offset[ 3 ] = { 0 };  // the offset w.r.t. the system centers
     offset[ 0 ]        = coordx - this->system_center[ 0 ];

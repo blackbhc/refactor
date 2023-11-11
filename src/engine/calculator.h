@@ -24,7 +24,7 @@ using std::vector;
 // and an optional potential tracer type
 #define md_args                                                             \
     ( double masses[], double coordinates[][ 3 ], double velocities[][ 3 ], \
-      vector< unsigned long* >& id_for_md, vector< unsigned long >& part_num_md )
+      vector< int* >& id_for_md, vector< int >& part_num_md )
 
 namespace galotfa {
 
@@ -79,14 +79,12 @@ public:
     calculator( galotfa::para* parameter );
     ~calculator();
     galotfa::analysis_result* feedback() const;
-    bool                      is_target_of_pre( unsigned long& type, double& coordx, double& coordy,
-                                                double& coordz ) const;
-    bool                      is_target_of_md( unsigned long& type, double& coordx, double& coordy,
-                                               double& coordz ) const;
+    bool is_target_of_pre( int& type, double& coordx, double& coordy, double& coordz ) const;
+    bool is_target_of_md( int& type, double& coordx, double& coordy, double& coordz ) const;
     // the apis between the analysis engine and the real analysis codes
     // TODO: the version with the potential tracer for the following methods
-    int call_pre_module( unsigned long& particle_num, unsigned long types[], double masses[],
-                         double coordinates[][ 3 ] ) const;
+    int                call_pre_module( int& particle_num, int types[], double masses[],
+                                        double coordinates[][ 3 ] ) const;
     int call_md_module md_args const;
     int                call_ptc_module() const;
     int                call_orb_module() const;
