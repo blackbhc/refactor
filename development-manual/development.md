@@ -259,6 +259,22 @@ which will combine other modules together to finish the on-the-fly analysis.
     will be overwritten in the next analysis step. To correctly output the analysis results, the monitor
     should push the results to the `writer` immediately after the `feedback` function is called.
 
+#### Steps to add new analysis results
+
+Except the analysis function, to include new analysis results, the workflow of the virtual analysis engine
+should be modified, which is a little tedious. The steps are listed as follows:
+
+1. Configure the `analysis_results` in the `calculator` class, to involve the new analysis results, which
+   is generally is pointer to array or single value or member of a vector.
+2. Configure its setting ups in the `calculator::setup_res()` function, at where such analysis results
+   will be initialized.
+3. Release such results in the destructor of the `calculator` class.
+4. Update the analysis results in its module (one of model, particle, ...) in the wrapper of `call_xxx_module`
+   of the `calculator` class.
+5. Create a dataset of such results in the `monitor::create_xxx_file_datasets()`, before which you should
+   choose a module to store such results, e.g. model, particle, group, etc.
+6. Push such results to its module at `monitor::save()` function.
+
 ### `src/tools` <a id="src_tools"></a> <a href="#list_of_modules"><font size=4>(src list)</font></a>
 
 #### Public APIs
