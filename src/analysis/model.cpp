@@ -5,19 +5,20 @@
 #include <complex>
 #include <math.h>
 #include <mpi.h>
+#include <string.h>
 #include <vector>
 
 using std::complex;
 namespace ana = galotfa::analysis;
 
-complex< double > ana::An( unsigned int array_len, double mass[], double x[], double y[],
+complex< double > ana::An( int array_len, double mass[], double x[], double y[],
                            unsigned int order )
 {
     complex< double > result = 0 + 0i;
     complex< double > I      = 0 + 1i;
     double            phi    = 0;  // the azimuthal angle
 
-    for ( unsigned int i = 0; i < array_len; i++ )
+    for ( int i = 0; i < array_len; i++ )
     {
         phi = atan2( y[ i ], x[ i ] );
         result += mass[ i ] * exp( order * phi * I );
@@ -29,7 +30,7 @@ complex< double > ana::An( unsigned int array_len, double mass[], double x[], do
 }
 
 
-double ana::s_bar( unsigned int array_len, double mass[], double x[], double y[] )
+double ana::s_bar( int array_len, double mass[], double x[], double y[] )
 {
     auto A2   = An( array_len, mass, x, y, 2 );
     auto A0   = An( array_len, mass, x, y, 0 );
@@ -37,14 +38,14 @@ double ana::s_bar( unsigned int array_len, double mass[], double x[], double y[]
     return abs( Abar );
 }
 
-double ana::s_buckle( unsigned int array_len, double mass[], double x[], double y[], double z[] )
+double ana::s_buckle( int array_len, double mass[], double x[], double y[], double z[] )
 {
     complex< double > numerator   = 0 + 0i;
     double            denominator = 0;
     complex< double > I           = 0 + 1i;
     double            phi         = 0;  // the azimuthal angle
 
-    for ( unsigned int i = 0; i < array_len; i++ )
+    for ( int i = 0; i < array_len; i++ )
     {
         phi = atan2( y[ i ], x[ i ] );
         numerator += z[ i ] * mass[ i ] * exp( 2 * phi * I );
@@ -58,13 +59,13 @@ double ana::s_buckle( unsigned int array_len, double mass[], double x[], double 
     return abs( numerator / denominator );
 }
 
-double ana::bar_major_axis( unsigned int array_len, double mass[], double x[], double y[] )
+double ana::bar_major_axis( int array_len, double mass[], double x[], double y[] )
 {
     auto A2 = An( array_len, mass, x, y, 2 );
     return arg( A2 ) / 2;  // divide by 2, as the argument of A2 is 2*phi
 }
 
-double ana::bar_length( unsigned int array_len, double mass[], double x[], double y[] )
+double ana::bar_length( int array_len, double mass[], double x[], double y[] )
 {
     ( void )array_len;
     ( void )mass;
@@ -74,7 +75,7 @@ double ana::bar_length( unsigned int array_len, double mass[], double x[], doubl
     return 0;
 }
 
-int ana::dispersion_tensor( unsigned int array_len, double x[], double y[], double z[], double vx[],
+int ana::dispersion_tensor( int array_len, double x[], double y[], double z[], double vx[],
                             double vy[], double vz[], double lower_bound_x, double upper_bound_x,
                             double lower_bound_y, double upper_bound_y, double lower_bound_z,
                             double upper_bound_z, unsigned int num_bins_x, unsigned int num_bins_y,
@@ -109,7 +110,7 @@ int ana::dispersion_tensor( unsigned int array_len, double x[], double y[], doub
     unsigned int i, j, k;  // tmp variables for the index of the bin
 
     unsigned int index_x, index_y, index_z;  // tmp variables for the index of the bin
-    for ( i = 0; i < array_len; ++i )
+    for ( i = 0; i < ( unsigned int )array_len; ++i )
     {
         if ( x[ i ] < lower_bound_x || x[ i ] > upper_bound_x || y[ i ] < lower_bound_y
              || y[ i ] > upper_bound_y || z[ i ] < lower_bound_z || z[ i ] > upper_bound_z )
@@ -246,4 +247,22 @@ int ana::dispersion_tensor( unsigned int array_len, double x[], double y[], doub
     return 0;
 }
 
+int ana::inertia_tensor( int array_len, double mass[], double x[], double y[], double z[],
+                         double* tensor )
+{
+    memset( tensor, 0, sizeof( double ) * 9 );
+    for ( int i = 0; i < array_len; i++ )
+    {
+        tensor[ 0 * 3 + 0 ] += mass[ i ] * ( y[ i ] * y[ i ] + z[ i ] * z[ i ] );
+        tensor[ 0 * 3 + 1 ] -= mass[ i ] * x[ i ] * y[ i ];
+        tensor[ 0 * 3 + 2 ] -= mass[ i ] * x[ i ] * z[ i ];
+        tensor[ 1 * 3 + 0 ] -= mass[ i ] * y[ i ] * x[ i ];
+        tensor[ 1 * 3 + 1 ] += mass[ i ] * ( x[ i ] * x[ i ] + z[ i ] * z[ i ] );
+        tensor[ 1 * 3 + 2 ] -= mass[ i ] * y[ i ] * z[ i ];
+        tensor[ 2 * 3 + 0 ] -= mass[ i ] * z[ i ] * x[ i ];
+        tensor[ 2 * 3 + 1 ] -= mass[ i ] * z[ i ] * y[ i ];
+        tensor[ 2 * 3 + 2 ] += mass[ i ] * ( x[ i ] * x[ i ] + y[ i ] * y[ i ] );
+    }
+    return 0;
+}
 #endif

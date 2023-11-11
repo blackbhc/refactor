@@ -48,6 +48,7 @@ struct analysis_result
     // Second dimension: the three projections, x-y, x-z, y-z
     // Third dimension: the pointer to the data
     vector< double* > dispersion_tensor;  // the pointer to the dispersion tensor
+    vector< double* > inertia_tensor;     // the pointer to the inertia tensor
 };
 
 

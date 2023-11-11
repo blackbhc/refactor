@@ -8,23 +8,25 @@
 using std::complex;
 namespace galotfa {
 namespace analysis {
-    complex< double > An( unsigned int array_len, double mass[], double x[], double y[],
+    complex< double > An( int array_len, double mass[], double x[], double y[],
                           unsigned int order );
 
-    double s_bar( unsigned int array_len, double mass[], double x[], double y[] );
+    double s_bar( int array_len, double mass[], double x[], double y[] );
 
-    double s_buckle( unsigned int array_len, double mass[], double x[], double y[], double z[] );
+    double s_buckle( int array_len, double mass[], double x[], double y[], double z[] );
 
-    double bar_major_axis( unsigned int array_len, double mass[], double x[], double y[] );
+    double bar_major_axis( int array_len, double mass[], double x[], double y[] );
 
-    double bar_length( unsigned int array_len, double mass[], double x[], double y[] );
+    double bar_length( int array_len, double mass[], double x[], double y[] );
 
-    int dispersion_tensor( unsigned int array_len, double x[], double y[], double z[], double vx[],
+    int dispersion_tensor( int array_len, double x[], double y[], double z[], double vx[],
                            double vy[], double vz[], double lower_bound_x, double upper_bound_x,
                            double lower_bound_y, double upper_bound_y, double lower_bound_z,
                            double upper_bound_z, unsigned int num_bins_x, unsigned int num_bins_y,
                            unsigned int num_bins_z, double* tensor );
 
+    int inertia_tensor( int array_len, double mass[], double x[], double y[], double z[],
+                        double* tensor );
 }  // namespace analysis
 }  // namespace galotfa
 #endif

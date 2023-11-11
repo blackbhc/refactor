@@ -283,6 +283,10 @@ int monitor::save()
                                                   binnum * binnum * binnum_third * 3 * 3,
                                                   "/DispersionTensor", 5 );
                 }
+                if ( this->para->md_inertia_tensor )
+                {
+                    single_model->push< double >( res->inertia_tensor[ i ], 9, "/InertiaTensor" );
+                }
                 ++i;
             }
     }
@@ -310,10 +314,11 @@ inline void monitor::create_model_file_datasets()
         size_t binnum_third = ( size_t )this->para->md_image_bins * this->para->md_axis_ratio;
         galotfa::hdf5::size_info image_info = { H5T_NATIVE_DOUBLE, 2, { binnum, binnum } };
         // for tensor
-        galotfa::hdf5::size_info tensor_info = { H5T_NATIVE_DOUBLE,
-                                                 5,
-                                                 { binnum, binnum, binnum_third, 3, 3 } };
         // 5 dimensions: x, y, z, (i, j) of the tensor
+        galotfa::hdf5::size_info dispersion_tensor_info = {
+            H5T_NATIVE_DOUBLE, 5, { binnum, binnum, binnum_third, 3, 3 }
+        };
+        galotfa::hdf5::size_info inertia_tensor_info = { H5T_NATIVE_DOUBLE, 2, { 3, 3 } };
 
         single_model->create_dataset( "/Times", single_scaler_info );
         if ( this->para->pre_recenter )
@@ -384,7 +389,9 @@ inline void monitor::create_model_file_datasets()
         }
 
         if ( this->para->md_dispersion_tensor )
-            single_model->create_dataset( "/DispersionTensor", tensor_info, 5 );
+            single_model->create_dataset( "/DispersionTensor", dispersion_tensor_info, 5 );
+        if ( this->para->md_inertia_tensor )
+            single_model->create_dataset( "/InertiaTensor", inertia_tensor_info );
         // use a smaller chunk size to avoid the memory error
     }
 }

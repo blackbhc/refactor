@@ -88,6 +88,15 @@ calculator::~calculator()
             delete[] this->ptrs_of_results->dispersion_tensor[ i ];
         }
     }
+    if ( this->para->md_inertia_tensor )
+    {
+        for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
+        {
+            delete[] this->ptrs_of_results->inertia_tensor[ i ];
+        }
+        this->ptrs_of_results->inertia_tensor.clear();
+    }
+
     delete this->ptrs_of_results;
 }
 
@@ -191,7 +200,6 @@ void calculator::setup_res()
                 }
             }
         }
-
         if ( this->para->md_dispersion_tensor )
         {
             unsigned int base_binnum = this->para->md_image_bins;
@@ -203,6 +211,15 @@ void calculator::setup_res()
             {
                 double* tensor_ptr = new double[ base_binnum * base_binnum * third_binnum * 3 * 3 ];
                 this->ptrs_of_results->dispersion_tensor[ i ] = tensor_ptr;
+            }
+        }
+        if ( this->para->md_inertia_tensor )
+        {
+            this->ptrs_of_results->inertia_tensor.resize( this->para->md_target_sets.size() );
+            for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
+            {
+                double* tensor_ptr                         = new double[ 3 * 3 ];
+                this->ptrs_of_results->inertia_tensor[ i ] = tensor_ptr;
             }
         }
     }
@@ -559,6 +576,11 @@ int calculator::call_md_module md_args const
                 delete[] v_R;
                 delete[] v_phi;
             }
+        }
+        if ( this->para->md_inertia_tensor )
+        {
+            ana::inertia_tensor( part_num_md[ i ], mass, x, y, z,
+                                 this->ptrs_of_results->inertia_tensor[ i ] );
         }
         // release the memory
         delete[] x;
