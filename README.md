@@ -374,7 +374,9 @@ is available with the inertia tensor.
   - The quantities of the image are specified by the `colors` parameter in the view of color coded (see below).
     (The name `image` may be changed in the future, as its meaning is not so clear.)
 - <a id="image_bins"></a>`image_bins`: how many bins of the image matrices in each dimension, for the axis that
-  may be stretched, the number of bins in such axis is also determined by the `axis_ratio` parameter.
+  may be stretched, the number of bins in such axis is also determined by the `axis_ratio` parameter. Note that
+  this number should not be too large, otherwise the chunk size of image matrix may overflow the limit value
+  (4GB in HDF5 library).
 - <a id="colors"></a>`colors`:
   At least one color must be given, if the `image` is enabled, otherwise the program will raise an error.
   - `number_density`: the number of particles in each bin.

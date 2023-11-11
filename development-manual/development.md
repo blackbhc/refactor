@@ -452,8 +452,6 @@ Steps to use the `writer` class to organize the hdf5 file:
   to the hdf5 file when the stack is full or the simulation is finished. This strategy is due to the
   uncertainty of how many synchronized time steps will be analyzed during a simulation.
   This can avoid the frequent opening and closing of the hdf5 file, which is time consuming.
-- The size of the virtual stack is in units of synchronized time steps in simulation, which is defined as
-  a constant `VIRTUAL_STACK_SIZE` in `src/output/writer.h`.
 - It seems to be possible to use the parallel hdf5 IO to improve the performance, but there is few
   documentations about this feature, and such feature is not always activated in the hdf5 library, so
   `galotfa` only use a serial mode to write date, which is collected from all processes into the main process.
@@ -485,6 +483,7 @@ size of the sub-space of the array.
 
 - `writer(std::string)`: the class for data output, which require a string to specify the path to the output
   file for initialization. This function can only be used in the main process, due to the hdf5 file lock.
+
   - `nodes`: the hash map with string-type key, and `galotfa::hdf5::node*`-type value, the key is the absolute
     path of the node, e.g. `/group1/group2/dataset_name` and `/` for the file.
     - Note: due to the limitation to use pointer represent the tree structure, the value in the hash table
@@ -504,20 +503,25 @@ size of the sub-space of the array.
   - `writer::create_group(std::string)`: create a hdf5 group with the given name, can be used to create nested
     groups recursively, e.g. given `group1/group2/group3`, the writer will create `group1` , `group2` and `group3`
     recursively if they do not exist. The group name without a prefix `/` will be treated as a root group.
-  - `writer::create_dataset(std::string, galotfa::hdf5::size_info&)`: create a hdf5 dataset with the given
+  - `writer::create_dataset(std::string, galotfa::hdf5::size_info&, unsigned int chunk_size)`: create a hdf5 dataset with the given
     name, if the string before the final dataset name, take a example: `a/b/c/dataset_name`, will be created
     as group, `a/b/c` here.
   - Note: The previous three create function will return 1 if there is some warning, and 0 for success. So never
     ignore the return value of these functions.
-  - `galota::hdf5::node* create_datanode(node& parent, std::string& dataset, galotfa::hdf5::size_info&)`: setup the
-    dataset of the parent node with the given name and info. `dataset` string should be the name of dataset
-    only, e.g. for `/group1/group2/dataset_name` the given value should be `dataset_name`. The parent node
-    should be a group node.
+  - `galota::hdf5::node* create_datanode(node& parent, std::string& dataset, galotfa::hdf5::size_info&, unsigned int chunk_size)`:
+    setup the dataset of the parent node with the given name and info. `dataset` string should be the name of dataset
+    only, e.g. for `/group1/group2/dataset_name` the given value should be `dataset_name`. The parent node should
+    be a group node.
   - `open_file(...)`: open a hdf5 file and return its id, private.
-  - `push(void* buffer, unsigned long len, std::string dataset_name)`: a template function, the main interface
-    to push an array of data to an existing dataset, the dataset name should be the absolute path of the dataset,
-    e.g. `/group1/group2/dataset_name`. If such dataset does not exist, the writer will create it automatically.
-    The data type of the dataset will be restored by `node`, during creation of the dataset.
+  - `push(void* buffer, unsigned long len, std::string dataset_name, unsigned int chunk_size)`: a template function,
+    the main interface to push an array of data to an existing dataset, the dataset name should be the absolute
+    path of the dataset, e.g. `/group1/group2/dataset_name`. If such dataset does not exist, the writer will create
+    it automatically. The data type of the dataset will be restored by `node`, during creation of the dataset.
+
+    <font color="red">Note: In general, the chunk_size should not be set explicitly, expect for some large datasets
+    (such as dispersion tensor), as the `hdf5` library does not support chunk size larger than 4GB. Besides if
+    you need to set it explicitly, make sure the parameter during create dataset is the same as the one use
+    in the push function.</font>
 
 ### `src/analysis`: <a id="src_analysis"></a> <a href="#list_of_modules"><font size=4>(src list)</font></a>
 
@@ -570,3 +574,4 @@ statistics, smoothing, etc. All the followings are defined in the namespace `gal
 - `s_buckle(...)`: the buckling strength.
 - `bar_major_axis(...)`: calculate the major axis of the bar, which is defined as the argument of $A_2$.
   The return value in the range $(-\pi/2, \pi/2]$.
+- `dispersion_tensor(...)`: function to calculate the dispersion tensor.
