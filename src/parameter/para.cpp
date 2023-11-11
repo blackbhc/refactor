@@ -342,8 +342,7 @@ int para::check( void )
 
             auto invalid_color = []( std::string& color ) -> bool {
                 return color != "number_density" && color != "surface_density"
-                       && color != "mean_velocity" && color != "dispersion"
-                       && color != "dispersion_tensor";
+                       && color != "mean_velocity" && color != "velocity_dispersion";
             };
 
             IF_ONE_THEN_WARN( this->md_colors, invalid_color,

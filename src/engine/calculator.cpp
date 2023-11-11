@@ -36,6 +36,59 @@ calculator::calculator( galotfa::para* parameter ) : para( parameter )
 
 calculator::~calculator()
 {
+    if ( this->para->md_switch_on && this->para->md_image )
+    {
+        REACH;
+        REACH;
+        if ( std::find( this->para->md_colors.begin(), this->para->md_colors.end(),
+                        "number_density" )
+             != this->para->md_colors.end() )
+        {
+            REACH;
+            for ( size_t i = 0; i < this->para->md_target_sets.size(); i++ )
+            {
+                delete[] this->ptrs_of_results->images[ 0 ][ 0 ][ i ];
+                delete[] this->ptrs_of_results->images[ 0 ][ 1 ][ i ];
+                delete[] this->ptrs_of_results->images[ 0 ][ 2 ][ i ];
+            }
+            REACH;
+        }
+        if ( std::find( this->para->md_colors.begin(), this->para->md_colors.end(),
+                        "surface_density" )
+             != this->para->md_colors.end() )
+        {
+            for ( size_t i = 0; i < this->para->md_target_sets.size(); i++ )
+            {
+                delete[] this->ptrs_of_results->images[ 1 ][ 0 ][ i ];
+                delete[] this->ptrs_of_results->images[ 1 ][ 1 ][ i ];
+                delete[] this->ptrs_of_results->images[ 1 ][ 2 ][ i ];
+            }
+        }
+        if ( std::find( this->para->md_colors.begin(), this->para->md_colors.end(),
+                        "mean_velocity" )
+             != this->para->md_colors.end() )
+        {
+            for ( size_t i = 0; i < this->para->md_target_sets.size(); i++ )
+                for ( int k = 2; k < 5; ++k )
+                {
+                    delete[] this->ptrs_of_results->images[ k ][ 0 ][ i ];
+                    delete[] this->ptrs_of_results->images[ k ][ 1 ][ i ];
+                    delete[] this->ptrs_of_results->images[ k ][ 2 ][ i ];
+                }
+        }
+        if ( std::find( this->para->md_colors.begin(), this->para->md_colors.end(),
+                        "velocity_dispersion" )
+             != this->para->md_colors.end() )
+        {
+            for ( size_t i = 0; i < this->para->md_target_sets.size(); i++ )
+                for ( int k = 5; k < 8; ++k )
+                {
+                    delete[] this->ptrs_of_results->images[ k ][ 0 ][ i ];
+                    delete[] this->ptrs_of_results->images[ k ][ 1 ][ i ];
+                    delete[] this->ptrs_of_results->images[ k ][ 2 ][ i ];
+                }
+        }
+    }
     delete this->ptrs_of_results;
 }
 
@@ -61,15 +114,95 @@ void calculator::setup_res()
         if ( this->para->md_an.size() > 0 )
             for ( auto& n : this->para->md_an )
                 this->ptrs_of_results->Ans[ n ].resize( this->para->md_target_sets.size() );
+        if ( this->para->md_image )
+        {
+
+            double       base_size   = this->para->md_region_size;
+            unsigned int base_binnum = this->para->md_image_bins;
+            double       third_size  = base_size * this->para->md_axis_ratio;
+            unsigned int third_binnum =
+                ( unsigned int )this->para->md_image_bins * this->para->md_axis_ratio;
+            if ( std::find( this->para->md_colors.begin(), this->para->md_colors.end(),
+                            "number_density" )
+                 != this->para->md_colors.end() )
+            {
+                for ( int j = 0; j < 3; ++j )
+                    this->ptrs_of_results->images[ 0 ][ j ].resize(
+                        this->para->md_target_sets.size() );
+                for ( size_t i = 0; i < this->para->md_target_sets.size(); i++ )
+                {
+                    double* image_xy_ptr = new double[ base_binnum * base_binnum ];
+                    double* image_xz_ptr = new double[ base_binnum * base_binnum ];
+                    double* image_yz_ptr = new double[ base_binnum * base_binnum ];
+                    this->ptrs_of_results->images[ 0 ][ 0 ][ i ] = image_xy_ptr;
+                    this->ptrs_of_results->images[ 0 ][ 1 ][ i ] = image_xz_ptr;
+                    this->ptrs_of_results->images[ 0 ][ 2 ][ i ] = image_yz_ptr;
+                }
+            }
+            if ( std::find( this->para->md_colors.begin(), this->para->md_colors.end(),
+                            "surface_density" )
+                 != this->para->md_colors.end() )
+            {
+                for ( int j = 0; j < 3; ++j )
+                    this->ptrs_of_results->images[ 1 ][ j ].resize(
+                        this->para->md_target_sets.size() );
+                for ( size_t i = 0; i < this->para->md_target_sets.size(); i++ )
+                {
+                    double* image_xy_ptr = new double[ base_binnum * base_binnum ];
+                    double* image_xz_ptr = new double[ base_binnum * base_binnum ];
+                    double* image_yz_ptr = new double[ base_binnum * base_binnum ];
+                    this->ptrs_of_results->images[ 1 ][ 0 ][ i ] = image_xy_ptr;
+                    this->ptrs_of_results->images[ 1 ][ 1 ][ i ] = image_xz_ptr;
+                    this->ptrs_of_results->images[ 1 ][ 2 ][ i ] = image_yz_ptr;
+                }
+            }
+            if ( std::find( this->para->md_colors.begin(), this->para->md_colors.end(),
+                            "mean_velocity" )
+                 != this->para->md_colors.end() )
+            {
+                for ( int j = 0; j < 3; ++j )
+                    for ( int k = 2; k < 5; ++k )
+                        this->ptrs_of_results->images[ k ][ j ].resize(
+                            this->para->md_target_sets.size() );
+                for ( size_t i = 0; i < this->para->md_target_sets.size(); i++ )
+                {
+                    for ( int k = 2; k < 5; ++k )
+                    {
+                        double* image_xy_ptr = new double[ base_binnum * base_binnum ];
+                        double* image_xz_ptr = new double[ base_binnum * base_binnum ];
+                        double* image_yz_ptr = new double[ base_binnum * base_binnum ];
+                        this->ptrs_of_results->images[ k ][ 0 ][ i ] = image_xy_ptr;
+                        this->ptrs_of_results->images[ k ][ 1 ][ i ] = image_xz_ptr;
+                        this->ptrs_of_results->images[ k ][ 2 ][ i ] = image_yz_ptr;
+                    }
+                }
+            }
+            if ( std::find( this->para->md_colors.begin(), this->para->md_colors.end(),
+                            "velocity_dispersion" )
+                 != this->para->md_colors.end() )
+            {
+                for ( int j = 0; j < 3; ++j )
+                    for ( int k = 5; k < 8; ++k )
+                        this->ptrs_of_results->images[ k ][ j ].resize(
+                            this->para->md_target_sets.size() );
+                for ( size_t i = 0; i < this->para->md_target_sets.size(); i++ )
+                {
+                    for ( int k = 5; k < 8; ++k )
+                    {
+                        double* image_xy_ptr = new double[ base_binnum * base_binnum ];
+                        double* image_xz_ptr = new double[ base_binnum * base_binnum ];
+                        double* image_yz_ptr = new double[ base_binnum * base_binnum ];
+                        this->ptrs_of_results->images[ k ][ 0 ][ i ] = image_xy_ptr;
+                        this->ptrs_of_results->images[ k ][ 1 ][ i ] = image_xz_ptr;
+                        this->ptrs_of_results->images[ k ][ 2 ][ i ] = image_yz_ptr;
+                    }
+                }
+            }
+        }
+
+        if ( this->para->md_dispersion_tensor )
+            this->ptrs_of_results->dispersion_tensor.resize( this->para->md_target_sets.size() );
     }
-}
-
-inline int shuffle()
-{
-    // TODO: to be implemented
-
-    // TODO: shuffle the flag status
-    return 0;
 }
 
 int calculator::call_pre_module( unsigned long& partnum_total, unsigned long types[],
@@ -189,81 +322,68 @@ int calculator::call_md_module md_args const
 {
     for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
     {  // analysis of each target set
-        double( *coords )[ 3 ] = new double[ part_num_md[ i ] ][ 3 ];
-        double( *velos )[ 3 ]  = new double[ part_num_md[ i ] ][ 3 ];
-        double* masses         = new double[ part_num_md[ i ] ];
+        double* mass = new double[ part_num_md[ i ] ];
+        // the coordinates used in the bin2d function
+        double* x = new double[ part_num_md[ i ] ];
+        double* y = new double[ part_num_md[ i ] ];
+        double* z = new double[ part_num_md[ i ] ];
+        double* vels[ 3 ];
+        vels[ 0 ] = new double[ part_num_md[ i ] ];
+        vels[ 1 ] = new double[ part_num_md[ i ] ];
+        vels[ 2 ] = new double[ part_num_md[ i ] ];
         // extract the data of the target set
         for ( int j = 0; j < ( int )part_num_md[ j ]; ++j )
         {
             {
-                coords[ j ][ 0 ] =
-                    coordinates[ id_for_md[ i ][ j ] ][ 0 ] - this->system_center[ 0 ];
-                coords[ j ][ 1 ] =
-                    coordinates[ id_for_md[ i ][ j ] ][ 1 ] - this->system_center[ 1 ];
-                coords[ j ][ 2 ] = coordinates[ id_for_md[ i ][ j ] ][ 2 ]
-                                   - this->system_center[ 2 ] * this->para->md_axis_ratio;
-                velos[ j ][ 0 ] = velocities[ id_for_md[ i ][ j ] ][ 0 ];
-                velos[ j ][ 1 ] = velocities[ id_for_md[ i ][ j ] ][ 1 ];
-                velos[ j ][ 2 ] = velocities[ id_for_md[ i ][ j ] ][ 2 ];
-                masses[ j ]     = masses[ id_for_md[ i ][ j ] ];
+                x[ j ] = coordinates[ id_for_md[ i ][ j ] ][ 0 ] - this->system_center[ 0 ];
+                y[ j ] = coordinates[ id_for_md[ i ][ j ] ][ 1 ] - this->system_center[ 1 ];
+                z[ j ] = coordinates[ id_for_md[ i ][ j ] ][ 2 ]
+                         - this->system_center[ 2 ] * this->para->md_axis_ratio;
+                vels[ 0 ][ j ] = velocities[ id_for_md[ i ][ j ] ][ 0 ];
+                vels[ 1 ][ j ] = velocities[ id_for_md[ i ][ j ] ][ 1 ];
+                vels[ 2 ][ j ] = velocities[ id_for_md[ i ][ j ] ][ 2 ];
+                mass[ j ]      = masses[ id_for_md[ i ][ j ] ];
             }
         }
         if ( this->para->md_bar_major_axis )
             this->ptrs_of_results->bar_marjor_axis[ i ] =
-                ana::bar_major_axis( part_num_md[ i ], masses, coords );
+                ana::bar_major_axis( part_num_md[ i ], mass, x, y );
         if ( this->para->md_bar_length )
             this->ptrs_of_results->bar_length[ i ] =
-                ana::bar_length( part_num_md[ i ], masses, coords );  // TODO: to be implemented
+                ana::bar_length( part_num_md[ i ], mass, x, y );  // TODO: to be implemented
         if ( this->para->md_sbar )
-            this->ptrs_of_results->s_bar[ i ] = ana::s_bar( part_num_md[ i ], masses, coords );
+            this->ptrs_of_results->s_bar[ i ] = ana::s_bar( part_num_md[ i ], mass, x, y );
         if ( this->para->md_sbuckle )
-            this->ptrs_of_results->s_buckle[ i ] =
-                ana::s_buckle( part_num_md[ i ], masses, coords );
+            this->ptrs_of_results->s_buckle[ i ] = ana::s_buckle( part_num_md[ i ], mass, x, y, z );
         if ( this->para->md_an.size() > 0 )
             for ( auto& n : this->para->md_an )
             {
-                this->ptrs_of_results->Ans[ n ][ i ] =
-                    ana::An( part_num_md[ i ], masses, coords, n );
+                this->ptrs_of_results->Ans[ n ][ i ] = ana::An( part_num_md[ i ], mass, x, y, n );
             }
 
         if ( this->para->md_align_bar
              && this->ptrs_of_results->s_bar[ i ] > this->para->md_bar_threshold )
         {
             double phi = this->ptrs_of_results->bar_marjor_axis[ i ];
-            double x, y;  // tmp variables
+            double _x, _y;  // tmp variables
             for ( int j = 0; j < part_num_md[ i ]; ++j )
             {
-                x                = coords[ j ][ 0 ];
-                y                = coords[ j ][ 1 ];
-                coords[ j ][ 0 ] = x * cos( phi ) - y * sin( phi );
-                coords[ j ][ 1 ] = x * sin( phi ) + y * cos( phi );
+                _x     = x[ j ];
+                _y     = x[ j ];
+                x[ j ] = _x * cos( phi ) - _y * sin( phi );
+                y[ j ] = _x * sin( phi ) + _y * cos( phi );
             }
         }
+
         if ( this->para->md_image )
         {
-            double *x, *y, *z, *vx, *vy, *vz;
-            x  = new double[ part_num_md[ i ] ];
-            y  = new double[ part_num_md[ i ] ];
-            z  = new double[ part_num_md[ i ] ];
-            vx = new double[ part_num_md[ i ] ];
-            vy = new double[ part_num_md[ i ] ];
-            vz = new double[ part_num_md[ i ] ];
-
-            for ( int j = 0; j < part_num_md[ i ]; ++j )
-            {
-                x[ j ]  = coords[ j ][ 0 ];
-                y[ j ]  = coords[ j ][ 1 ];
-                z[ j ]  = coords[ j ][ 2 ];
-                vx[ j ] = velos[ j ][ 0 ];
-                vy[ j ] = velos[ j ][ 1 ];
-                vz[ j ] = velos[ j ][ 2 ];
-            }
-
             double       base_size   = this->para->md_region_size;
             unsigned int base_binnum = this->para->md_image_bins;
             double       third_size  = base_size * this->para->md_axis_ratio;
             unsigned int third_binnum =
                 ( unsigned int )this->para->md_image_bins * this->para->md_axis_ratio;
+
+            int k, m, n;  // tmp variables for the loop
 
             if ( std::find( this->para->md_colors.begin(), this->para->md_colors.end(),
                             "number_density" )
@@ -278,16 +398,115 @@ int calculator::call_md_module md_args const
                 auto image_yz =
                     ana::bin2d( part_num_md[ i ], y, z, x, -base_size, base_size, -third_size,
                                 third_size, base_binnum, third_binnum, ana::stats_method::count );
+                for ( k = 0; k < base_binnum; k++ )
+                    for ( m = 0; m < third_binnum; m++ )
+                    {
+                        this->ptrs_of_results->images[ 0 ][ 0 ][ i ][ k * base_binnum + m ] =
+                            image_xy[ k ][ m ];
+                        this->ptrs_of_results->images[ 0 ][ 1 ][ i ][ k * base_binnum + m ] =
+                            image_xz[ k ][ m ];
+                        this->ptrs_of_results->images[ 0 ][ 2 ][ i ][ k * base_binnum + m ] =
+                            image_yz[ k ][ m ];
+                    }
             }
 
-            // release the memory
-            delete[] x;
-            delete[] y;
-            delete[] z;
-            delete[] vx;
-            delete[] vy;
-            delete[] vz;
+            if ( std::find( this->para->md_colors.begin(), this->para->md_colors.end(),
+                            "surface_density" )
+                 != this->para->md_colors.end() )
+            {
+                static double area_xy = 4 * base_size * base_size / base_binnum / base_binnum;
+                static double area_xz = 4 * base_size * third_size / base_binnum / third_binnum;
+                static double area_yz = 4 * base_size * third_size / base_binnum / third_binnum;
+                auto          image_xy =
+                    ana::bin2d( part_num_md[ i ], x, y, mass, -base_size, base_size, -base_size,
+                                base_size, base_binnum, base_binnum, ana::stats_method::sum );
+                auto image_xz =
+                    ana::bin2d( part_num_md[ i ], x, z, mass, -base_size, base_size, -third_size,
+                                third_size, base_binnum, third_binnum, ana::stats_method::sum );
+                auto image_yz =
+                    ana::bin2d( part_num_md[ i ], y, z, mass, -base_size, base_size, -third_size,
+                                third_size, base_binnum, third_binnum, ana::stats_method::sum );
+                for ( k = 0; k < base_binnum; k++ )
+                    for ( m = 0; m < third_binnum; m++ )
+                    {
+                        this->ptrs_of_results->images[ 1 ][ 0 ][ i ][ k * base_binnum + m ] =
+                            image_xy[ k ][ m ] / area_xy;
+                        this->ptrs_of_results->images[ 1 ][ 1 ][ i ][ k * base_binnum + m ] =
+                            image_xz[ k ][ m ] / area_xz;
+                        this->ptrs_of_results->images[ 1 ][ 2 ][ i ][ k * base_binnum + m ] =
+                            image_yz[ k ][ m ] / area_yz;
+                    }
+            }
+
+            if ( std::find( this->para->md_colors.begin(), this->para->md_colors.end(),
+                            "mean_velocity" )
+                 != this->para->md_colors.end() )
+            {
+                for ( n = 0; n < 3; ++n )
+                {
+                    auto image_xy = ana::bin2d( part_num_md[ i ], x, y, vels[ n ], -base_size,
+                                                base_size, -base_size, base_size, base_binnum,
+                                                base_binnum, ana::stats_method::mean );
+                    auto image_xz = ana::bin2d( part_num_md[ i ], x, z, vels[ n ], -base_size,
+                                                base_size, -third_size, third_size, base_binnum,
+                                                third_binnum, ana::stats_method::mean );
+                    auto image_yz = ana::bin2d( part_num_md[ i ], y, z, vels[ n ], -base_size,
+                                                base_size, -third_size, third_size, base_binnum,
+                                                third_binnum, ana::stats_method::mean );
+                    for ( k = 0; k < base_binnum; k++ )
+                        for ( m = 0; m < third_binnum; m++ )
+                        {
+                            this->ptrs_of_results
+                                ->images[ 2 + n ][ 0 ][ i ][ k * base_binnum + m ] =
+                                image_xy[ k ][ m ];
+                            this->ptrs_of_results
+                                ->images[ 2 + n ][ 1 ][ i ][ k * base_binnum + m ] =
+                                image_xz[ k ][ m ];
+                            this->ptrs_of_results
+                                ->images[ 2 + n ][ 2 ][ i ][ k * base_binnum + m ] =
+                                image_yz[ k ][ m ];
+                        }
+                }
+            }
+
+            if ( std::find( this->para->md_colors.begin(), this->para->md_colors.end(),
+                            "velocity_dispersion" )
+                 != this->para->md_colors.end() )
+            {
+                for ( n = 0; n < 3; ++n )
+                {
+                    auto image_xy = ana::bin2d( part_num_md[ i ], x, y, vels[ n ], -base_size,
+                                                base_size, -base_size, base_size, base_binnum,
+                                                base_binnum, ana::stats_method::std );
+                    auto image_xz = ana::bin2d( part_num_md[ i ], x, z, vels[ n ], -base_size,
+                                                base_size, -third_size, third_size, base_binnum,
+                                                third_binnum, ana::stats_method::std );
+                    auto image_yz = ana::bin2d( part_num_md[ i ], y, z, vels[ n ], -base_size,
+                                                base_size, -third_size, third_size, base_binnum,
+                                                third_binnum, ana::stats_method::std );
+                    for ( k = 0; k < base_binnum; k++ )
+                        for ( m = 0; m < third_binnum; m++ )
+                        {
+                            this->ptrs_of_results
+                                ->images[ 5 + n ][ 0 ][ i ][ k * base_binnum + m ] =
+                                image_xy[ k ][ m ];
+                            this->ptrs_of_results
+                                ->images[ 5 + n ][ 1 ][ i ][ k * base_binnum + m ] =
+                                image_xz[ k ][ m ];
+                            this->ptrs_of_results
+                                ->images[ 5 + n ][ 2 ][ i ][ k * base_binnum + m ] =
+                                image_yz[ k ][ m ];
+                        }
+                }
+            }
         }
+        // release the memory
+        delete[] x;
+        delete[] y;
+        delete[] z;
+        for ( int i = 0; i < 3; ++i )
+            delete[] vels[ i ];
+        delete[] mass;
     }
     return 0;
 }

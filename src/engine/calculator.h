@@ -40,9 +40,11 @@ struct analysis_result
     // First dimension: the order of the An, from 0 to 6
     // Second dimension: the pointer to the data
     vector< double >  bar_length;  // TODO: to be implemented with multiple method
-    vector< double* > images[ 4 ][ 3 ];
-    // First dimension: possible images colors, number_density, surface_density, mean_velocity,
-    // dispersion
+    vector< double* > images[ 8 ][ 3 ];
+    // First dimension are over possible images colors: number_density, surface_density,
+    // mean_velocity axis1, mean_velocity axis2, mean_velocity axis3, velocity_dispersion axis1,
+    // velocity_dispersion axis2, velocity_dispersion axis3 dispersion
+    // their indexes are 0, 1, 2, 3, 4, 5, 6, 7
     // Second dimension: the three projections, x-y, x-z, y-z
     // Third dimension: the pointer to the data
     vector< double* > dispersion_tensor;  // the pointer to the dispersion tensor
@@ -68,7 +70,6 @@ private:
     // private methods
 private:
     // the analysis wrappers: call the analysis modules, and restore the results
-    inline int  shuffle();
     inline bool in_recenter_region() const;
     void        setup_res();
 

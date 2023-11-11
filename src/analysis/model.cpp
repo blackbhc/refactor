@@ -10,7 +10,7 @@
 using std::complex;
 namespace ana = galotfa::analysis;
 
-complex< double > ana::An( unsigned int array_len, double mass[], double coord[][ 3 ],
+complex< double > ana::An( unsigned int array_len, double mass[], double x[], double y[],
                            unsigned int order )
 {
     complex< double > result = 0 + 0i;
@@ -19,7 +19,7 @@ complex< double > ana::An( unsigned int array_len, double mass[], double coord[]
 
     for ( unsigned int i = 0; i < array_len; i++ )
     {
-        phi = atan2( coord[ i ][ 1 ], coord[ i ][ 0 ] );
+        phi = atan2( y[ i ], x[ i ] );
         result += mass[ i ] * exp( order * phi * I );
     }
 
@@ -29,16 +29,16 @@ complex< double > ana::An( unsigned int array_len, double mass[], double coord[]
 }
 
 
-double ana::s_bar( unsigned int array_len, double mass[], double coord[][ 3 ] )
+double ana::s_bar( unsigned int array_len, double mass[], double x[], double y[] )
 {
     double s_bar = 0;
-    auto   A2    = An( array_len, mass, coord, 2 );
-    auto   A0    = An( array_len, mass, coord, 0 );
+    auto   A2    = An( array_len, mass, x, y, 2 );
+    auto   A0    = An( array_len, mass, x, y, 0 );
     auto   Abar  = A2 / A0;
     return abs( Abar );
 }
 
-double ana::s_buckle( unsigned int array_len, double mass[], double coord[][ 3 ] )
+double ana::s_buckle( unsigned int array_len, double mass[], double x[], double y[], double z[] )
 {
     complex< double > numerator   = 0 + 0i;
     double            denominator = 0;
@@ -47,8 +47,8 @@ double ana::s_buckle( unsigned int array_len, double mass[], double coord[][ 3 ]
 
     for ( unsigned int i = 0; i < array_len; i++ )
     {
-        phi = atan2( coord[ i ][ 1 ], coord[ i ][ 0 ] );
-        numerator += coord[ i ][ 2 ] * mass[ i ] * exp( 2 * phi * I );
+        phi = atan2( y[ i ], x[ i ] );
+        numerator += z[ i ] * mass[ i ] * exp( 2 * phi * I );
         denominator += mass[ i ];
     }
 
@@ -59,13 +59,13 @@ double ana::s_buckle( unsigned int array_len, double mass[], double coord[][ 3 ]
     return abs( numerator / denominator );
 }
 
-double ana::bar_major_axis( unsigned int array_len, double mass[], double coord[][ 3 ] )
+double ana::bar_major_axis( unsigned int array_len, double mass[], double x[], double y[] )
 {
-    auto A2 = An( array_len, mass, coord, 2 );
+    auto A2 = An( array_len, mass, x, y, 2 );
     return arg( A2 ) / 2;  // divide by 2, as the argument of A2 is 2*phi
 }
 
-double ana::bar_length( unsigned int array_len, double* mass, double ( *coord )[ 3 ] )
+double ana::bar_length( unsigned int array_len, double mass[], double x[], double y[] )
 {
     // TODO: to be implemented
     return 0;

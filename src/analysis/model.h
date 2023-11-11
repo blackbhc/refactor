@@ -7,16 +7,16 @@
 using std::complex;
 namespace galotfa {
 namespace analysis {
-    complex< double > An( unsigned int array_len, double mass[], double coord[][ 3 ],
+    complex< double > An( unsigned int array_len, double mass[], double x[], double y[],
                           unsigned int order );
 
-    double s_bar( unsigned int array_len, double mass[], double coord[][ 3 ] );
+    double s_bar( unsigned int array_len, double mass[], double x[], double y[] );
 
-    double s_buckle( unsigned int array_len, double mass[], double coord[][ 3 ] );
+    double s_buckle( unsigned int array_len, double mass[], double x[], double y[], double z[] );
 
-    double bar_major_axis( unsigned int array_len, double mass[], double coord[][ 3 ] );
+    double bar_major_axis( unsigned int array_len, double mass[], double x[], double y[] );
 
-    double bar_length( unsigned int array_len, double mass[], double coord[][ 3 ] );
+    double bar_length( unsigned int array_len, double mass[], double x[], double y[] );
 
 }  // namespace analysis
 }  // namespace galotfa

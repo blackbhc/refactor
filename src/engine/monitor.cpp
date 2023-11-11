@@ -177,56 +177,112 @@ int monitor::save()
     // this function mock you press a button to save the data on the monitor dashboard
     // so it should only be called by the run_with() function
     int return_code = 0;
-    if ( this->is_root() )
+    if ( this->is_root() && this->need_ana() )
     {
         galotfa::analysis_result* res = this->calc->feedback();  // get the analysis results
         int                       i   = 0;  // index of the target model analysis sets
-        for ( auto& single_model : this->writers.model_writers )
-        {
-            single_model->push< double >( &this->time, 1, "/Times" );
+        if ( this->need_ana_model() )
+            for ( auto& single_model : this->writers.model_writers )
+            {
+                single_model->push< double >( &this->time, 1, "/Times" );
 
-            if ( this->para->pre_recenter )
-                single_model->push< double >( res->system_center, 3, "/Center" );
-            if ( this->para->md_bar_major_axis )
-                single_model->push< double >( &res->bar_marjor_axis[ i ], 1, "/Bar/MajorAxis" );
-            if ( this->para->md_sbar )
-                single_model->push< double >( &res->s_bar[ i ], 1, "/Bar/SBar" );
-            if ( this->para->md_sbuckle )
-                single_model->push< double >( &res->s_buckle[ i ], 1, "/Bar/SBuckle" );
-            if ( this->para->md_an.size() > 0 )
-                for ( auto& m : this->para->md_an )
+                if ( this->para->pre_recenter )
+                    single_model->push< double >( res->system_center, 3, "/Center" );
+                if ( this->para->md_bar_major_axis )
+                    single_model->push< double >( &res->bar_marjor_axis[ i ], 1, "/Bar/MajorAxis" );
+                if ( this->para->md_sbar )
+                    single_model->push< double >( &res->s_bar[ i ], 1, "/Bar/SBar" );
+                if ( this->para->md_sbuckle )
+                    single_model->push< double >( &res->s_buckle[ i ], 1, "/Bar/SBuckle" );
+                if ( this->para->md_an.size() > 0 )
+                    for ( auto& m : this->para->md_an )
+                    {
+                        double real = res->Ans[ m ][ i ].real();
+                        double imag = res->Ans[ m ][ i ].real();
+                        single_model->push< double >( &real, 1,
+                                                      "/Bar/A" + std::to_string( m ) + "(real)" );
+                        single_model->push< double >( &imag, 1,
+                                                      "/Bar/A" + std::to_string( m ) + "(imag)" );
+                    }
+                if ( this->para->md_bar_length )
+                    single_model->push< double >( &res->bar_length[ i ], 1, "/Bar/Length" );
+
+                if ( this->para->md_image )
                 {
-                    double real = res->Ans[ m ][ i ].real();
-                    double imag = res->Ans[ m ][ i ].real();
-                    single_model->push< double >( &real, 1,
-                                                  "/Bar/A" + std::to_string( m ) + "(real)" );
-                    single_model->push< double >( &imag, 1,
-                                                  "/Bar/A" + std::to_string( m ) + "(imag)" );
+                    unsigned long binnum = this->para->md_image_bins;
+                    for ( auto& color : this->para->md_colors )
+                    {
+                        if ( color == "number_density" )
+                        {
+                            single_model->push< double >( res->images[ 0 ][ 0 ][ i ],
+                                                          binnum * binnum,
+                                                          "/Image/" + color + "(xy)" );
+                            single_model->push< double >( res->images[ 0 ][ 1 ][ i ],
+                                                          binnum * binnum,
+                                                          "/Image/" + color + "(xz)" );
+                            single_model->push< double >( res->images[ 0 ][ 2 ][ i ],
+                                                          binnum * binnum,
+                                                          "/Image/" + color + "(yz)" );
+                        }
+                        else if ( color == "surface_density" )
+                        {
+                            single_model->push< double >( res->images[ 1 ][ 0 ][ i ],
+                                                          binnum * binnum,
+                                                          "/Image/" + color + "(xy)" );
+                            single_model->push< double >( res->images[ 1 ][ 1 ][ i ],
+                                                          binnum * binnum,
+                                                          "/Image/" + color + "(xz)" );
+                            single_model->push< double >( res->images[ 1 ][ 2 ][ i ],
+                                                          binnum * binnum,
+                                                          "/Image/" + color + "(yz)" );
+                        }
+                        else if ( color == "mean_velocity" )
+                        {
+                            for ( int n = 0; n < 3; ++n )
+                            {
+                                single_model->push< double >(
+                                    res->images[ 2 + n ][ 0 ][ i ], binnum * binnum,
+                                    "/Image/" + color + "_axis_" + std::to_string( n + 1 )
+                                        + "(xy)" );
+                                single_model->push< double >(
+                                    res->images[ 2 + n ][ 1 ][ i ], binnum * binnum,
+                                    "/Image/" + color + "_axis_" + std::to_string( n + 1 )
+                                        + "(yz)" );
+                                single_model->push< double >(
+                                    res->images[ 2 + n ][ 2 ][ i ], binnum * binnum,
+                                    "/Image/" + color + "_axis_" + std::to_string( n + 1 )
+                                        + "(yz)" );
+                            }
+                        }
+                        else  // ( color == "velocity_dispersion" )
+                        {
+                            for ( int n = 0; n < 3; ++n )
+                            {
+                                single_model->push< double >(
+                                    res->images[ 5 + n ][ 0 ][ i ], binnum * binnum,
+                                    "/Image/" + color + "_axis_" + std::to_string( n + 1 )
+                                        + "(xy)" );
+                                single_model->push< double >(
+                                    res->images[ 5 + n ][ 1 ][ i ], binnum * binnum,
+                                    "/Image/" + color + "_axis_" + std::to_string( n + 1 )
+                                        + "(yz)" );
+                                single_model->push< double >(
+                                    res->images[ 5 + n ][ 2 ][ i ], binnum * binnum,
+                                    "/Image/" + color + "_axis_" + std::to_string( n + 1 )
+                                        + "(yz)" );
+                            }
+                        }
+                    }
                 }
-            if ( this->para->md_bar_length )
-                single_model->push< double >( &res->bar_length[ i ], 1, "/Bar/Length" );
-            if ( this->para->md_image )
-            {
-                unsigned long binnum = this->para->md_image_bins;
-                for ( size_t j = 0; j < this->para->md_colors.size(); ++j )
+                if ( this->para->md_dispersion_tensor )
                 {
-                    single_model->push< double >( res->images[ j ][ 0 ][ i ], binnum * binnum,
-                                                  "/Image/" + this->para->md_colors[ j ] + "(xy)" );
-                    single_model->push< double >( res->images[ j ][ 1 ][ i ], binnum * binnum,
-                                                  "/Image/" + this->para->md_colors[ j ] + "(xz)" );
-                    single_model->push< double >( res->images[ j ][ 2 ][ i ], binnum * binnum,
-                                                  "/Image/" + this->para->md_colors[ j ] + "(yz)" );
+                    unsigned long binnum = this->para->md_image_bins;
+                    single_model->push< double >( res->dispersion_tensor[ i ],
+                                                  binnum * binnum * binnum * 3 * 3,
+                                                  "/DispersionTensor" );
                 }
+                ++i;
             }
-            if ( this->para->md_dispersion_tensor )
-            {
-                unsigned long binnum = this->para->md_image_bins;
-                single_model->push< double >( res->dispersion_tensor[ i ],
-                                              binnum * binnum * binnum * 3 * 3,
-                                              "/DispersionTensor" );
-            }
-            ++i;
-        }
     }
 
     MPI_Bcast( &return_code, 1, MPI_INT, 0, MPI_COMM_WORLD );
@@ -279,11 +335,51 @@ inline void monitor::create_model_file_datasets()
         {
             for ( auto& color : this->para->md_colors )
             {
-                single_model->create_dataset( "/Image/" + color + "(xy)", image_info );
-                single_model->create_dataset( "/Image/" + color + "(xz)", image_info );
-                single_model->create_dataset( "/Image/" + color + "(yz)", image_info );
+                if ( color == "number_density" )
+                {
+                    single_model->create_dataset( "/Image/" + color + "(xy)", image_info );
+                    single_model->create_dataset( "/Image/" + color + "(xz)", image_info );
+                    single_model->create_dataset( "/Image/" + color + "(yz)", image_info );
+                }
+                else if ( color == "surface_density" )
+                {
+                    single_model->create_dataset( "/Image/" + color + "(xy)", image_info );
+                    single_model->create_dataset( "/Image/" + color + "(xz)", image_info );
+                    single_model->create_dataset( "/Image/" + color + "(yz)", image_info );
+                }
+                else if ( color == "mean_velocity" )
+                {
+                    for ( int n = 0; n < 3; ++n )
+                    {
+                        single_model->create_dataset( "/Image/" + color + "_axis_"
+                                                          + std::to_string( n + 1 ) + "(xy)",
+                                                      image_info );
+                        single_model->create_dataset( "/Image/" + color + "_axis_"
+                                                          + std::to_string( n + 1 ) + "(xz)",
+                                                      image_info );
+                        single_model->create_dataset( "/Image/" + color + "_axis_"
+                                                          + std::to_string( n + 1 ) + "(yz)",
+                                                      image_info );
+                    }
+                }
+                else  // ( color == "velocity_dispersion" )
+                {
+                    for ( int n = 0; n < 3; ++n )
+                    {
+                        single_model->create_dataset( "/Image/" + color + "_axis_"
+                                                          + std::to_string( n + 1 ) + "(xy)",
+                                                      image_info );
+                        single_model->create_dataset( "/Image/" + color + "_axis_"
+                                                          + std::to_string( n + 1 ) + "(xz)",
+                                                      image_info );
+                        single_model->create_dataset( "/Image/" + color + "_axis_"
+                                                          + std::to_string( n + 1 ) + "(yz)",
+                                                      image_info );
+                    }
+                }
             }
         }
+
         if ( this->para->md_dispersion_tensor )
             single_model->create_dataset( "/DispersionTensor", tensor_info );
     }
@@ -471,7 +567,6 @@ inline bool monitor::need_ana() const
 
 void monitor::release_once() const
 {
-
     if ( this->para->md_switch_on )
         if ( need_ana_model() )
         {
