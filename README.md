@@ -382,7 +382,7 @@ is available with the inertia tensor.
     $[L]$ are the internal unit of mass and length in the simulation, the same below.
   - `mean_velocity`: the mean velocity of the particles in each bin, depends on the region shape, one
     component for <font color="red">**each axis**</font>.
-  - `dispersion`: the velocity dispersion of the particles in each bin, one component for
+  - `velocity_dispersion`: the velocity dispersion of the particles in each bin, one component for
     <font color="red">**each axis**</font>.
 - <a id="bar_major_axis"></a>`bar_major_axis`: whether calculate the bar major axis in the target particles,
   if detected a bar, defined as the phase angle of the $m$=2 Fourier component of the surface density after
