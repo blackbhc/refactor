@@ -369,14 +369,20 @@ int calculator::call_md_module md_args const
         if ( this->para->md_align_bar
              && this->ptrs_of_results->s_bar[ i ] > this->para->md_bar_threshold )
         {
-            double phi = this->ptrs_of_results->bar_marjor_axis[ i ];
+            // rotate the coordinates to align the bar
+            double phi = -this->ptrs_of_results->bar_marjor_axis[ i ];
+            // minus sign: passively rotate the coordinates
             double _x, _y;  // tmp variables
             for ( int j = 0; j < part_num_md[ i ]; ++j )
             {
-                _x     = x[ j ];
-                _y     = x[ j ];
-                x[ j ] = _x * cos( phi ) - _y * sin( phi );
-                y[ j ] = _x * sin( phi ) + _y * cos( phi );
+                _x             = x[ j ];
+                _y             = y[ j ];
+                x[ j ]         = _x * cos( phi ) - _y * sin( phi );
+                y[ j ]         = _x * sin( phi ) + _y * cos( phi );
+                _x             = vels[ j ][ 0 ];
+                _y             = vels[ j ][ 1 ];
+                vels[ j ][ 0 ] = _x * cos( phi ) - _y * sin( phi );
+                vels[ j ][ 1 ] = _x * sin( phi ) + _y * cos( phi );
             }
         }
 
@@ -494,6 +500,62 @@ int calculator::call_md_module md_args const
                             }
                     }
                 }
+            }
+        }
+        if ( this->para->md_dispersion_tensor )
+        {
+            double       base_size   = this->para->md_region_size;
+            unsigned int base_binnum = this->para->md_image_bins;
+            double       third_size  = base_size * this->para->md_axis_ratio;
+            unsigned int third_binnum =
+                ( unsigned int )this->para->md_image_bins * this->para->md_axis_ratio;
+            if ( this->para->md_region_shape == "box" )
+                ana::dispersion_tensor(
+                    part_num_md[ i ], mass, x, y, z, vels[ 0 ], vels[ 1 ], vels[ 2 ], -base_size,
+                    base_size, -base_size, base_size, -third_size, third_size, base_binnum,
+                    base_binnum, third_binnum, this->ptrs_of_results->dispersion_tensor[ i ] );
+            else if ( this->para->md_region_shape == "sphere" )
+            {
+                double* v_r     = new double[ part_num_md[ i ] ];
+                double* v_phi   = new double[ part_num_md[ i ] ];
+                double* v_theta = new double[ part_num_md[ i ] ];
+                for ( unsigned long j = 0; j < part_num_md[ i ]; ++j )
+                {
+                    v_r[ j ] = ( vels[ 0 ][ j ] * x[ j ] + vels[ 1 ][ j ] * y[ j ]
+                                 + vels[ 2 ][ j ] * z[ j ] )
+                               / sqrt( x[ j ] * x[ j ] + y[ j ] * y[ j ] + z[ j ] * z[ j ] );
+                    v_phi[ j ] = ( -vels[ 0 ][ j ] * y[ j ] + vels[ 1 ][ j ] * x[ j ] )
+                                 / sqrt( x[ j ] * x[ j ] + y[ j ] * y[ j ] );
+                    v_theta[ j ] = ( -vels[ 0 ][ j ] * z[ j ]
+                                     + vels[ 2 ][ j ] * ( x[ j ] * x[ j ] + y[ j ] * y[ j ] ) )
+                                   / sqrt( x[ j ] * x[ j ] + y[ j ] * y[ j ] + z[ j ] * z[ j ] );
+                }
+                ana::dispersion_tensor( part_num_md[ i ], mass, x, y, z, v_r, v_phi, v_theta,
+                                        -base_size, base_size, -base_size, base_size, -third_size,
+                                        third_size, base_binnum, base_binnum, third_binnum,
+                                        this->ptrs_of_results->dispersion_tensor[ i ] );
+                delete[] v_r;
+                delete[] v_phi;
+                delete[] v_theta;
+            }
+            else  // ( this->para->md_region_shape == "cylinder" )
+            {
+
+                double* v_R   = new double[ part_num_md[ i ] ];
+                double* v_phi = new double[ part_num_md[ i ] ];
+                for ( unsigned long j = 0; j < part_num_md[ i ]; ++j )
+                {
+                    v_R[ j ] = ( vels[ 0 ][ j ] * x[ j ] + vels[ 1 ][ j ] * y[ j ] )
+                               / sqrt( x[ j ] * x[ j ] + y[ j ] * y[ j ] );
+                    v_phi[ j ] = ( -vels[ 0 ][ j ] * y[ j ] + vels[ 1 ][ j ] * x[ j ] )
+                                 / sqrt( x[ j ] * x[ j ] + y[ j ] * y[ j ] );
+                }
+                ana::dispersion_tensor( part_num_md[ i ], mass, x, y, z, v_R, v_phi, vels[ 2 ],
+                                        -base_size, base_size, -base_size, base_size, -third_size,
+                                        third_size, base_binnum, base_binnum, third_binnum,
+                                        this->ptrs_of_results->dispersion_tensor[ i ] );
+                delete[] v_R;
+                delete[] v_phi;
             }
         }
         // release the memory
