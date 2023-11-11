@@ -566,7 +566,7 @@ int writer::test_open_file()
     bool create_another_success = access( ( testfile2 + "-1" ).c_str(), F_OK ) == 0;
     if ( create_another_success )
     {
-        remove( ( testfile2 + "0" ).c_str() );
+        remove( ( testfile2 + "-1" ).c_str() );
     }
     else
     {
