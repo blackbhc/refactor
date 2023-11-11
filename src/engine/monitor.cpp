@@ -205,12 +205,26 @@ int monitor::save()
                 }
             if ( this->para->md_bar_length )
                 single_model->push< double >( &res->bar_length[ i ], 1, "/Bar/Length" );
-            // if ( this->para->md_image )
-            // {
-            //     single_model->create_dataset( "/Image/Size", image_info );
-            //     for ( auto& color : this->para->md_colors )
-            //         single_model->create_dataset( "/Image/" + color, single_vector_info );
-            // }
+            if ( this->para->md_image )
+            {
+                unsigned long binnum = this->para->md_image_bins;
+                for ( size_t j = 0; j < this->para->md_colors.size(); ++j )
+                {
+                    single_model->push< double >( res->images[ j ][ 0 ][ i ], binnum * binnum,
+                                                  "/Image/" + this->para->md_colors[ j ] + "(xy)" );
+                    single_model->push< double >( res->images[ j ][ 1 ][ i ], binnum * binnum,
+                                                  "/Image/" + this->para->md_colors[ j ] + "(xz)" );
+                    single_model->push< double >( res->images[ j ][ 2 ][ i ], binnum * binnum,
+                                                  "/Image/" + this->para->md_colors[ j ] + "(yz)" );
+                }
+            }
+            if ( this->para->md_dispersion_tensor )
+            {
+                unsigned long binnum = this->para->md_image_bins;
+                single_model->push< double >( res->dispersion_tensor[ i ],
+                                              binnum * binnum * binnum * 3 * 3,
+                                              "/DispersionTensor" );
+            }
             ++i;
         }
     }
@@ -237,7 +251,10 @@ inline void monitor::create_model_file_datasets()
         size_t                   binnum     = ( size_t )this->para->md_image_bins;
         galotfa::hdf5::size_info image_info = { H5T_NATIVE_DOUBLE, 2, { binnum, binnum } };
         // for tensor
-        galotfa::hdf5::size_info tensor_info = { H5T_NATIVE_DOUBLE, 4, { binnum, binnum, 3, 3 } };
+        galotfa::hdf5::size_info tensor_info = { H5T_NATIVE_DOUBLE,
+                                                 5,
+                                                 { binnum, binnum, binnum, 3, 3 } };
+        // 5 dimensions: x, y, z, (i, j) of the tensor
 
         single_model->create_dataset( "/Times", single_scaler_info );
         if ( this->para->pre_recenter )
@@ -267,6 +284,8 @@ inline void monitor::create_model_file_datasets()
                 single_model->create_dataset( "/Image/" + color + "(yz)", image_info );
             }
         }
+        if ( this->para->md_dispersion_tensor )
+            single_model->create_dataset( "/DispersionTensor", tensor_info );
     }
 }
 

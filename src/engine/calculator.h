@@ -36,8 +36,16 @@ struct analysis_result
     vector< double >            bar_marjor_axis;  // by argument of A2
     vector< double >            s_bar;
     vector< double >            s_buckle;
-    vector< complex< double > > Ans[ 7 ];    // the An of each order, from 0 to 6
-    vector< double >            bar_length;  // TODO: to be implemented with multiple method
+    vector< complex< double > > Ans[ 7 ];  // the An of each order, from 0 to 6
+    // First dimension: the order of the An, from 0 to 6
+    // Second dimension: the pointer to the data
+    vector< double >  bar_length;  // TODO: to be implemented with multiple method
+    vector< double* > images[ 4 ][ 3 ];
+    // First dimension: possible images colors, number_density, surface_density, mean_velocity,
+    // dispersion
+    // Second dimension: the three projections, x-y, x-z, y-z
+    // Third dimension: the pointer to the data
+    vector< double* > dispersion_tensor;  // the pointer to the dispersion tensor
 };
 
 
