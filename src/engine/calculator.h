@@ -62,10 +62,12 @@ private:
     double         convergence_threshold;  // the convergence threshold
     enum method { center_of_mass, most_dense_pixel, most_bound_particle };  // the recenter method
     enum region_shape { sphere, cylinder, box };  // the recenter region shape
-    method           recenter_method;             // the recenter method
-    region_shape     recenter_region_shape;       // the recenter region shape
-    region_shape     model_region_shape;
-    analysis_result* ptrs_of_results;
+    method                recenter_method;        // the recenter method
+    region_shape          recenter_region_shape;  // the recenter region shape
+    region_shape          model_region_shape;
+    analysis_result*      ptrs_of_results;
+    vector< std::string > colors;  // I dont't know why I need this, but if I don't use c copy,
+                                   // the call of this->para->model_colors will dump core
 
     // private methods
 private:
