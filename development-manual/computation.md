@@ -55,3 +55,22 @@ $S_{\rm bar}=|A_2/A_0|$
 ### Buckling strength
 
 $S_{\rm buckle}=|\sum_i^N {z_i\,m_i\cdot\exp{(2i\phi_i)}}/A_0|$
+
+### Dispersion tensor
+
+$\sigma_{ij}^2=<v_i\,v_j> - <v_i><v_j>$, in which $v_i$ is the $i$-th component of the velocity, and this
+quantity is defined at every pixel of specified analysis region.
+
+### Inertia tensor
+
+$I_{xx}=\sum_i^N {m_i(y_i^2+z_i^2)}$
+
+$I_{yy}=\sum_i^N {m_i(x_i^2+z_i^2)}$
+
+$I_{zz}=\sum_i^N {m_i(x_i^2+y_i^2)}$
+
+$I_{xy}=I_{yx}=-\sum_i^N {m_i\,x_i\,y_i}$
+
+$I_{xz}=I_{zx}=-\sum_i^N {m_i\,x_i\,z_i}$
+
+$I_{yz}=I_{zy}=-\sum_i^N {m_i\,y_i\,z_i}$
