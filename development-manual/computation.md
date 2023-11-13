@@ -54,7 +54,7 @@ $S_{\rm bar}=|A_2/A_0|$
 
 ### Buckling strength
 
-$S_{\rm buckle}=|\sum_i^N {z_i\,m_i\cdot\exp{(2i\phi_i)}}/A_0|$
+$S_{\rm buckle}=|\sum_i^N {z_i m_i\cdot\exp{(2i\phi_i)}}/A_0|$
 
 ### Dispersion tensor
 
@@ -76,3 +76,8 @@ $I_{xz}=I_{zx}=-\sum_i^N {m_i\,x_i\,z_i}$
 $I_{yz}=I_{zy}=-\sum_i^N {m_i\,y_i\,z_i}$
 
 This quantity is defined in the specified analysis region: summation is over the whole region.
+
+### Bar length (in the image plane)
+
+The bar length or radius is defined as the radius of the circle enclosing the bar region. Such region is
+not well defined. The algorithm used here is referred to [Ghosh & Di Matteo 2023](https://ui.adsabs.harvard.edu/abs/2023arXiv230810948G/abstract).
