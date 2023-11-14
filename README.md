@@ -6,6 +6,7 @@
 
 - <a href="#scheme">Design scheme</a>
 - <a href="#feature">Features of `galotfa`</a>
+- <a href="#fork_gadget4">Fork of `Gadget4`</a>
 - <a href="#install">Installation</a>
 - <a href="#usage">Usage</a>
 
@@ -70,6 +71,27 @@ the boxes stands for the APIs between such modules. Expect the above modules, `g
 
 ---
 
+## Fork of `Gadget4` <a href="#contents"><font size=4>(contents)</font></a> <a id="fork_gadget4"></a>
+
+There is a built-in fork of `Gadget4` in the `galotfa` repo, which is a modified version of `Gadget4` with
+some additional features:
+
+- Implement the support of zero-mass tracers during gravity calculation, of which its position is
+  fixed so it can be used to measure the potential at a given position. This feature is controlled by
+  an additional config parameter `ZERO_MASS_POT_TRACER` in the configuration file of `Gadget4`.
+- Some runtime parameters associated with the potential tracers:
+  - `PotTracerType`: specify the particle type of potential tracer: Note that this should be consistent
+    with the given initial condition.
+  - `PotOutStep`: the output period (in unit of synchronized time steps) of potential tracer particles.
+  - `PotOutFile`: the file name of the output file of potential tracer particles.
+  - `RecenterPartType`: the particle type(s) used to calculate the center of coordinate, which is
+    used to correct the position of the potential tracer to be fixed w.r.t to the simulated system.
+  - `RecenterThreshold`: the threshold to determine whether the center of coordinate is converged or not,
+    in unit of the internal length of the simulation.
+- Config parameter: `GALOTFA_ON`, whether enable `galotfa` or not.
+
+---
+
 ## Installation <a href="#contents"><font size=4>(contents)</font></a> <a id="install"></a>
 
 ### Dependencies
@@ -100,12 +122,10 @@ First, you need to check the following dependencies
    - the `mode` option can be `release` or `debug`, default is `release` which has `-O3` optimization mode.
      `debug` make the compiled library includes debug symbols for debugging which is only useful for developers.
 
-   - the `type` option can be `header-only`, `static`, `shared`, `all`:
+   - the `type` option can be `header-only` or `library` (default).
 
      - `header-only`: only copy the header files, no library files.
-     - `static`: build the static library.
-     - `shared`: build the shared library.
-     - `all` = `static` + `shared`.
+     - `library`: build the shared library.
 
    Note:
 
