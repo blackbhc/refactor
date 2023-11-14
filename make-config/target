@@ -2,38 +2,46 @@
 
 ifeq ($(type), header-only)
 	TARGET = header
-else ifeq ($(type), static)
-	TARGET = $(PROJECT_ROOT)/build/libgalotfa.a
-else ifeq ($(type), shared)
+else ifeq ($(type), library)
 	TARGET = $(PROJECT_ROOT)/build/libgalotfa.so
-else ifeq ($(type), all)
-	TARGET = $(PROJECT_ROOT)/build/libgalotfa.so $(PROJECT_ROOT)/build/libgalotfa.a
 else
-	type = unknown
+	TARGET = unknown
 endif
 
-
-$(PROJECT_ROOT)/build/libgalotfa.a: src/*/*.*
-	@mkdir -p $(BUILD_DIR)/include $(BUILD_DIR)/lib
-	@cp -r $(PROJECT_ROOT)/src/* $(BUILD_DIR)/include/
-# NOTE: due to the mpi.h dependency, the final compilation must be tested thoroughly
-	$(MPICXX) $(CXXFLAGS) -c $(PROJECT_ROOT)/src/galotfa.h -o $(BUILD_DIR)/galotfa.o
-	ar -rcs $(BUILD_DIR)/lib/libgalotfa.a -lhdf5 $(BUILD_DIR)/galotfa.o
-	@rm $(BUILD_DIR)/galotfa.o
-	@rm $(BUILD_DIR)/include/**/*.c*
+all_src := $(shell find $(PROJECT_ROOT)/src -name "*.cpp" )
+unit_test_src := $(shell find $(PROJECT_ROOT)/src/unit_test -name "*.cpp" )
+src := $(filter-out $(unit_test_src), $(all_src))
+tmp := $(patsubst %.cpp, %.o, $(src))
+obj := $(subst $(PROJECT_ROOT), $(PROJECT_ROOT)/build, $(tmp))
 
 
-$(PROJECT_ROOT)/build/libgalotfa.so: src/*/*.*
-	@mkdir -p $(BUILD_DIR)/include $(BUILD_DIR)/lib
-	@cp -r $(PROJECT_ROOT)/src/* $(BUILD_DIR)/include/
-# NOTE: due to the mpi.h dependency, the final compilation must be tested thoroughly
-	$(MPICXX) $(CXXFLAGS) --shared -fPIC $(PROJECT_ROOT)/src/galotfa.h -o $(BUILD_DIR)/lib/libgalotfa.so
-	@rm $(BUILD_DIR)/include/**/*.c*
+$(PROJECT_ROOT)/build/libgalotfa.so: $(BUILD_DIR)/src $(BUILD_DIR)/lib $(obj)
+	@echo "Building libgalotfa.so ..."
+	$(MPICXX) $(CXXFLAGS) --shared -fPIC $(obj) -lhdf5 -lgsl -lgslcblas -o $(BUILD_DIR)/lib/libgalotfa.so
 
 
-header:
+$(BUILD_DIR)/src:
+	@mkdir -p $(BUILD_DIR)/src
+	@cp -r $(PROJECT_ROOT)/src/* $(BUILD_DIR)/src/
+	@rm -r $(BUILD_DIR)/src/unit_test
+
+
+$(BUILD_DIR)/lib:
+	@mkdir -p $(BUILD_DIR)/lib
+
+
+$(BUILD_DIR)/include:
+	@mkdir -p $(BUILD_DIR)/include
+
+
+%.o: %.cpp
+	$(MPICXX) $(CXXFLAGS) -c -fPIC $< -o $@
+
+
+header: $(BUILD_DIR)/include
 	@echo "Copying header files ..."
-	@cp -r $(PROJECT_ROOT)/src/* $(BUILD_DIR)/include/
-	@sed -i "1i #define header_only" $(BUILD_DIR)/include/galotfa.h
+	@cp -r $(PROJECT_ROOT)/src $(PROJECT_ROOT)/build/include/
+	@sed -i "1i #define header_only 1" $(BUILD_DIR)/include/galotfa.h
+
 
 .PHONY: header

@@ -3,4 +3,4 @@ test_dir
 mpi_test
 build
 develop_log
-examples/galotfa.ini
+./examples/galotfa.ini

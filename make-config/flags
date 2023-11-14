@@ -8,8 +8,9 @@ ifeq ($(CXX), clang++)
 # forbid some aggrrssive warnings
 	CXXFLAGS += -Wno-extra-semi-stmt -Wno-disabled-macro-expansion -Wno-vla-extension -Wno-old-style-cast -Wno-padded -Wno-reserved-macro-identifier
 	CXXFLAGS += -Wno-reserved-identifier -Wno-documentation-unknown-command -Wno-documentation -Wno-documentation-deprecated-sync
-	CXXFLAGS += -Wno-zero-as-null-pointer-constant -Wno-switch-enum -Wno-unsafe-buffer-usage -Wno-unknown-warning-option -Wno-cast-qual 
-	CXXFLAGS += -Wno-suggest-override -Wno-suggest-destructor-override -Wno-weak-vtables -Wno-unused-function
+	CXXFLAGS += -Wno-zero-as-null-pointer-constant -Wno-switch-enum -Wno-unsafe-buffer-usage -Wno-unknown-warning-option -Wno-cast-qual
+	CXXFLAGS += -Wno-suggest-override -Wno-suggest-destructor-override -Wno-weak-vtables -Wno-unused-function -Wno-missing-prototypes
+	CXXFLAGS += -Wno-deprecated -Wno-missing-braces -Wno-zero-length-array
 else
     CXXFLAGS += -std=c++11 -O3 -Og -Wall -Wextra -Werror -fsanitize=undefined,leak,address
 endif
@@ -18,5 +19,5 @@ else
 endif
 
 ifeq ($(type), header-only)
-	CXXFLAGS += -Dheader_only
+	CXXFLAGS += -DGALOTFA_HEADER_ONLY
 endif

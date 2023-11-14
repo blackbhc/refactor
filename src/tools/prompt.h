@@ -5,14 +5,17 @@
 
 // for normal build mode, always use the mpi vertion prompts
 #ifndef DO_UNIT_TEST
-// if its header only, then other headers will include mpi.h
-#if !defined( GALOTFA_HEADER_ONLY ) && !defined( MPI_INCLUDED )
 #include <mpi.h>
+#define MPI_INCLUDED_LOCAL 1
+#else
+#ifdef MPI_TEST
+#include <mpi.h>
+#define MPI_INCLUDED_LOCAL 1
 #endif
 #endif
 
 // print a message for warning
-#ifndef MPI_INCLUDED
+#ifndef MPI_INCLUDED_LOCAL
 // a single processor version printf
 #define println( ... )         \
     {                          \
@@ -48,21 +51,17 @@
 #endif
 
 // print a message for warning
-#define WARN( ... )                                                        \
-    {                                                                      \
-        fprintln( stderr, "\033[0;1;33m [WARNING]: \033[0m" __VA_ARGS__ ); \
-    }
+#define WARN( ... ) fprintln( stderr, "\033[0;1;33m[WARNING]: \033[0m" __VA_ARGS__ )
 
-#define INFO( ... )                                            \
-    {                                                          \
-        println( "\033[0;1;32m [INFO]: \033[0m" __VA_ARGS__ ); \
-    }
+#define INFO( ... ) println( "\033[0;1;32m[INFO]: \033[0m" __VA_ARGS__ )
 
-// throw a error with a message
+#define REACH INFO( "Reach %s %d line", __FILE__, __LINE__ )
+
+// throw an error with a message
 // TODO: support more error type
 #define ERROR( ... )                                                         \
     {                                                                        \
-        fprintln( stderr, "\033[0;1;31m [ERROR]: \033[0m" __VA_ARGS__ );     \
+        fprintln( stderr, "\033[0;1;31m[ERROR]: \033[0m" __VA_ARGS__ );      \
         throw std::runtime_error( "Invalid file or parameter during run." ); \
     }
 

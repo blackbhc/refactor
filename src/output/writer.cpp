@@ -142,6 +142,7 @@ writer::writer( std::string path_to_file )
 {
 #ifndef debug_output  // if not in debug mode: create file
     this->create_file( path_to_file );
+    this->filename = path_to_file;
 #else  // if in debug mode: do nothing
     ( void )path_to_file;  // avoid unused variable warning
 #endif
@@ -162,8 +163,15 @@ inline void writer::clean_nodes( void )
 
 writer::~writer( void )
 {
-    // TODO: flush the buffer before closing the file
-    INFO( "Exiting writer..." );
+    // flush the buffer before closing the file
+    for ( auto& node : this->nodes )
+    {
+        // flush the buffer if the node is a dataset
+        if ( node.second->is_dataset() )
+            H5Dflush( node.second->get_hid() );
+    }
+    if ( this->nodes.find( "/" ) != this->nodes.end() )
+        H5Fflush( this->nodes.at( "/" )->get_hid(), H5F_SCOPE_GLOBAL );
     clean_nodes();
     this->stack_counter.clear();
 }
@@ -247,7 +255,8 @@ int writer::create_group( std::string group_name )
         {
             if ( i == strings.size() - 1 )  // if be the last element, warn and return
             {
-                WARN( "The group or dataset %s already exists!", group_name.c_str() );
+                WARN( "The group or dataset %s is already in use in file %s!", group_name.c_str(),
+                      this->filename.c_str() );
                 return 1;
             }
             else  // if not the last element, go to the next element
@@ -276,7 +285,8 @@ int writer::create_group( std::string group_name )
     return 0;
 }
 
-int writer::create_dataset( std::string dataset_name, hdf5::size_info& info )
+int writer::create_dataset( std::string dataset_name, hdf5::size_info& info,
+                            unsigned int chunk_size )
 {
     // first check the size of the size_info is consistent
     if ( ( size_t )info.rank != info.dims.size() )
@@ -287,7 +297,7 @@ int writer::create_dataset( std::string dataset_name, hdf5::size_info& info )
         galotfa::string::split( dataset_name, "/" );  // split the path into a string vector
     if ( strings.size() == 0 )
     {
-        WARN( "The path to create a hdf5 dataset is empty!" );
+        WARN( "The path of the creating hdf5 dataset is empty!" );
         return 1;  // if the path is empty, do nothing
     }
 
@@ -301,34 +311,43 @@ int writer::create_dataset( std::string dataset_name, hdf5::size_info& info )
 #endif
 
     // get the parent path
-    std::string parent_path = "/";
+    std::string parent_path = "";
     for ( size_t i = 0; i < strings.size() - 1; ++i )
-    {
-        if ( i == 0 )
-            parent_path += strings[ i ];
-        else
-            parent_path += "/" + strings[ i ];
-    }
-    // check whether the dataset exists
+        parent_path += "/" + strings[ i ];
+
+    // check whether there are group/dataset with the same name
     if ( this->nodes.find( parent_path + "/" + strings.back() ) != this->nodes.end() )
     {
-        WARN( "The dataset %s already exists!", dataset_name.c_str() );
+        WARN( "The name %s is already in use in file %s!", dataset_name.c_str(),
+              this->filename.c_str() );
         return 1;
     }
     // check whether the parent node exists, if not, create it
-    else if ( this->nodes.find( parent_path ) == this->nodes.end() )
+    else if ( this->nodes.find( parent_path ) == this->nodes.end() && parent_path != "" )
         this->create_group( parent_path );
 
     // create the dataset
-    auto data_node_ptr = create_datanode( *this->nodes.at( parent_path ), strings.back(), info );
-    // insert the node
-    this->nodes.insert( std::pair< std::string, galotfa::hdf5::node* >(
-        parent_path + "/" + strings.back(), data_node_ptr ) );
+    if ( parent_path == "" )
+    {
+        auto data_node_ptr =
+            create_datanode( *this->nodes.at( "/" ), strings.back(), info, chunk_size );
+        // insert the node
+        this->nodes.insert(
+            std::pair< std::string, galotfa::hdf5::node* >( "/" + strings.back(), data_node_ptr ) );
+    }
+    else
+    {
+        auto data_node_ptr =
+            create_datanode( *this->nodes.at( parent_path ), strings.back(), info, chunk_size );
+        // insert the node
+        this->nodes.insert( std::pair< std::string, galotfa::hdf5::node* >(
+            parent_path + "/" + strings.back(), data_node_ptr ) );
+    }
     return 0;
 }
 
 inline hdf5::node* writer::create_datanode( hdf5::node& parent, std::string& dataset,
-                                            hdf5::size_info& info )
+                                            hdf5::size_info& info, unsigned int chunk_size )
 {
     // check the size of the size_info is consistent: done in the caller-function create_file(
     // ...)
@@ -349,7 +368,7 @@ inline hdf5::node* writer::create_datanode( hdf5::node& parent, std::string& dat
     for ( size_t i = 0; i < info.rank; ++i )
         data_dims[ i + 1 ] = max_dims[ i + 1 ] = chunk_dims[ i + 1 ] = info.dims[ i ];
     data_dims[ 0 ]  = 0;
-    chunk_dims[ 0 ] = VIRTUAL_STACK_SIZE;
+    chunk_dims[ 0 ] = chunk_size;
     max_dims[ 0 ]   = H5S_UNLIMITED;
 
     // create property list and set chunk and compression
@@ -378,12 +397,13 @@ inline hdf5::node* writer::create_datanode( hdf5::node& parent, std::string& dat
     return datanode_ptr;
 }
 
-template < typename T > int writer::push( T* ptr, unsigned long len, std::string dataset_name )
+template < typename T >
+int writer::push( T* ptr, unsigned long len, std::string dataset_name, unsigned int chunk_size )
 {
     // check whether the dataset exists
     if ( this->nodes.find( dataset_name ) == this->nodes.end() )
     {
-        ERROR( "Try to push data into unexist dataset : %s", dataset_name.c_str() );
+        WARN( "Try to push data into unexist dataset: %s", dataset_name.c_str() );
         return 1;
     }
     else if ( !this->nodes.at( dataset_name )->is_dataset() )
@@ -399,8 +419,8 @@ template < typename T > int writer::push( T* ptr, unsigned long len, std::string
             target_len *= dims[ i ];
         if ( target_len != len )
         {
-            WARN( "The length of the target dataset different (%d) is different from the input "
-                  "(%lu)!",
+            WARN( "The length of the target dataset (%d) is different from the input data"
+                  " (%lu)!",
                   target_len, len );
             return 1;
         }
@@ -451,8 +471,8 @@ template < typename T > int writer::push( T* ptr, unsigned long len, std::string
 
     delete[] offset;
 
-    // flush the buffer if the stack is "full"
-    if ( stack_counter[ dataset_name ] % VIRTUAL_STACK_SIZE == 0 )
+    // flush the buffer if the "stack" is "full"
+    if ( stack_counter[ dataset_name ] % chunk_size == 0 )
         H5Dflush( this->nodes.at( dataset_name )->get_hid() );
 
     ++stack_counter[ dataset_name ];
@@ -465,10 +485,12 @@ template < typename T > int writer::push( T* ptr, unsigned long len, std::string
 }
 
 // ensure the template function is instantiated
-template int writer::push< int >( int* ptr, unsigned long len, std::string dataset_name );
-template int writer::push< double >( double* ptr, unsigned long len, std::string dataset_name );
+template int writer::push< int >( int* ptr, unsigned long len, std::string dataset_name,
+                                  unsigned int chunk_size );
+template int writer::push< double >( double* ptr, unsigned long len, std::string dataset_name,
+                                     unsigned int chunk_size );
 template int writer::push< unsigned int >( unsigned int* ptr, unsigned long len,
-                                           std::string dataset_name );
+                                           std::string dataset_name, unsigned int chunk_size );
 
 #ifdef debug_output
 int writer::test_node( void )
@@ -557,7 +579,7 @@ int writer::test_open_file()
     bool create_another_success = access( ( testfile2 + "-1" ).c_str(), F_OK ) == 0;
     if ( create_another_success )
     {
-        remove( ( testfile2 + "0" ).c_str() );
+        remove( ( testfile2 + "-1" ).c_str() );
     }
     else
     {
@@ -681,7 +703,7 @@ int writer::test_create_group()
         hid_t group_id = H5Gopen2( file_id, testgroup2.c_str(), H5P_DEFAULT );  // open the group
         H5Gclose( group_id );
         H5Fclose( file_id );
-        // remove( testfile.c_str() );  // clean up
+        remove( testfile.c_str() );  // clean up
     }
     catch ( const std::exception& e )
     {
@@ -915,7 +937,7 @@ int writer::test_push( void )
     }
 
     clean_nodes();
-    // remove( testfile.c_str() );
+    remove( testfile.c_str() );
     CHECK_RETURN( true );
 }
 #endif

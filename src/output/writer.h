@@ -8,14 +8,6 @@
 #include <unordered_map>
 #include <vector>
 
-// the size of the stack for on-the-fly writing
-#ifndef debug_output
-#define VIRTUAL_STACK_SIZE 1000
-#else
-#define VIRTUAL_STACK_SIZE 7
-// small size for debug
-#endif
-
 namespace galotfa {
 
 namespace hdf5 {
@@ -159,6 +151,7 @@ class writer
 public:
     // private members
 private:
+    std::string                                           filename;
     std::unordered_map< std::string, hdf5::node* >        nodes         = {};
     std::unordered_map< std::string, unsigned long long > stack_counter = {};
 
@@ -168,10 +161,12 @@ public:
     ~writer( void );
     int create_file( std::string path_to_file );
     int create_group( std::string group_name );
-    int create_dataset( std::string dataset_name, hdf5::size_info& info );
+    int create_dataset( std::string dataset_name, hdf5::size_info& info,
+                        unsigned int chunk_size = 1000 );
     int add_attribute( std::string node_name, std::string attr_name, hdf5::size_info& info );
     // TODO: to be implemented
-    template < typename T > int push( T* ptr, unsigned long len, std::string dataset_name );
+    template < typename T >
+    int push( T* ptr, unsigned long len, std::string dataset_name, unsigned int chunk_size = 1000 );
 #ifdef debug_output
     int test_open_file( void );
     int test_node( void );
@@ -185,7 +180,7 @@ private:
     // the nake open functions, without any check, internal use only
     inline hid_t       open_file( std::string path_to_file );
     inline hdf5::node* create_datanode( hdf5::node& parent, std::string& dataset,
-                                        hdf5::size_info& info );
+                                        hdf5::size_info& info, unsigned int chunk_size = 1000 );
     inline void        clean_nodes();
 };
 

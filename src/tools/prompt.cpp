@@ -12,11 +12,11 @@ namespace unit_test {
 static int warn_and_error()
 {
     println( " Test the prompt functions." );
-    println( "It should print a warning message and a error message, don't worry." );
+    println( "It should print a warning message and an error message, don't worry." );
     WARN( "This is a warning message" );
     try
     {
-        ERROR( "This is a error message" );
+        ERROR( "This is an error message" );
     }
     catch ( std::runtime_error& e )
     {
