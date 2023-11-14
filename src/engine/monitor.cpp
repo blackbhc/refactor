@@ -67,17 +67,17 @@ void monitor::init()
 
 monitor::~monitor()
 {
-    // call the post analysis module of the calculator
-    if ( this->para != nullptr )
-    {
-        delete this->para;
-        this->para = nullptr;
-    }
-
+    // TODO: call the post analysis module of the calculator
     if ( this->calc != nullptr )
     {
         delete this->calc;
         this->calc = nullptr;
+    }
+
+    if ( this->para != nullptr )
+    {
+        delete this->para;
+        this->para = nullptr;
     }
 
     // free the writers pointers
@@ -88,6 +88,7 @@ monitor::~monitor()
                 delete writer;
                 writer = nullptr;
             }
+
     if ( this->writers.group_writers.size() > 0 )
         for ( auto& writer : this->writers.group_writers )
             if ( writer != nullptr )
@@ -95,17 +96,18 @@ monitor::~monitor()
                 delete writer;
                 writer = nullptr;
             }
+
     if ( this->writers.particle_writer != nullptr )
     {
         delete this->writers.particle_writer;
         this->writers.particle_writer = nullptr;
     }
+
     if ( this->writers.orbit_writer != nullptr )
     {
         delete this->writers.orbit_writer;
         this->writers.orbit_writer = nullptr;
     }
-
 
     if ( !this->mpi_init_before_galotfa )
         MPI_Finalize();
@@ -149,7 +151,6 @@ inline void monitor::create_files()
     }
     else
     {
-
         std::string file = this->para->glb_output_dir + "/" + this->para->md_filename;
 
         galotfa::writer* writer = new galotfa::writer( file.c_str() );
@@ -657,6 +658,7 @@ void monitor::extractor( int& partnum_total, int types[], int ids[],
     // k: index for iterating all the members in each target set
     for ( i = 0; i < partnum_total; ++i )
     {
+        // extract the target particles for model analysis
         if ( this->need_ana_model() )
             if ( this->calc->is_target_of_md( types[ i ], coordinates[ i ][ 0 ],
                                               coordinates[ i ][ 1 ], coordinates[ i ][ 2 ] ) )
@@ -665,25 +667,36 @@ void monitor::extractor( int& partnum_total, int types[], int ids[],
                 {
                     for ( k = 0; k < this->para->md_target_sets[ j ].size(); ++k )
                         if ( types[ i ] == this->para->md_target_sets[ j ][ k ] )
+                        {
                             this->id_for_model[ j ][ this->part_num_model[ j ]++ ] = i;
+                            break;
+                        }
                 }
             }
 
+        // extract the target particles for particle analysis
         if ( this->need_ana_particle() )
         {
             for ( size_t j = 0; j < this->para->ptc_particle_types.size(); ++j )
             {
                 if ( types[ i ] == this->para->ptc_particle_types[ j ] )
+                {
                     this->id_for_particle[ j ][ this->part_num_particle[ j ]++ ] = i;
+                    break;
+                }
             }
         }
 
+        // extract the target particles for orbit analysis
         if ( this->need_log_orbit() )
         {
             for ( int j = 0; j < this->orbit_part_num; ++j )
             {
                 if ( ids[ i ] == this->orbit_log_ids[ j ] )
+                {
                     this->id_for_orbit[ this->part_num_orbit++ ] = i;
+                    break;
+                }
             }
         }
     }

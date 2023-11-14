@@ -323,7 +323,7 @@ vector< vector< double > > ana::bin2d( unsigned long array_len, double coord_x[]
         }
     }
 
-    // erase the extra memory
+    // erase the extra space
     if ( method == stats_method::median || method == stats_method::std )
         for ( i = 0; i < bin_numx; ++i )
             for ( j = 0; j < bin_numy; ++j )

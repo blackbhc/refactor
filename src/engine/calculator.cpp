@@ -6,7 +6,7 @@
 namespace ana = galotfa::analysis;
 namespace galotfa {
 
-calculator::calculator( galotfa::para* parameter ) : para( parameter )
+calculator::calculator( galotfa::para* parameter )
 {
     // TEST: allocate the output data pointer
     this->para = parameter;
@@ -354,7 +354,7 @@ int calculator::call_md_module md_args const
         vels[ 1 ] = new double[ part_num_md[ i ] ];
         vels[ 2 ] = new double[ part_num_md[ i ] ];
         // extract the data of the target set
-        for ( int j = 0; j < ( int )part_num_md[ j ]; ++j )
+        for ( int j = 0; j < ( int )part_num_md[ i ]; ++j )
         {
             {
                 x[ j ] = coordinates[ id_for_md[ i ][ j ] ][ 0 ] - this->system_center[ 0 ];

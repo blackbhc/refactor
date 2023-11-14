@@ -49,11 +49,11 @@ private:
     // model, particle, orbit, group, post
     // nested vector of the data writers to be written: due to there may be multiple analysis
     // sets
-    writes                   writers;
-    int                      galotfa_rank;  // the global rank of the MPI process
-    int                      galotfa_size;  // the global size of the MPI process
-    vector< int >            include_particle_types;
-    vector< vector< int >* > classifications;
+    writes        writers;
+    int           galotfa_rank;  // the global rank of the MPI process
+    int           galotfa_size;  // the global size of the MPI process
+    vector< int > include_particle_types;
+    // vector< vector< int >* > classifications;
     int           orbit_part_num = 0;     // the number of target particles for orbital curve log
     vector< int > orbit_log_ids;          // the particle ids for orbital curve log
     mutable vector< int* > id_for_model;  // similar but for model analysis section
