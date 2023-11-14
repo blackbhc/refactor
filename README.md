@@ -6,6 +6,7 @@
 
 - <a href="#scheme">Design scheme</a>
 - <a href="#feature">Features of `galotfa`</a>
+- <a href="#fork_gadget4">Fork of `Gadget4`</a>
 - <a href="#install">Installation</a>
 - <a href="#usage">Usage</a>
 
@@ -70,6 +71,27 @@ the boxes stands for the APIs between such modules. Expect the above modules, `g
 
 ---
 
+## Fork of `Gadget4` <a href="#contents"><font size=4>(contents)</font></a> <a id="fork_gadget4"></a>
+
+There is a built-in fork of `Gadget4` in the `galotfa` repo, which is a modified version of `Gadget4` with
+some additional features:
+
+- Implement the support of zero-mass tracers during gravity calculation, of which its position is
+  fixed so it can be used to measure the potential at a given position. This feature is controlled by
+  an additional config parameter `ZERO_MASS_POT_TRACER` in the configuration file of `Gadget4`.
+- Some runtime parameters associated with the potential tracers:
+  - `PotTracerType`: specify the particle type of potential tracer: Note that this should be consistent
+    with the given initial condition.
+  - `PotOutStep`: the output period (in unit of synchronized time steps) of potential tracer particles.
+  - `PotOutFile`: the file name of the output file of potential tracer particles.
+  - `RecenterPartType`: the particle type(s) used to calculate the center of coordinate, which is
+    used to correct the position of the potential tracer to be fixed w.r.t to the simulated system.
+  - `RecenterThreshold`: the threshold to determine whether the center of coordinate is converged or not,
+    in unit of the internal length of the simulation.
+- Config parameter: `GALOTFA_ON`, whether enable `galotfa` or not.
+
+---
+
 ## Installation <a href="#contents"><font size=4>(contents)</font></a> <a id="install"></a>
 
 ### Dependencies
@@ -100,12 +122,10 @@ First, you need to check the following dependencies
    - the `mode` option can be `release` or `debug`, default is `release` which has `-O3` optimization mode.
      `debug` make the compiled library includes debug symbols for debugging which is only useful for developers.
 
-   - the `type` option can be `header-only`, `static`, `shared`, `all`:
+   - the `type` option can be `header-only` or `library` (default).
 
      - `header-only`: only copy the header files, no library files.
-     - `static`: build the static library.
-     - `shared`: build the shared library.
-     - `all` = `static` + `shared`.
+     - `library`: build the shared library.
 
    Note:
 
@@ -192,7 +212,7 @@ to see their explanation.
 |            | <a href="#recenter">`recenter`</a>                           | Boolean    | `on`          | `on` or `off`                                               |
 |            | <a href="#recenter_anchors">`recenter_anchors`</a>           | Integer(s) |               | Avaiable particle types of your simulation IC               |
 |            | <a href="#region_shape">`region_shape`</a>                   | String     | `cylinder`    | `sphere`, `cylinder` or `box`.                              |
-|            | <a href="#ratio">`ratio`</a>                                 | Float      | 1.0           | $>0$                                                        |
+|            | <a href="#axis_ratio">`axis_ratio`</a>                       | Float      | 1.0           | $>0$                                                        |
 |            | <a href="#size">`region_size`</a>                            | Float      | 20.0          | $>0$                                                        |
 |            | <a href="#recenter_method">`recenter_method`</a>             | String     | `density`     | `com`, `density` or `potential`                             |
 | `Model`    |                                                              |            |               |                                                             |
@@ -203,18 +223,20 @@ to see their explanation.
 |            | <a href="#multiple">`multiple`</a>                           | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#classification">`classification`</a>               | Strings    | empty         | see in the <a href="#classification">text</a>               |
 |            | <a href="#region_shape_m">`region_shape`</a>                 | String     | `cylinder`    | `sphere`, `cylinder` or `box`.                              |
-|            | <a href="#ratio_m">`ratio`</a>                               | Float      | 1.0           | $>0$                                                        |
-|            | <a href="#align_bar">`align_bar`</a>                         | Boolean    | `on`          | `on` or `off`                                               |
+|            | <a href="#axis_ratio_m">`axis_ratio`</a>                     | Float      | 1.0           | $>0$                                                        |
 |            | <a href="#size_m">`region_size`</a>                          | Float      | 20.0          | $>0$                                                        |
+|            | <a href="#align_bar">`align_bar`</a>                         | Boolean    | `on`          | `on` or `off`                                               |
 |            | <a href="#image">`image`</a>                                 | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#image_bins">`image_bins`</a>                       | Integer    | 100           | $>0$                                                        |
 |            | <a href="#colors">`colors`</a>                               | String(s)  |               | see in the <a href="#colors">text</a>                       |
 |            | <a href="#bar_major_axis">`bar_major_axis`</a>               | Boolean    | `off`         | `on` of `off`                                               |
-|            | <a href="#bar_length">`bar_length`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#sbar">`sbar`</a>                                   | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#bar_threshold">`bar_threshold`</a>                 | Float      | 0.15          | $(0, 1)$                                                    |
+|            | <a href="#bar_length">`bar_length`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#sbuckle">`sbuckle`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#An">`An`</a>                                       | Integer(s) |               | > 0                                                         |
 |            | <a href="#inertia_tensor">`inertia_tensor`</a>               | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#dispersion_tensor">`dispersion_tensor`</a>         | Boolean    | `off`         | `on` or `off`                                               |
 | `Particle` |                                                              |            |               |                                                             |
 |            | <a href="#switch_on_p">`switch_on`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#filename_p">`filename`</a>                         | String     | `particle`    | Any valid filename prefix.                                  |
@@ -285,29 +307,29 @@ major axis to the $x$-axis.
   `recenter_anchors` = `2` to use the disk particles to calculate the center of the system.
 - <a id="region_shape"></a>`region_shape`: only meaningful when `recenter` = `on`, the shape of the region
   to calculate the center of the target particles, which will affect how the `region_size` is interpreted (see below).
-  - `region_shape` = `sphere`: the region is a sphere or spheroid if `ratio` $\neq$ 1, the axis of the spheroid is the
+  The particles that are located at the boundary of the region will also be included.
+  - `region_shape` = `sphere`: the region is a sphere or spheroid if `axis_ratio` $\neq$ 1, the axis of the spheroid is the
     parallel to the $z$-axis.
   - `region_shape` = `cylinder`: the region is a cylinder with symmetry axis parallel to the $z$-axis.
   - `region_shape` = `box`: the region is a box with sides parallel to the $x$, $y$ and $z$ axis.
-- <a id="ratio"></a>`ratio`: only meaningful when `recenter` = `on`, the ratio of the region's characteristic
-  lengths, which will affect how the `region_size` is interpreted.
+- <a id="axis_ratio"></a>`axis_ratio`: only meaningful when `recenter` = `on`, the axis_ratio of the region's
+  characteristic lengths, which will affect how the `region_size` is interpreted.
 - <a id="size"></a>`region_size`: only meaningful when `recenter` = `on`, the size of the region to calculate
-  the center of the target particles, which will
-  - `region_shape` = `sphere`: the region is a sphere with $R=$ `region_size` if `ratio` = 1. If `ratio` is not 1,
-    the sphere will be stretched along the $z$-axis with $R_z=$ `ratio` $\times$ `region_size`.
+  the center of the target particles (), which is interpreted differently according to the `region_shape`:
+  - `region_shape` = `sphere`: the region is a sphere with $R=$ `region_size` if `axis_ratio` = 1. If `axis_ratio` is not 1,
+    the sphere will be stretched along the $z$-axis with $R_z=$ `axis_ratio` $\times$ `region_size`.
   - `region_shape` = `cylinder`: the region is a cylinder with $R=$ `region_size`, and half height $H=$
-    `ratio` $\times$ `region_size`.
+    `axis_ratio` $\times$ `region_size`.
   - `region_shape` = `box`: the region is a cube with side length $L=$ `region_size`, and stretched along the
-    $z$-axis with $L_z=$ `ratio` $\times$ `region_size`.
+    $z$-axis with height $L_z=$ `axis_ratio` $\times$ `region_size`.
 - <a id="recenter_method"></a>`recenter_method`: the method to calculate the center of the target particles,
   with iteration if necessary (see `convergence_type` and `convergence_threshold`).
   - `recenter_method` = `com`: the center is defined as the center of mass of the target particles.
   - `recenter_method` = `density`: the center is defined as the pixel of the highest surface density of the target
-    particle(s), the size of the pixel is determined by `image_size` in the `Model` section.
+    particle(s), the size of the pixel is determined by `image_size` in the `Model` section. Note that if
+    the `region_method` = `density`, then the `image` option in the `Model` section will be automatically
+    turned on and `surface_density` will be automatically added to the `colors` parameter in the `Model` section.
   - `recenter_method` = `potential`: future feature.
-- <a id="align_bar"></a>`align_bar`: whether rotate the coordinates to align the $x$-axis to the bar major axis,
-  this option is only available when the bar is detected. It's may be useful to align the bar major axis to the
-  $x$-axis for some analysis or visualization.
 
 ##### Model
 
@@ -339,19 +361,30 @@ The model level on-the-fly analysis of the target particles. The most common cas
   - Values should in the range of `particle_types`, otherwise the program will raise an error.
 - <a id="region_shape_m"></a>`region_shape`: similar to the `region_shape` in the `Pre` section, but this one is
   used to calculate the model quantifications of the target particles, can get multiple values.
-  - `region_shape` = `sphere`: the region is a sphere or spheroid if `ratio` $\neq$ 1, the axis of the spheroid is the
-    parallel to the $z$-axis.
+  - `region_shape` = `sphere`: the region is a sphere or spheroid if `axis_ratio` $\neq$ 1, the axis of the spheroid
+    is the parallel to the $z$-axis.
   - `region_shape` = `cylinder`: the region is a cylinder with symmetry axis parallel to the $z$-axis.
   - `region_shape` = `box`: the region is a box with sides parallel to the $x$, $y$ and $z$ axis.
-- <a id="ratio_m"></a>`ratio`: similar to the `ratio` in the `Pre` section, but this one is used to calculate the
-  model quantifications of the target particles.
+- <a id="axis_ratio_m"></a>`axis_ratio`: similar to the `axis_ratio` in the `Pre` section, but this one is used to
+  calculate the model quantifications of the target particles.
 - <a id="size_m"></a>`region_size`: similar to the `region_size` in the `Pre` section, but this one is used to
-  - `region_shape` = `sphere`: the region is a sphere with $R=$ `region_size` if `ratio` = 1. If `ratio` $\neq$ 1, the sphere
-    will be stretched along the $z$-axis with $R_z=$ `ratio` $\times$ `region_size`.
+  - `region_shape` = `sphere`: the region is a sphere with $R=$ `region_size` if `axis_ratio` = 1. If `axis_ratio`
+    $\neq$ 1, the sphere will be stretched along the $z$-axis with $R_z=$ `axis_ratio` $\times$ `region_size`.
   - `region_shape` = `cylinder`: the region is a cylinder with $R=$ `region_size`, and half height $H=$
-    `ratio` $\times$ `region_size`.
-  - `region_shape` = `box`: the region is a cube with side length $L=$ `region_size`, and stretched along the $z$-axis with
-    $L_z=$ `ratio` $\times$ `region_size`.
+    `axis_ratio` $\times$ `region_size`.
+  - `region_shape` = `box`: the region is a cube with side length $L=$ `region_size`, and stretched along the
+    $z$-axis with $L_z=$ `axis_ratio` $\times$ `region_size`.
+- <a id="align_bar"></a>`align_bar`: whether rotate the coordinates to align the $x$-axis to the bar major axis
+  after recentering the target particles. This is only done when the bar is detected (see in `bar_threshold`).
+  It's may be useful to align the bar major axis to the $x$-axis for some analysis or visualization. Note
+  that if this option is activated then the `bar_major_axis` and `sbar` will be automatically activated in
+  the `Model` section, and the `recenter` in `Pre` section should be switched on otherwise the program will
+  raise an error.
+
+<font color="red">**Note:**</font> all the following bar related quantities are calculated in the x-y plane,
+namely they doesn't consider the case that the bar is inclined to the x-y plane. The possible correction
+is available with the inertia tensor.
+
 - <a id="image"></a>`image`: whether to output the image matrices of the target particles.
   - The particles will be divided into bins in each axis (according to the `region_shape`) and do some statistics
     in each bin, such as the mean value of some quantity, the number of particles in each bin, etc. The bin number
@@ -361,27 +394,38 @@ The model level on-the-fly analysis of the target particles. The most common cas
   - The quantities of the image are specified by the `colors` parameter in the view of color coded (see below).
     (The name `image` may be changed in the future, as its meaning is not so clear.)
 - <a id="image_bins"></a>`image_bins`: how many bins of the image matrices in each dimension, for the axis that
-  may be stretched, the number of bins in such axis is also determined by the `ratio` parameter.
+  may be stretched, the number of bins in such axis is also determined by the `axis_ratio` parameter. Note that
+  this number should not be too large, otherwise the chunk size of image matrix may overflow the limit value
+  (4GB in HDF5 library).
 - <a id="colors"></a>`colors`:
   At least one color must be given, if the `image` is enabled, otherwise the program will raise an error.
-  - `particle_number`: the number of particles in each bin.
+  - `number_density`: the number of particles in each bin.
   - `surface_density`: the surface density of the particles in each bin. The unit is $[M]/[L]^2$, $[M]$ and
     $[L]$ are the internal unit of mass and length in the simulation, the same below.
-  - `mean_velocity`: the mean velocity of the particles in each bin, one component for each axis.
-  - `dispersion`: the velocity dispersion of the particles in each bin, one component for each axis.
-  - `dispersion_tensor`: the velocity dispersion tensor of the particles in each bin.
+  - `mean_velocity`: the mean velocity of the particles in each bin, depends on the region shape, one
+    component for <font color="red">**each axis**</font>.
+  - `velocity_dispersion`: the velocity dispersion of the particles in each bin, one component for
+    <font color="red">**each axis**</font>.
 - <a id="bar_major_axis"></a>`bar_major_axis`: whether calculate the bar major axis in the target particles,
   if detected a bar, defined as the phase angle of the $m$=2 Fourier component of the surface density after
   projection into the equatorial plane, $\arg(A_2)$.
-- <a id="bar_length"></a>`bar_length`: whether calculate the bar length in the target particles,
-  if detected a bar.
-- <a id="inerita_tensor"></a>`inertia_tensor`: whether calculate the inertia tensor of the target particles.
 - <a id="sbar"></a>`sbar`: whether calculate the bar strength parameter, where $S_{\rm{bar}}$ is defined
   as $A_2/A_0$.
+- <a id="bar_threshold"></a>`bar_threshold`: the threshold to detect a bar, namely if $S_{\rm bar}>$ this
+  value, the program will consider that a bar is detected, where $S_{\rm bar}$ is the bar strength parameter.
+  - In general, a range in $[0.1, 0.2]$ is recommended, but it depends on the simulation.
+- <a id="bar_length"></a>`bar_length`: whether calculate the bar length in the target particles,
+  if detected a bar, this is calculated with many methods. See in the development-manual/computation.md.
 - <a id="sbuckle"></a>`sbuckle`: whether calculate the buckling strength parameter, where $S_{\rm{buckle}}$
   is defined as $\sum m_i z_i \exp(-2i \phi_i) / \sum m_i$.
 - <a id="An"></a>`An`: whether calculate the $A_n$ parameters, where $A_n$ is the $n$-th Fourier component of the
-  surface density after projection into the equatorial plane.
+  surface density after projection into the equatorial plane. Note that actually only 0 - 6 are supported,
+  as higher order Fourier components are not so meaningful. So if you really want to calculate $A_n$ with $n>6$,
+  you need to change the code by yourself.
+- <a id="inerita_tensor"></a>`inertia_tensor`: whether calculate the inertia tensor of the target particles.
+- <a id="dispersion_tensor"></a>`dispersion_tensor`: the velocity dispersion tensor of the particles in
+  each bin, the three axes are dependent on the region shape. Its spatial resolution is the same as the
+  `image_bins`.
 
 ##### Particle
 
@@ -414,9 +458,7 @@ of stars that contribute to the bar, or the spiral arms, etc.
   If there is no too much particles to trace, the period can be set to a small value, e.g. 1, which means log the
   position of the target particles at every synchronized time step.
 - <a id="idfile"></a>`idfile`: the path to an ASCII file of particles id of the target particle to trace, must
-  be given if the orbit curve log is enabled, otherwise the program will raise an error. The particle type
-  of this part can be any type of particles in the simulation, not restricted to the target particles specified
-  by the `particle_types` parameter in the `Global` section.
+  be given if the orbit curve log is enabled, otherwise the program will raise an error.
   - The particle id in this file can be separated by any of the following characters: white space, new line,
     `,`, `-`, `+`, `:` and `&`.
   - Particle ID that is not exist in the simulation will be ignored, with some warning message.
@@ -472,6 +514,7 @@ before using any `galotfa` APIs.
 - [ ] (other) add potential tracer support into the common simulation codes.
 - [ ] (global) output the used parameters to a separate file: galotfa-used.ini
 - [ ] (global) specify different target particle types (and possible multiple analysis sets) in different analysis level.
+- [ ] (pre-process) support triaxial region shape.
 - [ ] (model) the bar length calculation.
 - [ ] (particle) the guiding radius calculation.
 - [ ] (particle) the orbital frequency calculation.

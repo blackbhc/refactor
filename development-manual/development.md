@@ -150,6 +150,7 @@ There are 5 steps to add a new unit test:
 - <a href="#src_tools">`src/tools`</a>
 - <a href="#src_parameter">`src/parameter`</a>
 - <a href="#src_output">`src/output`</a>
+- <a href="#src_analysis">`src/analysis`</a>
 
 ### `src/engine`: <a id="src_engine"></a><a href="#list_of_modules"><font size=4>(src list)</font></a>
 
@@ -196,6 +197,8 @@ which will combine other modules together to finish the on-the-fly analysis.
   parameter to the virtual analysis engine.
 - `monitor.save()`: the API between the monitor and the writer class, to save the analysis results at each step into
   hdf5 files.
+- `monitor.extractor()`: extract the array index of the target particles from the simulation data, then the
+  calculator can use the index to extract the target particles' data from the simulation data.
 - `calculator.start()`: start up the analysis engine.
 - `calculator.stop()`: stop the analysis engine, which will free some status flags and resources.
 - `calculator.pre_process(...)`: the wrapper of the pre-process part of the analysis engine, which will be
@@ -206,10 +209,23 @@ which will combine other modules together to finish the on-the-fly analysis.
 - `calculator.group()`: the wrapper of the group level analysis part of the analysis engine.
 - `calculator.post()`: the wrapper of the post process part of the analysis engine, which will
   be called after all synchronized time steps.
+- `calculator.is_target_of_xxx(...)`: judge whether the particle is the target of the xxx analysis module,
+  where xxx is the name of the analysis module, e.g. `is_target_of_pre(...)`, `is_target_of_ptc(...)`
+  will return true if the particle is the target of the pre-process and particle level analysis module.
+  Note that these functions only check the physical aspects of the particles, e.g. whether the particle
+  is located in the target region, but do not check the particle type, which is checked in the `extractor`
+  function.
+- `calculator.call_xxx_module(...)`: `xxx` is `pre`, `model` ... These functions are used to call the corresponding
+  real analysis functions, which are implemented in the real analysis modules.
 
 #### Implementation details
 
-- class `monitor`: the virtual analysis engine's monitor.
+- struct `analysis_results`: the analysis results of the analysis engine, just design to be a symbolic integration
+  of the pointer of the analysis resutls' container in the `calculator` class.
+- struct `writers`: the integration of writers for different analysis modules, as there may be
+  more than one (and unknown) output files in the model and group level analysis modules.
+- class `monitor`: the virtual analysis engine's monitor, which will take over the analysis period and the
+  extract of the target particles of analysis.
 
   - `init()`: create the output directory and open the hdf5 files, only to make the constructor more readable, and
     should be called only in the constructor.
@@ -223,33 +239,41 @@ which will combine other modules together to finish the on-the-fly analysis.
   - `create_writers()`: create the writer objects based on the parameter file, due to the file lock, this
     function should be called only in the main process. To improve the readability of the code, this function
     are split into several inline functions.
+  - `extractor()`: iterate the simulation data to extract the array index of the target particles, which will
+    be used to extract the target particles' data from the simulation data.
+  - `release_once()`: release the resources allocated in `extractor()` after each synchronized time step.
 
 - class `calculator`: the virtual analysis engine's calculator.
 
   - constructor: with one argument `galotfa::parameter::para&`, which is a reference to the parameter class.
   - some container of the analysis results, which will be used to restore the results from different analysis modules.
-  - `recv_data(...)`: the API between the companion of the `monitor.push_data(...)` that receive the data from
-    the monitor and deliver the real analysis parts.
   - There are two versions of this function, one of which support the potential tracer.
-  - At the end of the function, the `run_once` function will be called to analysis the data at one synchronized
-    time step.
-  - Actually, the `monitor.push_data(...)` function is an inline function that just call this function,
-    to define them as separate functions is just for better readability of the codes.
-  - `start()`: start up the analysis engine, which will allocate the memory for the analysis results and set
-    some status flags.
-  - `stop()`: stop the analysis engine, which will free some status flags and resources.
   - the analysis wrappers (list in the API section): use the parameters to call the pure functions, which
     is implemented in the real analysis modules, to finish the on-the-fly analysis, and then update the
     analysis results that returned by the pure functions.
-  - `run_once(...)`: the API to call the calculator to analysis of the data at one synchronized time step.
-    This function is a wrapper of the previous APIs and will be automatically called by the `recv_data` function.
-  - `feedback(...)`: return the analysis results' pointers to the monitor, due to the limitation of static
-    type, the pointers will be stored in a vector of `void*` type, which will be converted to the real type
-    in the monitor. Keep this in mind when you want to add a new analysis module, and be careful to use the
-    pointers in the vector.
+  - `feedback(...)`: return the analysis results' pointers to the monitor, which is stored in a struct
+    `analysis_results`, of which every member pointer is a pointer to the analysis results or `nullptr`
+    if such analysis module is not activated.
 
-    <font color=red>Note</font>: such pointers' data will be overwritten in the each synchronized time step, so the
-    monitor should save the data immediately after the `feedback` function is called.
+    <font color=red>NOTE</font>: such pointers only point to the analysis results' container, so its data
+    will be overwritten in the next analysis step. To correctly output the analysis results, the monitor
+    should push the results to the `writer` immediately after the `feedback` function is called.
+
+#### Steps to add new analysis results
+
+Except the analysis function, to include new analysis results, the workflow of the virtual analysis engine
+should be modified, which is a little tedious. The steps are listed as follows:
+
+1. Configure the `analysis_results` in the `calculator` class, to involve the new analysis results, which
+   is generally is pointer to array or single value or member of a vector.
+2. Configure its setting ups in the `calculator::setup_res()` function, at where such analysis results
+   will be initialized.
+3. Release such results in the destructor of the `calculator` class.
+4. Update the analysis results in its module (one of model, particle, ...) in the wrapper of `call_xxx_module`
+   of the `calculator` class.
+5. Create a dataset of such results in the `monitor::create_xxx_file_datasets()`, before which you should
+   choose a module to store such results, e.g. model, particle, group, etc.
+6. Push such results to its module at `monitor::save()` function.
 
 ### `src/tools` <a id="src_tools"></a> <a href="#list_of_modules"><font size=4>(src list)</font></a>
 
@@ -262,7 +286,7 @@ For `prompt.h`, `prompt.cpp`:
 - `fprintln`: macro, similar as `println` but aims to simplify `fprintf`.
 - `INFO`: print a information message, based on the `println` macro.
 - `WARN`: print a warning message to `stderr`, based on the `fprintln` macro.
-- `ERROR`: print a error message to `stderr`, based on the `fprintln` macro.
+- `ERROR`: print an error message to `stderr`, based on the `fprintln` macro.
 
 For `string.h`, `string.cpp`:
 
@@ -298,7 +322,7 @@ include `prompt.h`, otherwise `CPP` can not distinguish the `MPI` environment.</
     namely `printf(...); printf("\n");`.
   - `fprintln`: similar as `println` but print to a FILE pointer.
   - `WARN`: print a warning message, based on the `fprintln` macro.
-  - `ERROR`: print a error message, based on the `fprintln` macro.
+  - `ERROR`: print an error message, based on the `fprintln` macro.
   - `COUNT(<call a unit test function>)`: the function to check the result of a unit test, then increase
     the int variable `success`, `fail` and `unknown` correspondingly, in the local environment where the
     macro is called. This macro should be used only in the unit test wrapper functions, where the unit
@@ -366,9 +390,9 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
   - member prefix indicates their section in the parameter file: `glb` for the global section, `pre` for the
     pre-process section, `md` for the model section, `ptc` for the particle section, `orb` for the orbit section,
     `grp` for the group section and `post` for the post-process section.
-  - most members of struct `para` are just a proxy of possible parameters in the ini file, except the
-    `md_target_sets`, which is parsed from the `particle_types` and `classification` parameters from
-    model section of the ini file.
+  - most members of struct `para` are just a proxy of possible parameters in the ini file, except:
+    - `md_target_sets`: parsed from the `particle_types` and `classification` parameters from
+      model section of the ini file.
   - constructor: with a reference to a created `ini_parser` object, then update the value of the parameters
     based on the parameter file (with hard code, the ugly but fast way).
   - `check()`: check whether there are some conflicts between the parameters, and whether there are some
@@ -385,6 +409,8 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
 4. Add a check statement into the check function of `para`(`check()`), to check the possible conflicts and
    lack of the new parameter.
 5. Use the new parameter in the analysis code.
+
+Steps to change the parameter's name or usage are similar.
 
 ### `src/output`: <a id="src_output"></a> <a href="#list_of_modules"><font size=4>(src list)</font></a>
 
@@ -442,8 +468,6 @@ Steps to use the `writer` class to organize the hdf5 file:
   to the hdf5 file when the stack is full or the simulation is finished. This strategy is due to the
   uncertainty of how many synchronized time steps will be analyzed during a simulation.
   This can avoid the frequent opening and closing of the hdf5 file, which is time consuming.
-- The size of the virtual stack is in units of synchronized time steps in simulation, which is defined as
-  a constant `VIRTUAL_STACK_SIZE` in `src/output/writer.h`.
 - It seems to be possible to use the parallel hdf5 IO to improve the performance, but there is few
   documentations about this feature, and such feature is not always activated in the hdf5 library, so
   `galotfa` only use a serial mode to write date, which is collected from all processes into the main process.
@@ -475,15 +499,18 @@ size of the sub-space of the array.
 
 - `writer(std::string)`: the class for data output, which require a string to specify the path to the output
   file for initialization. This function can only be used in the main process, due to the hdf5 file lock.
-  - `nodes`: the hash map with string-type key, and `galotfa::hdf5::node`-type value, the key is the absolute
+
+  - `nodes`: the hash map with string-type key, and `galotfa::hdf5::node*`-type value, the key is the absolute
     path of the node, e.g. `/group1/group2/dataset_name` and `/` for the file.
-    - Note: due to there is no default constructor for the `node` class, to call a `node` object in the hash map,
-      you need to use the `at` method.
+    - Note: due to the limitation to use pointer represent the tree structure, the value in the hash table
+      are all new allocated objects, which should be deleted in the destructor of the writer class.
     - The key must start with `/` and end without `/`.
     - (Current feature) The `nodes` only support push nodes and clean the whole tree structure. So the `nodes`
       is cleaned only in the destructor of the writer. (This is due to `nodes` use string-type key and
       there is no any tree structure in the hash map, so it's hard to clean the tree structure of the individual
       node).
+  - `writer::clean_nodes()`: release the resources of the `nodes` hash map, which will be called in the
+    destructor of the writer class or some unit test functions.
   - `writer::~writer()`: the destructor of the class, which will close the hdf5 file and the created hdf5 objects,
     such as dataset and group.
   - `writer::create_file(std::string)`: call `open_file(...)` to open the hdf5 file, and create a file node
@@ -492,17 +519,75 @@ size of the sub-space of the array.
   - `writer::create_group(std::string)`: create a hdf5 group with the given name, can be used to create nested
     groups recursively, e.g. given `group1/group2/group3`, the writer will create `group1` , `group2` and `group3`
     recursively if they do not exist. The group name without a prefix `/` will be treated as a root group.
-  - `writer::create_dataset(std::string, galotfa::hdf5::size_info&)`: create a hdf5 dataset with the given
+  - `writer::create_dataset(std::string, galotfa::hdf5::size_info&, unsigned int chunk_size)`: create a hdf5 dataset with the given
     name, if the string before the final dataset name, take a example: `a/b/c/dataset_name`, will be created
     as group, `a/b/c` here.
   - Note: The previous three create function will return 1 if there is some warning, and 0 for success. So never
     ignore the return value of these functions.
-  - `galota::hdf5::node create_datanode(node& parent, std::string& dataset, galotfa::hdf5::size_info&)`: setup the
-    dataset of the parent node with the given name and info. `dataset` string should be the name of dataset
-    only, e.g. for `/group1/group2/dataset_name` the given value should be `dataset_name`. The parent node
-    should be a group node.
+  - `galota::hdf5::node* create_datanode(node& parent, std::string& dataset, galotfa::hdf5::size_info&, unsigned int chunk_size)`:
+    setup the dataset of the parent node with the given name and info. `dataset` string should be the name of dataset
+    only, e.g. for `/group1/group2/dataset_name` the given value should be `dataset_name`. The parent node should
+    be a group node.
   - `open_file(...)`: open a hdf5 file and return its id, private.
-  - `push(void* buffer, unsigned long len, std::string dataset_name)`: a template function, the main interface
-    to push a array of data to a existing dataset, the dataset name should be the absolute path of the dataset,
-    e.g. `/group1/group2/dataset_name`. If such dataset does not exist, the writer will create it automatically.
-    The data type of the dataset will be restored by `node`, during creation of the dataset.
+  - `push(void* buffer, unsigned long len, std::string dataset_name, unsigned int chunk_size)`: a template function,
+    the main interface to push an array of data to an existing dataset, the dataset name should be the absolute
+    path of the dataset, e.g. `/group1/group2/dataset_name`. If such dataset does not exist, the writer will create
+    it automatically. The data type of the dataset will be restored by `node`, during creation of the dataset.
+
+    <font color="red">Note: In general, the chunk_size should not be set explicitly, expect for some large datasets
+    (such as dispersion tensor), as the `hdf5` library does not support chunk size larger than 4GB. Besides if
+    you need to set it explicitly, make sure the parameter during create dataset is the same as the one use
+    in the push function.</font>
+
+### `src/analysis`: <a id="src_analysis"></a> <a href="#list_of_modules"><font size=4>(src list)</font></a>
+
+The real analysis modules, which will be called by the virtual analysis engine. For better modularity, this
+module only deal with the data and calculation, and the logical control based on parameters is the work of
+`calculator`, and by different parameters, the `calculator` can call different analysis functions in this module.
+All functions are non-member functions, which can be treated as a black box to finish some calculation.
+
+Note: all unit test of this module are designed for mpi mode, `make test` can not pass the compilation.
+
+#### Utils: `src/analysis/utils.h` and `src/analysis/utils.cpp`
+
+These functions/class are used in the analysis module, which implement some common calculation, such as 2D binning
+statistics, smoothing, etc. All the followings are defined in the namespace `galotfa::analysis`.
+
+- `in_spheroid(...)`: check whether the particle is in the spheroid region, which is used to check whether
+  the particle is in the target region of the pre-process part.
+- `in_cylinder(...)`: similar but for a cylinder region.
+- `in_box(...)`: similar but for a box region.
+- template struct `vec`: a template struct to implement the vector operation, such as norm, dot product, cross
+  product, etc. Most operations are implemented by operator overloading. Note that all self operation in this
+  class has no return value.
+- template struct `mat`: a template struct to implement the matrix operation, such as inverse, transpose, etc.
+  Again, most operations are implemented by operator overloading and the self operation has no return value.
+  - Note: as this is only a toy class, the inverse, determinant calculation are implemented at here, which
+    is not efficient and accurate. So if you want to use this class, please use it carefully. I choose to
+    implement them at here because I want to avoid all unnecessary dependency of other libraries.
+- enumerate `stats_method`: the type of the statistics method, `mean`, `median`, `std`, `sum`, `min`, `max`, `count`.
+- two template functions for binning statistics: `bin1d` and `bin2d`, analogy to python `scipy.stats.binned_statistic` and
+  `scipy.stats.binned_statistic_2d`, which return `vec` or `mat` struct.
+  - These functions always return `std::vector<double>` or 2D `std::vector`.
+  - The functions' arguments are: data array(s) and its length and lower/upper bound(s) of the bin(s), all
+    in `double` type, then a unsigned int for bin number, and the last argument is the statistics method,
+    which is a `galotfa::analysis::stats_method` type (see above).
+  - The bins are defined as `[lower, upper)`, namely the lower bound is included and the upper bound is excluded.
+    Except the last bin, which is `[lower, upper]`.
+
+#### Pre-process part: `src/analysis/pre.h` and `src/analysis/pre.cpp`
+
+- `center_by_com(...)`: calculate the system's center of mass as the system center.
+- `most_dense_pixle(...)`: calculate the most dense pixel in the image matrices x-y and x-z as the system center,
+  note that the final system center is the center of the most dense pixel, so choose the bin size carefully.
+  For example, if the number of bins is small, then an odd number of bins is better.
+
+#### Model analysis part: `src/analysis/model.h` and `src/analysis/model.cpp`
+
+- `An(...)`: the Fourier coefficient of surface density's symmetric component (see formula in the
+  development-manual/computation.md).
+- `s_bar`: the bar strength, $A_2/A_0$.
+- `s_buckle(...)`: the buckling strength.
+- `bar_major_axis(...)`: calculate the major axis of the bar, which is defined as the argument of $A_2$.
+  The return value in the range $(-\pi/2, \pi/2]$.
+- `dispersion_tensor(...)`: function to calculate the dispersion tensor.
