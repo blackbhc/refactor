@@ -170,7 +170,8 @@ writer::~writer( void )
         if ( node.second->is_dataset() )
             H5Dflush( node.second->get_hid() );
     }
-    H5Fflush( this->nodes.at( "/" )->get_hid(), H5F_SCOPE_GLOBAL );
+    if ( this->nodes.find( "/" ) != this->nodes.end() )
+        H5Fflush( this->nodes.at( "/" )->get_hid(), H5F_SCOPE_GLOBAL );
     clean_nodes();
     this->stack_counter.clear();
 }
