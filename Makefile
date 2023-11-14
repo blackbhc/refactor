@@ -1,5 +1,5 @@
-# build type: header-only or static or shared or all
-type = all
+# build type: header-only or library
+type = library
 # build mode: debug or release
 mode = release
 # install prefix
@@ -40,7 +40,7 @@ clean:
 
 
 ifndef units
-TEST_TARGET = prompt
+TEST_TARGET =
 else
 TEST_TARGET = $(units)
 endif
@@ -60,14 +60,11 @@ build: check $(TARGET)
 	@mkdir -p $(BUILD_DIR)
 ifeq ($(type), header-only)
 	@echo "Building header-only ..."
-else ifeq ($(type), static)
-	@echo "Building static lib ..."
-else ifeq ($(type), shared)
-	@echo "Building dynamic lib ..."
-else ifeq ($(type), all)
-	@echo "Building all ..."
+else ifeq ($(type), library)
+	@echo "Building library ..."
 else
-	@echo "Invalid build type: should be one of (header-only, static, shared, all)"
+	@echo "Invalid build type: should be one of (header-only, library)"
+	@echo "Get:" $(type)
 	@exit 1
 endif
 	@echo "Build done successfully!"
@@ -87,18 +84,26 @@ endif
 install: build
 	@echo "Installing ..."
 	@mkdir -p $(prefix)
-	@cp -r $(BUILD_DIR)/* $(prefix)/
+ifeq ($(type), header-only)
+	@cp -r $(BUILD_DIR)/include $(prefix)/
+else
+	@cp -r $(BUILD_DIR)/lib $(prefix)/
+	@mkdir $(prefix)/include
+	@cp -r $(BUILD_DIR)/src/galotfa.h $(prefix)/include/
+endif
 	@echo "Done!"
 
 headers = $(shell (ls $(PROJECT_ROOT)/src/))
 uninstall:
 	@echo "Uninstalling ..."
-ifeq ($(findstring galotfa, $(prefix)), "") # if there is no galotfa in prefix
+ifeq ($(findstring galotfa, $(prefix)), "") # if there is no 'galotfa' in prefix
+# only remove the files in galotfa
 	@rm -rf $(prefix)/include/$(headers)
 	@rm -rf $(prefix)/lib/libgalotfa*
 else
+# if it's a directory only for galotfa, remove the whole directory
 	@rm -rf $(prefix)
 endif
 	@echo "Done!"
 	
-.PHONY: all clean test install check test_make
+.PHONY: all clean test install uninstall check test_make

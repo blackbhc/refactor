@@ -14,9 +14,9 @@ namespace ana = galotfa::analysis;
 complex< double > ana::An( int array_len, double mass[], double x[], double y[],
                            unsigned int order )
 {
-    complex< double > result = 0 + 0i;
-    complex< double > I      = 0 + 1i;
-    double            phi    = 0;  // the azimuthal angle
+    complex< double > result = 0;
+    complex< double > I( 0, 1 );  // the imaginary unit (0+1i)
+    double            phi = 0;    // the azimuthal angle
 
     for ( int i = 0; i < array_len; i++ )
     {
@@ -40,10 +40,10 @@ double ana::s_bar( int array_len, double mass[], double x[], double y[] )
 
 double ana::s_buckle( int array_len, double mass[], double x[], double y[], double z[] )
 {
-    complex< double > numerator   = 0 + 0i;
+    complex< double > numerator   = 0;
     double            denominator = 0;
-    complex< double > I           = 0 + 1i;
-    double            phi         = 0;  // the azimuthal angle
+    complex< double > I( 0, 1 );  // the imaginary unit (0+1i)
+    double            phi = 0;    // the azimuthal angle
 
     for ( int i = 0; i < array_len; i++ )
     {

@@ -13,10 +13,9 @@
 #endif
 
 extern "C" {
-void galotfa_without_pot_tracer( unsigned long particle_ids[], unsigned long types[],
-                                 double masses[], double coordiantes[][ 3 ],
-                                 double velocities[][ 3 ], double time,
-                                 unsigned long particle_number )
+void galotfa_without_pot_tracer( int particle_ids[], int types[], double masses[],
+                                 double coordiantes[][ 3 ], double velocities[][ 3 ], double time,
+                                 int particle_number )
 {
     static galotfa::monitor otf_monitor;
 
@@ -27,9 +26,9 @@ void galotfa_without_pot_tracer( unsigned long particle_ids[], unsigned long typ
     return;
 }
 
-void galotfa_with_pot_tracer( unsigned long pot_tracer_type, unsigned long particle_ids[],
-                              unsigned long types[], double masses[], double coordiantes[][ 3 ],
-                              double velocities[][ 3 ], double time, unsigned long particle_number )
+void galotfa_with_pot_tracer( int pot_tracer_type, int particle_ids[], int types[], double masses[],
+                              double coordiantes[][ 3 ], double velocities[][ 3 ], double time,
+                              int particle_number )
 
 {
     // TODO: to be implemented
