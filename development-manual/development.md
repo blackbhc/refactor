@@ -406,9 +406,10 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
 2. Edit the `para` class in the `src/parameter/para.h` file, add the parameter into the chosen section
    and set its default value.
 3. Add a line in the update function (`para::para(...)`) to update the value of the new parameter from the ini file.
-4. Add a check statement into the check function of `para`(`check()`), to check the possible conflicts and
+4. Add a check statement into the check function of (`para::check()`), to check the possible conflicts and
    lack of the new parameter.
-5. Use the new parameter in the analysis code.
+5. Add the new parameter to the example ini file in the `examples` directory.
+6. Use the new parameter in the analysis code and modify the unit test codes of the parameter module if needed.
 
 Steps to change the parameter's name or usage are similar.
 
