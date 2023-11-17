@@ -48,6 +48,10 @@ $A_n=\sum_i^N {m_i\cdot\exp{(in\phi_i)}}$, $N$ is the number of particles, $m_i$
 $i$-th particle, $\phi_i$ is the azimuthal angle of the $i$-th particle in cylindrical coordinate, $n$ is
 the order of the mode.
 
+### Bar major axis
+
+$\phi_{\rm bar} \equiv \frac{1}{2}\arg{A_2}$
+
 ### Bar strength
 
 $S_{\rm bar}=|A_2/A_0|$
@@ -80,4 +84,12 @@ This quantity is defined in the specified analysis region: summation is over the
 ### Bar length (in the image plane)
 
 The bar length or radius is defined as the radius of the circle enclosing the bar region. Such region is
-not well defined. The algorithm used here is referred to [Ghosh & Di Matteo 2023](https://ui.adsabs.harvard.edu/abs/2023arXiv230810948G/abstract).
+not well defined. Algorithms used here is referred to [Ghosh & Di Matteo 2023](https://ui.adsabs.harvard.edu/abs/2023arXiv230810948G/abstract).
+
+- $R_{\rm bar,1}$: the radial extent within which the phase-angle of the $m=2$ Fourier moment ($\phi_2$)
+  remains constant within $3^\circ \sim 5^\circ$, of which the exact value is a free parameter specified in the
+  ini file. Note that the variation of the $\phi_2$ is relative to the bar major axis.
+- $R_{\rm bar,2}$: the radial extent where the bar strength $S_{\rm bar}$ reaches its maximum.
+- $R_{\rm bar,3}$: the radial extent where the bar strength $S_{\rm bar}$ drops to $70\%$ of its maximum value,
+  after the maximum value is reached. The exact value of the percentage is a free parameter specified in the
+  ini file.
