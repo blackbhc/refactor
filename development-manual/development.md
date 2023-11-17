@@ -592,3 +592,4 @@ statistics, smoothing, etc. All the followings are defined in the namespace `gal
 - `bar_major_axis(...)`: calculate the major axis of the bar, which is defined as the argument of $A_2$.
   The return value in the range $(-\pi/2, \pi/2]$.
 - `dispersion_tensor(...)`: function to calculate the dispersion tensor.
+- `bar_radius(...)`: function to calculate the bar radius, which is the $R_{\rm bar,1}$ in [Ghosh & Di Matteo 2023](https://ui.adsabs.harvard.edu/abs/2023arXiv230810948G/abstract).

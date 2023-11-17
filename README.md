@@ -244,7 +244,7 @@ to see their explanation.
 |            | <a href="#bar_threshold">`bar_threshold`</a>                 | Float      | 0.15          | $(0, 1)$                                                    |
 |            | <a href="#bar_radius">`bar_radius`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#rmin">`rmin`</a>                                   | Float      | 0.0           | $>0$                                                        |
-|            | <a href="#rmax">`rmax`</a>                                   | Float      |               | $>0$                                                        |
+|            | <a href="#rmax">`rmax`</a>                                   | Float      | Region size   | $>0$                                                        |
 |            | <a href="#rbins">`rbins`</a>                                 | Integer    | 20            | $>0$                                                        |
 |            | <a href="#percentage">`percentage`</a>                       | Float      | 70            | $(0, 100)$                                                  |
 |            | <a href="#sbuckle">`sbuckle`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
