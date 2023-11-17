@@ -381,7 +381,7 @@ int calculator::call_md_module md_args const
             this->ptrs_of_results->bar_radius[ i ][ 1 ] =
                 ana::bar_radius2( part_num_md[ i ], mass, x, y );  // TODO: to be implemented
             this->ptrs_of_results->bar_radius[ i ][ 2 ] =
-                ana::bar_radius2( part_num_md[ i ], mass, x, y );  // TODO: to be implemented
+                ana::bar_radius3( part_num_md[ i ], mass, x, y );  // TODO: to be implemented
         }
         if ( this->para->md_sbar )
             this->ptrs_of_results->s_bar[ i ] = ana::s_bar( part_num_md[ i ], mass, x, y );
