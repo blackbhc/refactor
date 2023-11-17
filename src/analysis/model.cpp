@@ -65,7 +65,7 @@ double ana::bar_major_axis( int array_len, double mass[], double x[], double y[]
     return arg( A2 ) / 2;  // divide by 2, as the argument of A2 is 2*phi
 }
 
-double ana::bar_length( int array_len, double mass[], double x[], double y[] )
+double ana::bar_radius( int array_len, double mass[], double x[], double y[] )
 {
     ( void )array_len;
     ( void )mass;

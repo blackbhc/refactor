@@ -205,8 +205,8 @@ int monitor::save()
                         single_model->push< double >( &imag, 1,
                                                       "/Bar/A" + std::to_string( m ) + "(imag)" );
                     }
-                if ( this->para->md_bar_length )
-                    single_model->push< double >( &res->bar_length[ i ], 1, "/Bar/Length" );
+                if ( this->para->md_bar_radius )
+                    single_model->push< double >( &res->bar_radius[ i ], 1, "/Bar/Length" );
 
                 if ( this->para->md_image )
                 {
@@ -326,7 +326,7 @@ inline void monitor::create_model_file_datasets()
             single_model->create_dataset( "/Center", single_vector_info );
         if ( this->para->md_bar_major_axis )
             single_model->create_dataset( "/Bar/MajorAxis", single_scaler_info );
-        if ( this->para->md_bar_length )
+        if ( this->para->md_bar_radius )
             single_model->create_dataset( "/Bar/Length", single_scaler_info );
         if ( this->para->md_sbar )
             single_model->create_dataset( "/Bar/SBar", single_scaler_info );

@@ -113,8 +113,8 @@ void calculator::setup_res()
         // set the vector of the results has size == the number of target analysis sets
         if ( this->para->md_bar_major_axis )
             this->ptrs_of_results->bar_marjor_axis.resize( this->para->md_target_sets.size() );
-        if ( this->para->md_bar_length )
-            this->ptrs_of_results->bar_length.resize( this->para->md_target_sets.size() );
+        if ( this->para->md_bar_radius )
+            this->ptrs_of_results->bar_radius.resize( this->para->md_target_sets.size() );
         if ( this->para->md_sbar )
             this->ptrs_of_results->s_bar.resize( this->para->md_target_sets.size() );
         if ( this->para->md_sbuckle )
@@ -370,9 +370,9 @@ int calculator::call_md_module md_args const
         if ( this->para->md_bar_major_axis )
             this->ptrs_of_results->bar_marjor_axis[ i ] =
                 ana::bar_major_axis( part_num_md[ i ], mass, x, y );
-        if ( this->para->md_bar_length )
-            this->ptrs_of_results->bar_length[ i ] =
-                ana::bar_length( part_num_md[ i ], mass, x, y );  // TODO: to be implemented
+        if ( this->para->md_bar_radius )
+            this->ptrs_of_results->bar_radius[ i ] =
+                ana::bar_radius( part_num_md[ i ], mass, x, y );  // TODO: to be implemented
         if ( this->para->md_sbar )
             this->ptrs_of_results->s_bar[ i ] = ana::s_bar( part_num_md[ i ], mass, x, y );
         if ( this->para->md_sbuckle )

@@ -91,7 +91,9 @@ para::para( ini_parser& parser )
     update( md, image_bins, Model, int );
     update( md, colors, Model, strs );
     update( md, bar_major_axis, Model, bool );
-    update( md, bar_length, Model, bool );
+    update( md, bar_radius, Model, bool );
+    update( md, deg, Model, double );
+    update( md, percentage, Model, double );
     update( md, sbar, Model, bool );
     update( md, bar_threshold, Model, double );
     update( md, sbuckle, Model, bool );
@@ -356,6 +358,18 @@ int para::check( void )
                 "Try to calculate the amplitude of Fourier symmetry modes, but the order invalid: "
                 "get a non-positive value.\n Please check your ini file." );
         }
+
+        if ( this->md_bar_radius )
+        {
+            IF_THEN_WARN(
+                this->md_deg <= 0 || this->md_deg >= 90,
+                "The degree parameter for the Rbar1 is not in the range of (0,90), which is "
+                "not allowed." );
+            IF_THEN_WARN(
+                this->md_percentage <= 0 || this->md_percentage >= 100,
+                "The percentage parameter for the Rbar3 is not in the range of (0,100), which is "
+                "not allowed." );
+        }
     }
 
     // check the particle section
@@ -487,7 +501,9 @@ int para::test_print()
     printi( md, bar_major_axis );
     printi( md, sbar );
     printd( md, bar_threshold );
-    printi( md, bar_length );
+    printi( md, bar_radius );
+    printd( md, deg );
+    printd( md, percentage );
     printi( md, sbuckle );
     printis( md, an );
     printi( md, inertia_tensor );

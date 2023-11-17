@@ -17,7 +17,7 @@ namespace analysis {
 
     double bar_major_axis( int array_len, double mass[], double x[], double y[] );
 
-    double bar_length( int array_len, double mass[], double x[], double y[] );
+    double bar_radius( int array_len, double mass[], double x[], double y[] );
 
     int dispersion_tensor( int array_len, double x[], double y[], double z[], double vx[],
                            double vy[], double vz[], double lower_bound_x, double upper_bound_x,

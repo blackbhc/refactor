@@ -39,7 +39,7 @@ struct analysis_result
     vector< complex< double > > Ans[ 7 ];  // the An of each order, from 0 to 6
     // First dimension: the order of the An, from 0 to 6
     // Second dimension: the pointer to the data
-    vector< double >  bar_length;  // TODO: to be implemented with multiple method
+    vector< double >  bar_radius;  // TODO: to be implemented with multiple method
     vector< double* > images[ 8 ][ 3 ];
     // First dimension are over possible images colors: number_density, surface_density,
     // mean_velocity axis1, mean_velocity axis2, mean_velocity axis3, velocity_dispersion axis1,
