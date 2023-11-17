@@ -171,6 +171,16 @@ First, you need to check the following dependencies
 
 ### Get start with examples
 
+To start with the built-in `Gadget4` fork, you can run the following steps:
+
+1. Install `galotfa` as in previous section.
+2. Go into the `gadget4` directory, use as a normal `Gadget4` code, with additional configuration and
+   runtime parameters, which are described in the <a href="#fork_gadget4">Fork of `Gadget4`</a> section.
+3. Copy the `galotfa.ini` from the `examples` directory into the working directory of your simulation,
+   modify the parameters in the `galotfa.ini` file according to your requirement.
+4. Run the simulation, and the output files will be generated in the `output_dir` specified in the
+   `galotfa.ini` file.
+
 ### Complete illustrations
 
 #### Units of quantities
