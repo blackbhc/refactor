@@ -137,24 +137,28 @@ inline void monitor::create_files()
     // NOTE: this function will access the hdf5 files, so it should be called by the root process
     // Besides, it should be called only when galotfa is enabled (para->glb_switch_on == true)
 
-    if ( this->para->md_multiple )
+    if ( this->para->md_switch_on )
     {
-        for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
+        if ( this->para->md_multiple )
         {
-            std::string prefix = "set" + std::to_string( i + 1 ) + "_";
+            for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
+            {
+                std::string prefix = "set" + std::to_string( i + 1 ) + "_";
 
-            std::string file = this->para->glb_output_dir + "/" + prefix + this->para->md_filename;
+                std::string file =
+                    this->para->glb_output_dir + "/" + prefix + this->para->md_filename;
+
+                galotfa::writer* writer = new galotfa::writer( file.c_str() );
+                this->writers.model_writers.push_back( writer );
+            }
+        }
+        else
+        {
+            std::string file = this->para->glb_output_dir + "/" + this->para->md_filename;
 
             galotfa::writer* writer = new galotfa::writer( file.c_str() );
             this->writers.model_writers.push_back( writer );
         }
-    }
-    else
-    {
-        std::string file = this->para->glb_output_dir + "/" + this->para->md_filename;
-
-        galotfa::writer* writer = new galotfa::writer( file.c_str() );
-        this->writers.model_writers.push_back( writer );
     }
 
     if ( this->para->ptc_switch_on )
@@ -206,7 +210,11 @@ int monitor::save()
                                                       "/Bar/A" + std::to_string( m ) + "(imag)" );
                     }
                 if ( this->para->md_bar_radius )
-                    single_model->push< double >( &res->bar_radius[ i ], 1, "/Bar/Length" );
+                {
+                    single_model->push< double >( &res->bar_radius[ i ][ 0 ], 1, "/Bar/Radius1" );
+                    single_model->push< double >( &res->bar_radius[ i ][ 1 ], 1, "/Bar/Radius2" );
+                    single_model->push< double >( &res->bar_radius[ i ][ 2 ], 1, "/Bar/Radius3" );
+                }
 
                 if ( this->para->md_image )
                 {
@@ -327,7 +335,11 @@ inline void monitor::create_model_file_datasets()
         if ( this->para->md_bar_major_axis )
             single_model->create_dataset( "/Bar/MajorAxis", single_scaler_info );
         if ( this->para->md_bar_radius )
-            single_model->create_dataset( "/Bar/Length", single_scaler_info );
+        {
+            single_model->create_dataset( "/Bar/Radius1", single_scaler_info );
+            single_model->create_dataset( "/Bar/Radius2", single_scaler_info );
+            single_model->create_dataset( "/Bar/Radius3", single_scaler_info );
+        }
         if ( this->para->md_sbar )
             single_model->create_dataset( "/Bar/SBar", single_scaler_info );
         if ( this->para->md_sbuckle )

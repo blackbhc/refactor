@@ -114,7 +114,11 @@ void calculator::setup_res()
         if ( this->para->md_bar_major_axis )
             this->ptrs_of_results->bar_marjor_axis.resize( this->para->md_target_sets.size() );
         if ( this->para->md_bar_radius )
+        {
             this->ptrs_of_results->bar_radius.resize( this->para->md_target_sets.size() );
+            for ( auto& radius_in_one_set : this->ptrs_of_results->bar_radius )
+                radius_in_one_set.resize( 3 );
+        }
         if ( this->para->md_sbar )
             this->ptrs_of_results->s_bar.resize( this->para->md_target_sets.size() );
         if ( this->para->md_sbuckle )
@@ -371,8 +375,14 @@ int calculator::call_md_module md_args const
             this->ptrs_of_results->bar_marjor_axis[ i ] =
                 ana::bar_major_axis( part_num_md[ i ], mass, x, y );
         if ( this->para->md_bar_radius )
-            this->ptrs_of_results->bar_radius[ i ] =
-                ana::bar_radius( part_num_md[ i ], mass, x, y );  // TODO: to be implemented
+        {
+            this->ptrs_of_results->bar_radius[ i ][ 0 ] =
+                ana::bar_radius1( part_num_md[ i ], mass, x, y );  // TODO: to be implemented
+            this->ptrs_of_results->bar_radius[ i ][ 1 ] =
+                ana::bar_radius2( part_num_md[ i ], mass, x, y );  // TODO: to be implemented
+            this->ptrs_of_results->bar_radius[ i ][ 2 ] =
+                ana::bar_radius2( part_num_md[ i ], mass, x, y );  // TODO: to be implemented
+        }
         if ( this->para->md_sbar )
             this->ptrs_of_results->s_bar[ i ] = ana::s_bar( part_num_md[ i ], mass, x, y );
         if ( this->para->md_sbuckle )
