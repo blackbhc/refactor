@@ -33,7 +33,7 @@ struct analysis_result
     // pre-process part
     double* system_center = nullptr;
     // model part, all support multiple analysis sets
-    vector< double >            bar_marjor_axis;  // by argument of A2
+    vector< double >            bar_major_axis;  // by argument of A2
     vector< double >            s_bar;
     vector< double >            s_buckle;
     vector< complex< double > > Ans[ 7 ];  // the An of each order, from 0 to 6

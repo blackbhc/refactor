@@ -38,9 +38,9 @@ struct para
     vector< int >           md_particle_types;
     vector< std::string >   md_classification;
     vector< vector< int > > md_target_sets;
-    int                     md_image_bins = 100;
-    double md_region_size = 20, md_axis_ratio = 1, md_bar_threshold = 0.15, md_deg = 3,
-           md_percentage                  = 70;
+    int                     md_image_bins = 100, md_rbins = 20;
+    double md_region_size = 20, md_axis_ratio = 1, md_bar_threshold = 0.15, md_rmin = 0.0,
+           md_rmax = 0.0, md_deg = 3, md_percentage = 70;
     std::string           md_region_shape = "cylinder";
     vector< int >         md_an;  // An, lowercase for ini key
     vector< std::string > md_colors;

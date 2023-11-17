@@ -18,7 +18,7 @@ complex< double > ana::An( int array_len, double mass[], double x[], double y[],
     complex< double > I( 0, 1 );  // the imaginary unit (0+1i)
     double            phi = 0;    // the azimuthal angle
 
-    for ( int i = 0; i < array_len; i++ )
+    for ( int i = 0; i < array_len; ++i )
     {
         phi = atan2( y[ i ], x[ i ] );
         result += mass[ i ] * exp( order * phi * I );
@@ -45,7 +45,7 @@ double ana::s_buckle( int array_len, double mass[], double x[], double y[], doub
     complex< double > I( 0, 1 );  // the imaginary unit (0+1i)
     double            phi = 0;    // the azimuthal angle
 
-    for ( int i = 0; i < array_len; i++ )
+    for ( int i = 0; i < array_len; ++i )
     {
         phi = atan2( y[ i ], x[ i ] );
         numerator += z[ i ] * mass[ i ] * exp( 2 * phi * I );
@@ -65,33 +65,78 @@ double ana::bar_major_axis( int array_len, double mass[], double x[], double y[]
     return arg( A2 ) / 2;  // divide by 2, as the argument of A2 is 2*phi
 }
 
-double ana::bar_radius1( int array_len, double mass[], double x[], double y[] )
+double ana::bar_radius( int array_len, double mass[], double x[], double y[], double rmin,
+                        double rmax, int rbins, double major_axis, double angle_threshold,
+                        double percentage, double* results )
 {
-    ( void )array_len;
-    ( void )mass;
-    ( void )x;
-    ( void )y;
-    // TODO: to be implemented
-    return 0;
-}
+    // static variables
+    static complex< double > I( 0, 1 );   // the imaginary unit (0+1i)
+    static double            phi    = 0;  // the azimuthal angle
+    static int               index  = 0;  // the array index of the bin
+    static int               binnum = rbins;
+    static double            min = rmin, max = rmax, range = max - min, bin_size = range / binnum;
+    static double            angle = angle_threshold * M_PI / 180, percent = percentage / 100;
 
-double ana::bar_radius2( int array_len, double mass[], double x[], double y[] )
-{
-    ( void )array_len;
-    ( void )mass;
-    ( void )x;
-    ( void )y;
-    // TODO: to be implemented
-    return 0;
-}
+    double*            s_bar    = new double[ binnum ]();
+    double*            phis     = new double[ binnum ]();
+    complex< double >* result   = new complex< double >[ binnum ]();
+    double*            mass_sum = new double[ binnum ]();
+    double             r        = 0;
 
-double ana::bar_radius3( int array_len, double mass[], double x[], double y[] )
-{
-    ( void )array_len;
-    ( void )mass;
-    ( void )x;
-    ( void )y;
-    // TODO: to be implemented
+    for ( int i = 0; i < array_len; ++i )
+    {
+        r = sqrt( x[ i ] * x[ i ] + y[ i ] * y[ i ] );
+        if ( r < min || r > max )
+            continue;
+
+        index = ( int )( r - min ) / bin_size;
+        if ( index == binnum )
+            --index;
+
+        phi = atan2( y[ i ], x[ i ] );
+        result[ index ] += mass[ i ] * exp( 2 * phi * I );
+        mass_sum[ index ] += mass[ i ];
+    }
+
+    // MPI reduction
+    MPI_Allreduce( MPI_IN_PLACE, result, binnum, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD );
+    MPI_Allreduce( MPI_IN_PLACE, mass_sum, binnum, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+
+    for ( int i = 0; i < binnum; ++i )
+    {
+        s_bar[ i ] = abs( result[ i ] / mass_sum[ i ] );
+        phis[ i ]  = arg( result[ i ] ) / 2;  // divide by 2, as the argument of A2 is 2*phi
+    }
+
+    results[ 0 ] = 0;  // calculate Rbar1
+    for ( int i = 0; i < binnum; ++i )
+    {
+        if ( fabs( phis[ i ] - major_axis ) >= angle )
+        {
+            results[ 0 ] = min + ( i + 0.5 ) * bin_size;
+            break;
+        }
+    }
+    results[ 1 ] = ( ( std::max_element( s_bar, s_bar + binnum ) - s_bar ) + 0.5 ) * bin_size
+                   + min;     // calculate Rbar2
+    results[ 2 ]        = 0;  // calculate Rbar3
+    int    max_location = std::max_element( s_bar, s_bar + binnum ) - s_bar;
+    double max_s_bar    = s_bar[ max_location ];
+    for ( int i = max_location; i < binnum; ++i )
+    {
+        if ( s_bar[ i ] <= percent * max_s_bar )
+        {
+            results[ 2 ] = min + ( i + 0.5 ) * bin_size;
+            break;
+        }
+    }
+
+    // release the memory
+    delete[] s_bar;
+    delete[] phis;
+    delete[] result;
+    delete[] mass_sum;
+
     return 0;
 }
 
@@ -198,9 +243,9 @@ int ana::dispersion_tensor( int array_len, double x[], double y[], double z[], d
     unsigned int factor3 = num_bins_y * num_bins_z * 9;
     unsigned int factor4 = num_bins_z * 9;
 
-    for ( i = 0; i < num_bins_x; i++ )
-        for ( j = 0; j < num_bins_y; j++ )
-            for ( k = 0; k < num_bins_z; k++ )
+    for ( i = 0; i < num_bins_x; ++i )
+        for ( j = 0; j < num_bins_y; ++j )
+            for ( k = 0; k < num_bins_z; ++k )
             {
                 tensor[ i * factor3 + j * factor4 + k * 9 + 0 * 3 + 0 ] =
                     v00[ i * factor1 + j * factor2 + k ] / count[ i * factor1 + j * factor2 + k ]
@@ -271,7 +316,7 @@ int ana::inertia_tensor( int array_len, double mass[], double x[], double y[], d
                          double* tensor )
 {
     memset( tensor, 0, sizeof( double ) * 9 );
-    for ( int i = 0; i < array_len; i++ )
+    for ( int i = 0; i < array_len; ++i )
     {
         tensor[ 0 * 3 + 0 ] += mass[ i ] * ( y[ i ] * y[ i ] + z[ i ] * z[ i ] );
         tensor[ 0 * 3 + 1 ] -= mass[ i ] * x[ i ] * y[ i ];

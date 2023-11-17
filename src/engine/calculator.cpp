@@ -112,7 +112,7 @@ void calculator::setup_res()
     {
         // set the vector of the results has size == the number of target analysis sets
         if ( this->para->md_bar_major_axis )
-            this->ptrs_of_results->bar_marjor_axis.resize( this->para->md_target_sets.size() );
+            this->ptrs_of_results->bar_major_axis.resize( this->para->md_target_sets.size() );
         if ( this->para->md_bar_radius )
         {
             this->ptrs_of_results->bar_radius.resize( this->para->md_target_sets.size() );
@@ -372,17 +372,8 @@ int calculator::call_md_module md_args const
             }
         }
         if ( this->para->md_bar_major_axis )
-            this->ptrs_of_results->bar_marjor_axis[ i ] =
+            this->ptrs_of_results->bar_major_axis[ i ] =
                 ana::bar_major_axis( part_num_md[ i ], mass, x, y );
-        if ( this->para->md_bar_radius )
-        {
-            this->ptrs_of_results->bar_radius[ i ][ 0 ] =
-                ana::bar_radius1( part_num_md[ i ], mass, x, y );  // TODO: to be implemented
-            this->ptrs_of_results->bar_radius[ i ][ 1 ] =
-                ana::bar_radius2( part_num_md[ i ], mass, x, y );  // TODO: to be implemented
-            this->ptrs_of_results->bar_radius[ i ][ 2 ] =
-                ana::bar_radius3( part_num_md[ i ], mass, x, y );  // TODO: to be implemented
-        }
         if ( this->para->md_sbar )
             this->ptrs_of_results->s_bar[ i ] = ana::s_bar( part_num_md[ i ], mass, x, y );
         if ( this->para->md_sbuckle )
@@ -393,11 +384,31 @@ int calculator::call_md_module md_args const
                 this->ptrs_of_results->Ans[ n ][ i ] = ana::An( part_num_md[ i ], mass, x, y, n );
             }
 
+        if ( this->para->md_bar_radius )  // must call this after s_bar
+        {
+            if ( this->ptrs_of_results->s_bar[ i ] >= this->para->md_bar_threshold )
+            {
+                static double rmin = this->para->md_rmin, rmax = this->para->md_rmax;
+                static int    rbins = this->para->md_rbins;
+                // only calculate the bar radius when the bar is strong enough
+                ana::bar_radius( part_num_md[ i ], mass, x, y, rmin, rmax, rbins,
+                                 this->ptrs_of_results->bar_major_axis[ i ], this->para->md_deg,
+                                 this->para->md_percentage,
+                                 this->ptrs_of_results->bar_radius[ i ].data() );
+            }
+            else
+            {
+                this->ptrs_of_results->bar_radius[ i ][ 0 ] = 0;
+                this->ptrs_of_results->bar_radius[ i ][ 1 ] = 0;
+                this->ptrs_of_results->bar_radius[ i ][ 2 ] = 0;
+            }
+        }
+
         if ( this->para->md_align_bar
              && this->ptrs_of_results->s_bar[ i ] > this->para->md_bar_threshold )
         {
             // rotate the coordinates to align the bar
-            double phi = -this->ptrs_of_results->bar_marjor_axis[ i ];
+            double phi = -this->ptrs_of_results->bar_major_axis[ i ];
             // minus sign: passively rotate the coordinates
             double _x, _y;  // tmp variables
             for ( int j = 0; j < part_num_md[ i ]; ++j )

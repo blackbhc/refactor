@@ -194,7 +194,7 @@ int monitor::save()
                 if ( this->para->pre_recenter )
                     single_model->push< double >( res->system_center, 3, "/Center" );
                 if ( this->para->md_bar_major_axis )
-                    single_model->push< double >( &res->bar_marjor_axis[ i ], 1, "/Bar/MajorAxis" );
+                    single_model->push< double >( &res->bar_major_axis[ i ], 1, "/Bar/MajorAxis" );
                 if ( this->para->md_sbar )
                     single_model->push< double >( &res->s_bar[ i ], 1, "/Bar/SBar" );
                 if ( this->para->md_sbuckle )
