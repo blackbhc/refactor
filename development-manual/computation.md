@@ -26,7 +26,7 @@ the maximum iteration number, the convergence threshold and maximum iteration nu
 
 #### As center of mass (`recenter_method=com`)
 
-The center of mass of the system is defined as $\vec{r}_{\rm cm} = \frac{\sum_i m_i \vec{r}_i}{\sum_i m_i}$
+The center of mass of the system is defined as $\vec{r}_{\rm com} = \frac{\sum_i m_i \vec{r}_i}{\sum_i m_i}$
 where $\vec{r}_i$ and $m_i$ are the position and mass of the $i$-th particle, respectively.
 
 #### As the most bound particle (`recenter_method=potential`)
