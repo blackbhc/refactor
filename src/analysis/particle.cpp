@@ -34,6 +34,23 @@ int ana::angular_momentum( int part_num, double masses[], double coords[][ 3 ], 
     return 0;
 }
 
+int ana::circularity( int part_num, double coords[][ 3 ], double vels[][ 3 ],
+                      double ( &center )[ 3 ], double circularity[] )
+{
+    for ( int i = 0; i < part_num; ++i )
+    {
+        circularity[ i ] =
+            ( ( coords[ i ][ 0 ] - center[ 0 ] ) * vels[ i ][ 1 ]
+              - ( coords[ i ][ 1 ] - center[ 1 ] ) * vels[ i ][ 0 ] )
+            / ( sqrt( ( coords[ i ][ 0 ] - center[ 0 ] ) * ( coords[ i ][ 0 ] - center[ 0 ] )
+                      + ( coords[ i ][ 1 ] - center[ 1 ] ) * ( coords[ i ][ 1 ] - center[ 1 ] )
+                      + ( coords[ i ][ 2 ] - center[ 2 ] ) * ( coords[ i ][ 2 ] - center[ 2 ] ) )
+                * sqrt( vels[ i ][ 0 ] * vels[ i ][ 0 ] + vels[ i ][ 1 ] * vels[ i ][ 1 ]
+                        + vels[ i ][ 2 ] * vels[ i ][ 2 ] ) );
+    }
+    return 0;
+}
+
 #ifdef debug_particle
 #include "../tools/prompt.h"
 #include <math.h>
@@ -66,7 +83,10 @@ int test_angular_momentum()
         for ( int j = 0; j < 3; ++j )
         {
             if ( !fequal( angular_momentum[ i ][ j ], target[ i ][ j ] ) )
+            {
+                INFO( "Taget: %lf, Result: %lf", target[ i ][ j ], angular_momentum[ i ][ j ] );
                 CHECK_RETURN( false );
+            }
         }
     }
 
@@ -76,6 +96,30 @@ int test_angular_momentum()
         delete[] angular_momentum[ i ];
     }
     delete[] angular_momentum;
+
+    CHECK_RETURN( true );
+}
+
+int test_circularity()
+{
+    println( "Testing the circularity function ..." );
+
+    double coords[ 3 ][ 3 ] = { { 1, 0, 0 }, { 0, 1, 0 }, { 1, 0, 0 } };
+    double vels[ 3 ][ 3 ]   = { { 0, 1, 0 }, { 0, 0, 1 }, { 1, 1, 0 } };
+    double center[ 3 ]      = { 0, 0, 0 };
+    double target[ 3 ]      = { 1, 0, 1 / sqrt( 2 ) };
+    double circularity[ 3 ];
+
+    ana::circularity( 3, coords, vels, center, circularity );
+
+    for ( int i = 0; i < 3; ++i )
+    {
+        if ( !fequal( circularity[ i ], target[ i ] ) )
+        {
+            INFO( "Taget: %lf, Result: %lf", target[ i ], circularity[ i ] );
+            CHECK_RETURN( false );
+        }
+    }
 
     CHECK_RETURN( true );
 }

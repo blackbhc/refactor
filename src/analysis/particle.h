@@ -5,7 +5,9 @@ namespace galotfa {
 namespace analysis {
     int angular_momentum( int part_num, double masses[], double coords[][ 3 ], double vels[][ 3 ],
                           double ( &center )[ 3 ], double** angular_momentum );
-}
+    int circularity( int part_num, double coords[][ 3 ], double vels[][ 3 ],
+                     double ( &center )[ 3 ], double circularity[] );
+}  // namespace analysis
 }  // namespace galotfa
 
 #ifdef debug_particle
@@ -13,6 +15,7 @@ namespace analysis {
 #include <math.h>
 namespace unit_test {
 int test_angular_momentum();
+int test_circularity();
 }  // namespace unit_test
 #endif
 #endif
