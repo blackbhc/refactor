@@ -51,6 +51,44 @@ int ana::circularity( int part_num, double coords[][ 3 ], double vels[][ 3 ],
     return 0;
 }
 
+int ana::circularity_3d( int part_num, double coords[][ 3 ], double vels[][ 3 ],
+                         double ( &center )[ 3 ], double circularity_3d[] )
+{
+    double** angular_momentum = new double*[ part_num ];
+    for ( int i = 0; i < part_num; ++i )
+    {
+        angular_momentum[ i ] = new double[ 3 ];
+    }
+    double* masses = new double[ part_num ];  // unit mass
+    for ( int i = 0; i < part_num; ++i )
+    {
+        masses[ i ] = 1;
+    }
+    ana::angular_momentum( part_num, masses, coords, vels, center, angular_momentum );
+
+    for ( int i = 0; i < part_num; ++i )
+    {
+        circularity_3d[ i ] =
+            ( sqrt( angular_momentum[ i ][ 0 ] * angular_momentum[ i ][ 0 ]
+                    + angular_momentum[ i ][ 1 ] * angular_momentum[ i ][ 1 ]
+                    + angular_momentum[ i ][ 2 ] * angular_momentum[ i ][ 2 ] ) )
+            / ( sqrt( ( coords[ i ][ 0 ] - center[ 0 ] ) * ( coords[ i ][ 0 ] - center[ 0 ] )
+                      + ( coords[ i ][ 1 ] - center[ 1 ] ) * ( coords[ i ][ 1 ] - center[ 1 ] )
+                      + ( coords[ i ][ 2 ] - center[ 2 ] ) * ( coords[ i ][ 2 ] - center[ 2 ] ) )
+                * sqrt( vels[ i ][ 0 ] * vels[ i ][ 0 ] + vels[ i ][ 1 ] * vels[ i ][ 1 ]
+                        + vels[ i ][ 2 ] * vels[ i ][ 2 ] ) );
+    }
+
+    // release the memory
+    for ( int i = 0; i < part_num; ++i )
+    {
+        delete[] angular_momentum[ i ];
+    }
+    delete[] angular_momentum;
+    delete[] masses;
+    return 0;
+}
+
 #ifdef debug_particle
 #include "../tools/prompt.h"
 #include <math.h>
@@ -117,6 +155,30 @@ int test_circularity()
         if ( !fequal( circularity[ i ], target[ i ] ) )
         {
             INFO( "Taget: %lf, Result: %lf", target[ i ], circularity[ i ] );
+            CHECK_RETURN( false );
+        }
+    }
+
+    CHECK_RETURN( true );
+}
+
+int test_circularity_3d()
+{
+    println( "Testing the circularity_3d function ..." );
+
+    double coords[ 3 ][ 3 ] = { { 1, 0, 0 }, { 0, 1, 0 }, { 1, 0, 0 } };
+    double vels[ 3 ][ 3 ]   = { { 0, 1, 0 }, { 0, 0, 1 }, { 1, 1, 0 } };
+    double center[ 3 ]      = { 0, 0, 0 };
+    double target[ 3 ]      = { 1, 1, 1 / sqrt( 2 ) };
+    double circularity_3d[ 3 ];
+
+    ana::circularity_3d( 3, coords, vels, center, circularity_3d );
+
+    for ( int i = 0; i < 3; ++i )
+    {
+        if ( !fequal( circularity_3d[ i ], target[ i ] ) )
+        {
+            INFO( "Taget: %lf, Result: %lf", target[ i ], circularity_3d[ i ] );
             CHECK_RETURN( false );
         }
     }

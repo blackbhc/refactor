@@ -14,6 +14,7 @@ static std::vector< int > test_particle()
     int unknown = 0;
     COUNT( unit_test::test_angular_momentum() );
     COUNT( unit_test::test_circularity() );
+    COUNT( unit_test::test_circularity_3d() );
     SUMMARY( "particle analysis" );
 
     std::vector< int > result = { 0, 0, 0 };
