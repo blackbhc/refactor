@@ -13,7 +13,7 @@ in the codes.
 
 ---
 
-## Pre-process <a name="pre-process"></a><a href="#contents"><font size=4>(content)</font></a>
+## Pre-process <a name="pre-process"></a><a href="#content"><font size=4>(content)</font></a>
 
 ### System center
 
@@ -40,7 +40,9 @@ The center of the densest pixel is the pixel with maximum number density, where 
 center of such pixel. Note that this method is sensitive to the image matrix's pixel size, which is
 inferred from `image_bins` in the `Model` section of the ini file.
 
-## Model Analysis <a name="model"></a><a href="#contents"><font size=4>(content)</font></a>
+---
+
+## Model Analysis <a name="model"></a><a href="#content"><font size=4>(content)</font></a>
 
 ### Density Fourier Symmetry Mode
 
@@ -93,3 +95,16 @@ not well defined. Algorithms used here is referred to [Ghosh & Di Matteo 2023](h
 - $R_{\rm bar,3}$: the radial extent where the bar strength $S_{\rm bar}$ drops to $70\%$ of its maximum value,
   after the maximum value is reached. The exact value of the percentage is a free parameter specified in the
   ini file.
+
+---
+
+## Particle Analysis <a name="particle"></a><a href="#content"><font size=4>(content)</font></a>
+
+### Circularity
+
+$\epsilon=\frac{j_z}{j_c(E)}$, where $j_z$ is the $z$-component of the angular momentum, and $j_c$ is the angular
+momentum of a circular orbit with the same energy $E$. This quantity can quantify the deviation of the orbit
+from a in-plane circular orbit.
+
+$\epsilon_{\rm 3D}=\frac{j}{j_c(E)}$, similar to the above, but $j$ is the magnitude of the angular momentum. This
+quantity can quantify the deviation of the orbit from a circular orbit (possibly out-of-plane).

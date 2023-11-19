@@ -593,3 +593,9 @@ statistics, smoothing, etc. All the followings are defined in the namespace `gal
   The return value in the range $(-\pi/2, \pi/2]$.
 - `dispersion_tensor(...)`: function to calculate the dispersion tensor.
 - `bar_radius(...)`: function to calculate the bar radius, which is the $R_{\rm bar,1}$ in [Ghosh & Di Matteo 2023](https://ui.adsabs.harvard.edu/abs/2023arXiv230810948G/abstract).
+
+#### Particle analysis part: `src/analysis/particle.h` and `src/analysis/particle.cpp`
+
+- `angular_momentum(...)`: calculate the angular momentum of the particles' array.
+- `circularity(...)` and `circularity_3d(...)`: calculate the circularity of the particles' array, definition
+  is available in the development-manual/computation.md.
