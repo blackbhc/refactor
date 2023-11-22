@@ -48,14 +48,25 @@ namespace hdf5 {
     {
         if ( this->parent != nullptr )  // only when the node has a parent
         {
+            printf( "%d\n", __LINE__ );
+            printf( "Address of [this]: %p\n", ( void* )this );
+            printf( "Address of [this->parent]: %p\n", ( void* )this->parent );
+            printf( "%d\n", __LINE__ );
+            printf( "Test the parent can be accessed at %p: %lu\n", ( void* )this->parent,
+                    this->parent->self );
+            printf( "Address of [this->parent->children]: %p\n", ( void* )&this->parent->children );
+            printf( "Address of [this->parent->children]: %p\n",
+                    ( void* )this->parent->children.data() );
+            printf( "%d\n", __LINE__ );
             for ( size_t i = 0; i < this->parent->children.size(); ++i )
             {
                 if ( this->parent->children.at( i ) == this )
                 {
-                    this->parent->children.erase( this->parent->children.begin() + ( long )i );
+                    this->parent->children.erase( this->parent->children.begin() + i );
                     break;
                 }
             }
+            this->parent = nullptr;
         }
     }
 
@@ -64,7 +75,6 @@ namespace hdf5 {
         for ( auto& child : this->children )
             child->close();
         this->remove_from_parent();
-        this->children.clear();
 
         // if the attribute, property or dataspace is not created, the handle is 0
         // if created, close it
