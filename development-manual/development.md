@@ -222,7 +222,7 @@ which will combine other modules together to finish the on-the-fly analysis.
 
 - struct `analysis_results`: the analysis results of the analysis engine, just design to be a symbolic integration
   of the pointer of the analysis resutls' container in the `calculator` class.
-- struct `writers`: the integration of writers for different analysis modules, as there may be
+- struct `writer_sets`: the integration of writers for different analysis modules, as there may be
   more than one (and unknown) output files in the model and group level analysis modules.
 - class `monitor`: the virtual analysis engine's monitor, which will take over the analysis period and the
   extract of the target particles of analysis.
@@ -406,9 +406,10 @@ The `ini_parser` class will parse the ini parameter file into a hash table.
 2. Edit the `para` class in the `src/parameter/para.h` file, add the parameter into the chosen section
    and set its default value.
 3. Add a line in the update function (`para::para(...)`) to update the value of the new parameter from the ini file.
-4. Add a check statement into the check function of `para`(`check()`), to check the possible conflicts and
+4. Add a check statement into the check function of (`para::check()`), to check the possible conflicts and
    lack of the new parameter.
-5. Use the new parameter in the analysis code.
+5. Add the new parameter to the example ini file in the `examples` directory.
+6. Use the new parameter in the analysis code and modify the unit test codes of the parameter module if needed.
 
 Steps to change the parameter's name or usage are similar.
 
@@ -591,3 +592,10 @@ statistics, smoothing, etc. All the followings are defined in the namespace `gal
 - `bar_major_axis(...)`: calculate the major axis of the bar, which is defined as the argument of $A_2$.
   The return value in the range $(-\pi/2, \pi/2]$.
 - `dispersion_tensor(...)`: function to calculate the dispersion tensor.
+- `bar_radius(...)`: function to calculate the bar radius, which is the $R_{\rm bar,1}$ in [Ghosh & Di Matteo 2023](https://ui.adsabs.harvard.edu/abs/2023arXiv230810948G/abstract).
+
+#### Particle analysis part: `src/analysis/particle.h` and `src/analysis/particle.cpp`
+
+- `angular_momentum(...)`: calculate the angular momentum of the particles' array.
+- `circularity(...)` and `circularity_3d(...)`: calculate the circularity of the particles' array, definition
+  is available in the development-manual/computation.md.

@@ -242,7 +242,11 @@ to see their explanation.
 |            | <a href="#bar_major_axis">`bar_major_axis`</a>               | Boolean    | `off`         | `on` of `off`                                               |
 |            | <a href="#sbar">`sbar`</a>                                   | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#bar_threshold">`bar_threshold`</a>                 | Float      | 0.15          | $(0, 1)$                                                    |
-|            | <a href="#bar_length">`bar_length`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#bar_radius">`bar_radius`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#rmin">`rmin`</a>                                   | Float      | 0.0           | $>0$                                                        |
+|            | <a href="#rmax">`rmax`</a>                                   | Float      | Region size   | $>0$                                                        |
+|            | <a href="#rbins">`rbins`</a>                                 | Integer    | 20            | $>0$                                                        |
+|            | <a href="#percentage">`percentage`</a>                       | Float      | 70            | $(0, 100)$                                                  |
 |            | <a href="#sbuckle">`sbuckle`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#An">`An`</a>                                       | Integer(s) |               | > 0                                                         |
 |            | <a href="#inertia_tensor">`inertia_tensor`</a>               | Boolean    | `off`         | `on` or `off`                                               |
@@ -424,8 +428,21 @@ is available with the inertia tensor.
 - <a id="bar_threshold"></a>`bar_threshold`: the threshold to detect a bar, namely if $S_{\rm bar}>$ this
   value, the program will consider that a bar is detected, where $S_{\rm bar}$ is the bar strength parameter.
   - In general, a range in $[0.1, 0.2]$ is recommended, but it depends on the simulation.
-- <a id="bar_length"></a>`bar_length`: whether calculate the bar length in the target particles,
-  if detected a bar, this is calculated with many methods. See in the development-manual/computation.md.
+- <a id="bar_radius"></a>`bar_radius`: whether calculate the radius of the bar in the target particles,
+  if detected a bar, this is calculated with many methods. Which are the first three methods in
+  [Ghosh & Di Matteo 2023](https://ui.adsabs.harvard.edu/abs/2023arXiv230810948G/abstract).
+  See more details in the development-manual/computation.md, all the three different methods will be calculated.
+- <a id="rmin"></a>`rmin`: the minimum radius during calculating the bar radius, the $R_{\rm bar,2}$ is sensitive
+  to this parameter, due to the inner most region is generally spherical, so the argument angle of $m=2$ Fourier
+  component is noisy in such region. If not given, the minimum radius will be 0.
+- <a id="rmax"></a>`rmax`: the maximum radius during calculating the bar radius, if not given, the maximum
+  radius will be the maximum radius of the target particles, namely the analysis region size.
+- <a id="rbins"></a>`rbins`: the number of bins during calculating the bar radius.
+- <a id="deg"></a>`deg`: the degree threshold to determine the location of the bar ends, only meaningful
+  when `bar_radius` = `on`. This is the free parameter of $R_{\rm bar,1}$ in [Ghosh & Di Matteo 2023](https://ui.adsabs.harvard.edu/abs/2023arXiv230810948G/abstract). In general, $3^\circ\sim5^\circ$ is recommended, but it depends on the simulation.
+- <a id="percentage"></a>`percentage`: the percentage of bar ends to be considered as the bar ends, only
+  meaningful when `bar_radius` = `on`. This is the free parameter of $R_{\rm bar,3}$ in [Ghosh & Di Matteo 2023](https://ui.adsabs.harvard.edu/abs/2023arXiv230810948G/abstract).
+  In general, $70\%\sim80\%$ is recommended, but it depends on the simulation.
 - <a id="sbuckle"></a>`sbuckle`: whether calculate the buckling strength parameter, where $S_{\rm{buckle}}$
   is defined as $\sum m_i z_i \exp(-2i \phi_i) / \sum m_i$.
 - <a id="An"></a>`An`: whether calculate the $A_n$ parameters, where $A_n$ is the $n$-th Fourier component of the
