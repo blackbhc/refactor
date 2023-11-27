@@ -222,7 +222,7 @@ which will combine other modules together to finish the on-the-fly analysis.
 
 - struct `analysis_results`: the analysis results of the analysis engine, just design to be a symbolic integration
   of the pointer of the analysis resutls' container in the `calculator` class.
-- struct `writers`: the integration of writers for different analysis modules, as there may be
+- struct `writer_sets`: the integration of writers for different analysis modules, as there may be
   more than one (and unknown) output files in the model and group level analysis modules.
 - class `monitor`: the virtual analysis engine's monitor, which will take over the analysis period and the
   extract of the target particles of analysis.
