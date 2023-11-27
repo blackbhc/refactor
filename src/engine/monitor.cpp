@@ -67,7 +67,6 @@ void monitor::init()
 
 monitor::~monitor()
 {
-    // TODO: call the post analysis module of the calculator
     if ( this->calc != nullptr )
     {
         delete this->calc;
@@ -137,24 +136,28 @@ inline void monitor::create_files()
     // NOTE: this function will access the hdf5 files, so it should be called by the root process
     // Besides, it should be called only when galotfa is enabled (para->glb_switch_on == true)
 
-    if ( this->para->md_multiple )
+    if ( this->para->md_switch_on )
     {
-        for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
+        if ( this->para->md_multiple )
         {
-            std::string prefix = "set" + std::to_string( i + 1 ) + "_";
+            for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
+            {
+                std::string prefix = "set" + std::to_string( i + 1 ) + "_";
 
-            std::string file = this->para->glb_output_dir + "/" + prefix + this->para->md_filename;
+                std::string file =
+                    this->para->glb_output_dir + "/" + prefix + this->para->md_filename;
+
+                galotfa::writer* writer = new galotfa::writer( file.c_str() );
+                this->writers.model_writers.push_back( writer );
+            }
+        }
+        else
+        {
+            std::string file = this->para->glb_output_dir + "/" + this->para->md_filename;
 
             galotfa::writer* writer = new galotfa::writer( file.c_str() );
             this->writers.model_writers.push_back( writer );
         }
-    }
-    else
-    {
-        std::string file = this->para->glb_output_dir + "/" + this->para->md_filename;
-
-        galotfa::writer* writer = new galotfa::writer( file.c_str() );
-        this->writers.model_writers.push_back( writer );
     }
 
     if ( this->para->ptc_switch_on )
@@ -190,7 +193,7 @@ int monitor::save()
                 if ( this->para->pre_recenter )
                     single_model->push< double >( res->system_center, 3, "/Center" );
                 if ( this->para->md_bar_major_axis )
-                    single_model->push< double >( &res->bar_marjor_axis[ i ], 1, "/Bar/MajorAxis" );
+                    single_model->push< double >( &res->bar_major_axis[ i ], 1, "/Bar/MajorAxis" );
                 if ( this->para->md_sbar )
                     single_model->push< double >( &res->s_bar[ i ], 1, "/Bar/SBar" );
                 if ( this->para->md_sbuckle )
@@ -205,8 +208,12 @@ int monitor::save()
                         single_model->push< double >( &imag, 1,
                                                       "/Bar/A" + std::to_string( m ) + "(imag)" );
                     }
-                if ( this->para->md_bar_length )
-                    single_model->push< double >( &res->bar_length[ i ], 1, "/Bar/Length" );
+                if ( this->para->md_bar_radius )
+                {
+                    single_model->push< double >( &res->bar_radius[ i ][ 0 ], 1, "/Bar/Radius1" );
+                    single_model->push< double >( &res->bar_radius[ i ][ 1 ], 1, "/Bar/Radius2" );
+                    single_model->push< double >( &res->bar_radius[ i ][ 2 ], 1, "/Bar/Radius3" );
+                }
 
                 if ( this->para->md_image )
                 {
@@ -326,8 +333,12 @@ inline void monitor::create_model_file_datasets()
             single_model->create_dataset( "/Center", single_vector_info );
         if ( this->para->md_bar_major_axis )
             single_model->create_dataset( "/Bar/MajorAxis", single_scaler_info );
-        if ( this->para->md_bar_length )
-            single_model->create_dataset( "/Bar/Length", single_scaler_info );
+        if ( this->para->md_bar_radius )
+        {
+            single_model->create_dataset( "/Bar/Radius1", single_scaler_info );
+            single_model->create_dataset( "/Bar/Radius2", single_scaler_info );
+            single_model->create_dataset( "/Bar/Radius3", single_scaler_info );
+        }
         if ( this->para->md_sbar )
             single_model->create_dataset( "/Bar/SBar", single_scaler_info );
         if ( this->para->md_sbuckle )
@@ -541,8 +552,8 @@ int monitor::run_with call_without_tracer
             this->create_particle_file_datasets( particle_ana_nums );  // create the datasets
     }
 
-    inject_data no_tracer;
-    int         return_code = this->save();
+    inject_data no_tracer;  // a function object to inject the data to the virtual calculator
+    int         return_code = this->save();  // save the analysis results to the output files
     if ( return_code != 0 )
     {
         WARN( "Failed to save analysis results to the output files." );
@@ -579,33 +590,31 @@ inline bool monitor::need_ana() const
 
 void monitor::release_once() const
 {
-    if ( this->para->md_switch_on )
-        if ( need_ana_model() )
+    if ( need_ana_model() )
+    {
+        for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
         {
-            for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
+            if ( this->id_for_model[ i ] != nullptr )
             {
-                if ( this->id_for_model[ i ] != nullptr )
-                {
-                    delete[] this->id_for_model[ i ];
-                    this->id_for_model[ i ] = nullptr;
-                }
-                this->part_num_model[ i ] = 0;
+                delete[] this->id_for_model[ i ];
+                this->id_for_model[ i ] = nullptr;
             }
+            this->part_num_model[ i ] = 0;
         }
+    }
 
-    if ( this->para->ptc_switch_on )
-        if ( need_ana_particle() )
+    if ( need_ana_particle() )
+    {
+        for ( size_t i = 0; i < this->para->ptc_particle_types.size(); ++i )
         {
-            for ( size_t i = 0; i < this->para->ptc_particle_types.size(); ++i )
+            if ( this->id_for_particle[ i ] != nullptr )
             {
-                if ( this->id_for_particle[ i ] != nullptr )
-                {
-                    delete[] this->id_for_particle[ i ];
-                    this->id_for_particle[ i ] = nullptr;
-                }
-                this->part_num_particle[ i ] = 0;
+                delete[] this->id_for_particle[ i ];
+                this->id_for_particle[ i ] = nullptr;
             }
+            this->part_num_particle[ i ] = 0;
         }
+    }
 
     if ( this->id_for_orbit != nullptr )
         if ( need_log_orbit() )

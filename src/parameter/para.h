@@ -31,18 +31,19 @@ struct para
     vector< int > pre_recenter_anchors;
 
     // other model section parameters
-    bool md_image = false, md_bar_major_axis = false, md_bar_length = false, md_sbar = false,
+    bool md_image = false, md_bar_major_axis = false, md_bar_radius = false, md_sbar = false,
          md_sbuckle = false, md_inertia_tensor = false, md_align_bar = true,
          md_dispersion_tensor           = false;
     bool                    md_multiple = false;
     vector< int >           md_particle_types;
     vector< std::string >   md_classification;
     vector< vector< int > > md_target_sets;
-    int                     md_image_bins  = 100;
-    double                  md_region_size = 20, md_axis_ratio = 1, md_bar_threshold = 0.15;
-    std::string             md_region_shape = "cylinder";
-    vector< int >           md_an;  // An, lowercase for ini key
-    vector< std::string >   md_colors;
+    int                     md_image_bins = 100, md_rbins = 20;
+    double md_region_size = 20, md_axis_ratio = 1, md_bar_threshold = 0.15, md_rmin = 0.0,
+           md_rmax = 0.0, md_deg = 3, md_percentage = 70;
+    std::string           md_region_shape = "cylinder";
+    vector< int >         md_an;  // An, lowercase for ini key
+    vector< std::string > md_colors;
 
     // other particle section parameters
     bool ptc_circularity = false, ptc_circularity_3d = false, ptc_rg = false, ptc_freq = false;

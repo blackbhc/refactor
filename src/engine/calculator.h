@@ -33,14 +33,16 @@ struct analysis_result
     // pre-process part
     double* system_center = nullptr;
     // model part, all support multiple analysis sets
-    vector< double >            bar_marjor_axis;  // by argument of A2
+    vector< double >            bar_major_axis;  // by argument of A2
     vector< double >            s_bar;
     vector< double >            s_buckle;
     vector< complex< double > > Ans[ 7 ];  // the An of each order, from 0 to 6
     // First dimension: the order of the An, from 0 to 6
     // Second dimension: the pointer to the data
-    vector< double >  bar_length;  // TODO: to be implemented with multiple method
-    vector< double* > images[ 8 ][ 3 ];
+    // N*3 bar radius:
+    // N for multiple analysis sets, 3 for Rbar1, Rbar2, Rbar3 in Ghosh & Di Matteo 2023
+    vector< vector< double > > bar_radius;
+    vector< double* >          images[ 8 ][ 3 ];
     // First dimension are over possible images colors: number_density, surface_density,
     // mean_velocity axis1, mean_velocity axis2, mean_velocity axis3, velocity_dispersion axis1,
     // velocity_dispersion axis2, velocity_dispersion axis3 dispersion

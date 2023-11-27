@@ -40,6 +40,7 @@ namespace hdf5 {
     {
         this->close();
     }
+
     inline void node::add_child( node* child )
     {
         this->children.push_back( child );
@@ -52,19 +53,23 @@ namespace hdf5 {
             {
                 if ( this->parent->children.at( i ) == this )
                 {
-                    this->parent->children.erase( this->parent->children.begin() + ( long )i );
+                    this->parent->children.at( i ) = nullptr;
                     break;
                 }
             }
+            this->parent = nullptr;
         }
     }
 
     void node::close( void )
     {
-        for ( auto& child : this->children )
-            child->close();
-        this->remove_from_parent();
+        for ( size_t i = 0; i < this->children.size(); ++i )
+        {
+            if ( this->children[ i ] != nullptr )
+                this->children[ i ]->close();
+        }
         this->children.clear();
+        this->remove_from_parent();
 
         // if the attribute, property or dataspace is not created, the handle is 0
         // if created, close it
