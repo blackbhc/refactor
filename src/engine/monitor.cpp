@@ -67,7 +67,6 @@ void monitor::init()
 
 monitor::~monitor()
 {
-    // TODO: call the post analysis module of the calculator
     if ( this->calc != nullptr )
     {
         delete this->calc;
@@ -553,8 +552,8 @@ int monitor::run_with call_without_tracer
             this->create_particle_file_datasets( particle_ana_nums );  // create the datasets
     }
 
-    inject_data no_tracer;
-    int         return_code = this->save();
+    inject_data no_tracer;  // a function object to inject the data to the virtual calculator
+    int         return_code = this->save();  // save the analysis results to the output files
     if ( return_code != 0 )
     {
         WARN( "Failed to save analysis results to the output files." );
@@ -591,33 +590,31 @@ inline bool monitor::need_ana() const
 
 void monitor::release_once() const
 {
-    if ( this->para->md_switch_on )
-        if ( need_ana_model() )
+    if ( need_ana_model() )
+    {
+        for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
         {
-            for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
+            if ( this->id_for_model[ i ] != nullptr )
             {
-                if ( this->id_for_model[ i ] != nullptr )
-                {
-                    delete[] this->id_for_model[ i ];
-                    this->id_for_model[ i ] = nullptr;
-                }
-                this->part_num_model[ i ] = 0;
+                delete[] this->id_for_model[ i ];
+                this->id_for_model[ i ] = nullptr;
             }
+            this->part_num_model[ i ] = 0;
         }
+    }
 
-    if ( this->para->ptc_switch_on )
-        if ( need_ana_particle() )
+    if ( need_ana_particle() )
+    {
+        for ( size_t i = 0; i < this->para->ptc_particle_types.size(); ++i )
         {
-            for ( size_t i = 0; i < this->para->ptc_particle_types.size(); ++i )
+            if ( this->id_for_particle[ i ] != nullptr )
             {
-                if ( this->id_for_particle[ i ] != nullptr )
-                {
-                    delete[] this->id_for_particle[ i ];
-                    this->id_for_particle[ i ] = nullptr;
-                }
-                this->part_num_particle[ i ] = 0;
+                delete[] this->id_for_particle[ i ];
+                this->id_for_particle[ i ] = nullptr;
             }
+            this->part_num_particle[ i ] = 0;
         }
+    }
 
     if ( this->id_for_orbit != nullptr )
         if ( need_log_orbit() )

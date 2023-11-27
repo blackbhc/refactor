@@ -37,64 +37,69 @@ calculator::calculator( galotfa::para* parameter )
 
 calculator::~calculator()
 {
-    if ( this->para->md_switch_on && this->para->md_image )
+    if ( this->para->md_switch_on )
     {
-        for ( auto& color : this->colors )
+        if ( this->para->md_image )
         {
-            if ( color == "number_density" )
+            for ( auto& color : this->colors )
             {
-                for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
+                if ( color == "number_density" )
                 {
-                    delete[] this->ptrs_of_results->images[ 0 ][ 0 ][ i ];
-                    delete[] this->ptrs_of_results->images[ 0 ][ 1 ][ i ];
-                    delete[] this->ptrs_of_results->images[ 0 ][ 2 ][ i ];
+                    for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
+                    {
+                        delete[] this->ptrs_of_results->images[ 0 ][ 0 ][ i ];
+                        delete[] this->ptrs_of_results->images[ 0 ][ 1 ][ i ];
+                        delete[] this->ptrs_of_results->images[ 0 ][ 2 ][ i ];
+                    }
+                }
+                else if ( color == "surface_density" )
+                {
+                    for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
+                    {
+                        delete[] this->ptrs_of_results->images[ 1 ][ 0 ][ i ];
+                        delete[] this->ptrs_of_results->images[ 1 ][ 1 ][ i ];
+                        delete[] this->ptrs_of_results->images[ 1 ][ 2 ][ i ];
+                    }
+                }
+                else if ( color == "mean_velocity" )
+                {
+                    for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
+                        for ( int k = 2; k < 5; ++k )
+                        {
+                            delete[] this->ptrs_of_results->images[ k ][ 0 ][ i ];
+                            delete[] this->ptrs_of_results->images[ k ][ 1 ][ i ];
+                            delete[] this->ptrs_of_results->images[ k ][ 2 ][ i ];
+                        }
+                }
+                else  // ( color == "velocity_dispersion" )
+                {
+                    for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
+                        for ( int k = 5; k < 8; ++k )
+                        {
+                            delete[] this->ptrs_of_results->images[ k ][ 0 ][ i ];
+                            delete[] this->ptrs_of_results->images[ k ][ 1 ][ i ];
+                            delete[] this->ptrs_of_results->images[ k ][ 2 ][ i ];
+                        }
                 }
             }
-            else if ( color == "surface_density" )
-            {
-                for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
-                {
-                    delete[] this->ptrs_of_results->images[ 1 ][ 0 ][ i ];
-                    delete[] this->ptrs_of_results->images[ 1 ][ 1 ][ i ];
-                    delete[] this->ptrs_of_results->images[ 1 ][ 2 ][ i ];
-                }
-            }
-            else if ( color == "mean_velocity" )
-            {
-                for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
-                    for ( int k = 2; k < 5; ++k )
-                    {
-                        delete[] this->ptrs_of_results->images[ k ][ 0 ][ i ];
-                        delete[] this->ptrs_of_results->images[ k ][ 1 ][ i ];
-                        delete[] this->ptrs_of_results->images[ k ][ 2 ][ i ];
-                    }
-            }
-            else  // ( color == "velocity_dispersion" )
-            {
-                for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
-                    for ( int k = 5; k < 8; ++k )
-                    {
-                        delete[] this->ptrs_of_results->images[ k ][ 0 ][ i ];
-                        delete[] this->ptrs_of_results->images[ k ][ 1 ][ i ];
-                        delete[] this->ptrs_of_results->images[ k ][ 2 ][ i ];
-                    }
-            }
         }
-    }
-    if ( this->para->md_dispersion_tensor )
-    {
-        for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
+        if ( this->para->md_dispersion_tensor )
         {
-            delete[] this->ptrs_of_results->dispersion_tensor[ i ];
+            for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
+            {
+                delete[] this->ptrs_of_results->dispersion_tensor[ i ];
+            }
+            this->ptrs_of_results->dispersion_tensor.clear();
         }
-    }
-    if ( this->para->md_inertia_tensor )
-    {
-        for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
+
+        if ( this->para->md_inertia_tensor )
         {
-            delete[] this->ptrs_of_results->inertia_tensor[ i ];
+            for ( size_t i = 0; i < this->para->md_target_sets.size(); ++i )
+            {
+                delete[] this->ptrs_of_results->inertia_tensor[ i ];
+            }
+            this->ptrs_of_results->inertia_tensor.clear();
         }
-        this->ptrs_of_results->inertia_tensor.clear();
     }
 
     delete this->ptrs_of_results;
