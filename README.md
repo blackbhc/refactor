@@ -129,7 +129,7 @@ First, you need to check the following dependencies
 
    Note:
 
-   - (1) header-only is the default option, which is recommended for the first time installation.
+   - (1) header-only is recommended for the first time installation.
      Such option will define a `header-only` macro in the `galotfa` header files, which will make the
      library can be used without linking to the library files.
    - (2) if you encounter any error during the installation, please check the error message and run
