@@ -19,5 +19,5 @@ ifneq ($(findstring output, $(TEST_TARGET)), )
 	@exit 1
 endif
 	@echo "Building mpi unit test ..."
-	@$(MPICXX) -DMPI_TEST $(CXXFLAGS) $(PROJECT_ROOT)/src/unit_test/test.cpp -lhdf5 -lgsl \
+	@$(MPICXX) -cxx=$(CXX) -DMPI_TEST $(CXXFLAGS) $(PROJECT_ROOT)/src/unit_test/test.cpp -lhdf5 -lgsl \
 		-lgslcblas -o $(PROJECT_ROOT)/test_dir/mpi_test

@@ -21,7 +21,7 @@ else ifneq ($(shell which g++), )
 CXX = g++
 endif
 
-MPICXX = ${shell which mpicxx} -cxx=$(CXX)
+MPICXX = ${shell which mpicxx}
 
 include ./make-config/flags  		# settings for build flags
 include ./make-config/target		# settings for target
