@@ -45,7 +45,7 @@ Model --> LogMd
 
 Every box is a functional module with independent implementation, which is class or a part of a class.
 The details of them are illustrated in <a href="#code">Code structure</a>. The connection lines between
-the boxes stands for the APIs between such modules. Expect the above modules, `galotfa` also uses a standalone
+the boxes stands for the APIs between such modules. Except the above modules, `galotfa` also uses a standalone
 `INI` parameter file to control the behaviours of all modules and APIs in the preceding workflow.
 
 ---
@@ -107,6 +107,7 @@ First, you need to check the following dependencies
 
   - any `MPI` library.
   - `gsl` library.
+  - `hdf5` library.
 
 ### Download and install step by step
 
@@ -129,7 +130,7 @@ First, you need to check the following dependencies
 
    Note:
 
-   - (1) header-only is the default option, which is recommended for the first time installation.
+   - (1) header-only is recommended for the first time installation.
      Such option will define a `header-only` macro in the `galotfa` header files, which will make the
      library can be used without linking to the library files.
    - (2) if you encounter any error during the installation, please check the error message and run
@@ -138,7 +139,7 @@ First, you need to check the following dependencies
      compile the `galotfa` header files. Therefore, to use `galotfa` in a simulation code written in `C`,
      the `type` option should be `static` or `shared`.
 
-4. run `make -p <path/to/install>`:
+4. run `mkdir -p <path/to/install>`:
 
    Create the directory for the installation of `galotfa`, if it already exists, skip this step.
 
@@ -147,11 +148,13 @@ First, you need to check the following dependencies
    Install the `galotfa` to the directory specified by `prefix`, which should be the same as
    the one you specified in the last step.
 
-6. After configure the `CPATH`, `LIBRARY_PATH` and `LD_LIBRARY_PATH` environment variables,
-   you can use `galotfa` in your project.:
+6. Configure the environment variables of the dynamic library loader: `CPATH`, `LIBRARY_PATH` and `LD_LIBRARY_PATH`
 
    - (temporary) run `export CPATH=$CPATH:<prefix>/include`, `export LIBRARY_PATH=$LIBRARY_PATH:<prefix>/lib`,
-     `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<prefix>/lib` before you compile your project every time.
+     `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<prefix>/lib` before you compile your simulation program every time.
+     This only works for the current terminal session, if you open a new terminal, you need to run the above
+     commands again. Or you can add the above three `export` commands into your shell configuration file, see
+     below.
 
    - (permanent) add the above three `export` commands into your shell configuration file:
 
@@ -160,7 +163,10 @@ First, you need to check the following dependencies
      like `/bin/bash` to your terminal. Then run `source ~/.bashrc`/`source ~/.zshrc` to make the changes take effect.
      Then you can use `galotfa` without configure every time.
 
-7. If you want to uninstall `galotfa`, run `make uninstall` in the `galotfa` repo directory.
+7. After this step, you can use compile your simulation code with `galotfa` by adding `-lgalotfa` to the compiler
+   flags, e.g. `g++ ... -lgalotfa ...` or `mpicxx ... -lgalotfa ...`.
+
+8. If you want to uninstall `galotfa`, run `make uninstall` in the `galotfa` repo directory.
 
    If the install path contain `galotfa`, then such directory will be removed completely. Otherwise, only
    the `galotfa` library files under such directory will be removed.
@@ -170,6 +176,18 @@ First, you need to check the following dependencies
 ## Usage <a href="#contents"><font size=4>(contents)</font></a> <a id="usage"></a>
 
 ### Get start with examples
+
+To get start with the built-in `Gadget4` fork, you can go through the following steps:
+
+1. Install `galotfa` as in previous section.
+2. Go into the `gadget4` directory, use as a normal `Gadget4` code, with additional configuration and
+   runtime parameters, which are described in the <a href="#fork_gadget4">Fork of `Gadget4`</a> section.
+3. Copy the `galotfa.ini` from the `examples` directory into the working directory of your simulation,
+   namely the directory where you run the simulation. For example, if you run `Gadget4` by command
+   like `mpirun -np 32 ./Gadeget4 param.txt`, then the working directory is the directory has the executable
+   `Gadget4` and the parameter file `param.txt`.
+4. Modify the parameters in the `galotfa.ini` file according to your requirement.
+5. Run the simulation, and the output files will be generated in the `output_dir` specified in the `galotfa.ini` file.
 
 ### Complete illustrations
 
@@ -232,7 +250,11 @@ to see their explanation.
 |            | <a href="#bar_major_axis">`bar_major_axis`</a>               | Boolean    | `off`         | `on` of `off`                                               |
 |            | <a href="#sbar">`sbar`</a>                                   | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#bar_threshold">`bar_threshold`</a>                 | Float      | 0.15          | $(0, 1)$                                                    |
-|            | <a href="#bar_length">`bar_length`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#bar_radius">`bar_radius`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
+|            | <a href="#rmin">`rmin`</a>                                   | Float      | 0.0           | $>0$                                                        |
+|            | <a href="#rmax">`rmax`</a>                                   | Float      | Region size   | $>0$                                                        |
+|            | <a href="#rbins">`rbins`</a>                                 | Integer    | 20            | $>0$                                                        |
+|            | <a href="#percentage">`percentage`</a>                       | Float      | 70            | $(0, 100)$                                                  |
 |            | <a href="#sbuckle">`sbuckle`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
 |            | <a href="#An">`An`</a>                                       | Integer(s) |               | > 0                                                         |
 |            | <a href="#inertia_tensor">`inertia_tensor`</a>               | Boolean    | `off`         | `on` or `off`                                               |
@@ -414,8 +436,21 @@ is available with the inertia tensor.
 - <a id="bar_threshold"></a>`bar_threshold`: the threshold to detect a bar, namely if $S_{\rm bar}>$ this
   value, the program will consider that a bar is detected, where $S_{\rm bar}$ is the bar strength parameter.
   - In general, a range in $[0.1, 0.2]$ is recommended, but it depends on the simulation.
-- <a id="bar_length"></a>`bar_length`: whether calculate the bar length in the target particles,
-  if detected a bar, this is calculated with many methods. See in the development-manual/computation.md.
+- <a id="bar_radius"></a>`bar_radius`: whether calculate the radius of the bar in the target particles,
+  if detected a bar, this is calculated with many methods. Which are the first three methods in
+  [Ghosh & Di Matteo 2023](https://ui.adsabs.harvard.edu/abs/2023arXiv230810948G/abstract).
+  See more details in the development-manual/computation.md, all the three different methods will be calculated.
+- <a id="rmin"></a>`rmin`: the minimum radius during calculating the bar radius, the $R_{\rm bar,2}$ is sensitive
+  to this parameter, due to the inner most region is generally spherical, so the argument angle of $m=2$ Fourier
+  component is noisy in such region. If not given, the minimum radius will be 0.
+- <a id="rmax"></a>`rmax`: the maximum radius during calculating the bar radius, if not given, the maximum
+  radius will be the maximum radius of the target particles, namely the analysis region size.
+- <a id="rbins"></a>`rbins`: the number of bins during calculating the bar radius.
+- <a id="deg"></a>`deg`: the degree threshold to determine the location of the bar ends, only meaningful
+  when `bar_radius` = `on`. This is the free parameter of $R_{\rm bar,1}$ in [Ghosh & Di Matteo 2023](https://ui.adsabs.harvard.edu/abs/2023arXiv230810948G/abstract). In general, $3^\circ\sim5^\circ$ is recommended, but it depends on the simulation.
+- <a id="percentage"></a>`percentage`: the percentage of bar ends to be considered as the bar ends, only
+  meaningful when `bar_radius` = `on`. This is the free parameter of $R_{\rm bar,3}$ in [Ghosh & Di Matteo 2023](https://ui.adsabs.harvard.edu/abs/2023arXiv230810948G/abstract).
+  In general, $70\%\sim80\%$ is recommended, but it depends on the simulation.
 - <a id="sbuckle"></a>`sbuckle`: whether calculate the buckling strength parameter, where $S_{\rm{buckle}}$
   is defined as $\sum m_i z_i \exp(-2i \phi_i) / \sum m_i$.
 - <a id="An"></a>`An`: whether calculate the $A_n$ parameters, where $A_n$ is the $n$-th Fourier component of the
