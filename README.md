@@ -45,7 +45,7 @@ Model --> LogMd
 
 Every box is a functional module with independent implementation, which is class or a part of a class.
 The details of them are illustrated in <a href="#code">Code structure</a>. The connection lines between
-the boxes stands for the APIs between such modules. Expect the above modules, `galotfa` also uses a standalone
+the boxes stands for the APIs between such modules. Except the above modules, `galotfa` also uses a standalone
 `INI` parameter file to control the behaviours of all modules and APIs in the preceding workflow.
 
 ---
@@ -107,6 +107,7 @@ First, you need to check the following dependencies
 
   - any `MPI` library.
   - `gsl` library.
+  - `hdf5` library.
 
 ### Download and install step by step
 
@@ -138,7 +139,7 @@ First, you need to check the following dependencies
      compile the `galotfa` header files. Therefore, to use `galotfa` in a simulation code written in `C`,
      the `type` option should be `static` or `shared`.
 
-4. run `make -p <path/to/install>`:
+4. run `mkdir -p <path/to/install>`:
 
    Create the directory for the installation of `galotfa`, if it already exists, skip this step.
 
@@ -147,11 +148,13 @@ First, you need to check the following dependencies
    Install the `galotfa` to the directory specified by `prefix`, which should be the same as
    the one you specified in the last step.
 
-6. After configure the `CPATH`, `LIBRARY_PATH` and `LD_LIBRARY_PATH` environment variables,
-   you can use `galotfa` in your project.:
+6. Configure the environment variables of the dynamic library loader: `CPATH`, `LIBRARY_PATH` and `LD_LIBRARY_PATH`
 
    - (temporary) run `export CPATH=$CPATH:<prefix>/include`, `export LIBRARY_PATH=$LIBRARY_PATH:<prefix>/lib`,
-     `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<prefix>/lib` before you compile your project every time.
+     `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<prefix>/lib` before you compile your simulation program every time.
+     This only works for the current terminal session, if you open a new terminal, you need to run the above
+     commands again. Or you can add the above three `export` commands into your shell configuration file, see
+     below.
 
    - (permanent) add the above three `export` commands into your shell configuration file:
 
@@ -160,7 +163,10 @@ First, you need to check the following dependencies
      like `/bin/bash` to your terminal. Then run `source ~/.bashrc`/`source ~/.zshrc` to make the changes take effect.
      Then you can use `galotfa` without configure every time.
 
-7. If you want to uninstall `galotfa`, run `make uninstall` in the `galotfa` repo directory.
+7. After this step, you can use compile your simulation code with `galotfa` by adding `-lgalotfa` to the compiler
+   flags, e.g. `g++ ... -lgalotfa ...` or `mpicxx ... -lgalotfa ...`.
+
+8. If you want to uninstall `galotfa`, run `make uninstall` in the `galotfa` repo directory.
 
    If the install path contain `galotfa`, then such directory will be removed completely. Otherwise, only
    the `galotfa` library files under such directory will be removed.
@@ -171,15 +177,17 @@ First, you need to check the following dependencies
 
 ### Get start with examples
 
-To start with the built-in `Gadget4` fork, you can run the following steps:
+To get start with the built-in `Gadget4` fork, you can go through the following steps:
 
 1. Install `galotfa` as in previous section.
 2. Go into the `gadget4` directory, use as a normal `Gadget4` code, with additional configuration and
    runtime parameters, which are described in the <a href="#fork_gadget4">Fork of `Gadget4`</a> section.
 3. Copy the `galotfa.ini` from the `examples` directory into the working directory of your simulation,
-   modify the parameters in the `galotfa.ini` file according to your requirement.
-4. Run the simulation, and the output files will be generated in the `output_dir` specified in the
-   `galotfa.ini` file.
+   namely the directory where you run the simulation. For example, if you run `Gadget4` by command
+   like `mpirun -np 32 ./Gadeget4 param.txt`, then the working directory is the directory has the executable
+   `Gadget4` and the parameter file `param.txt`.
+4. Modify the parameters in the `galotfa.ini` file according to your requirement.
+5. Run the simulation, and the output files will be generated in the `output_dir` specified in the `galotfa.ini` file.
 
 ### Complete illustrations
 
