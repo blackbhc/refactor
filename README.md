@@ -187,8 +187,7 @@ To get start with the built-in `Gadget4` fork, you can go through the following 
    like `mpirun -np 32 ./Gadeget4 param.txt`, then the working directory is the directory has the executable
    `Gadget4` and the parameter file `param.txt`.
 4. Modify the parameters in the `galotfa.ini` file according to your requirement.
-5. Run the simulation, and the output files will be generated in the `output_dir` specified in the
-   `galotfa.ini` file.
+5. Run the simulation, and the output files will be generated in the `output_dir` specified in the `galotfa.ini` file.
 
 ### Complete illustrations
 
