@@ -410,7 +410,7 @@ herr_t my_H5Aread(hid_t attr_id, hid_t mem_type_id, void *buf, const char *attr_
       H5Eget_auto(H5E_DEFAULT, &errfunc, &client_data);
       errfunc(H5P_DEFAULT, client_data);
       H5Eset_auto(H5E_DEFAULT, NULL, NULL);
-      Terminate("Error detected in HDF5: mismatch in size for attribute %s, expected size = %ld, actual attribute size = %ld\n",
+      Terminate("Error detected in HDF5: mismatch in size for attribute %s, expected size = %lld, actual attribute size = %lld\n",
                 attr_name, size, attr_size);
     }
 

@@ -40,7 +40,7 @@
 
 // galotfa
 #ifdef GALOTFA_ON
-#include <galotfaApi.hpp>
+#include <galotfa.h>
 #endif
 
 /*!
@@ -91,9 +91,6 @@ void sim::run(void)
   double comNumerator[3] = {0.0, 0.0, 0.0};                                      // local sum of positions
   double comDenominator  = 0.0;                                                  // local sum of Mass
   double oldValue[3]     = {centerOfMass[0], centerOfMass[1], centerOfMass[2]};  // old center of mass
-#endif
-#ifdef GALOTFA_ON
-  galotfa::API otf("galotfa.ini");
 #endif
 
 #if defined(NGENIC_TEST) && defined(PERIODIC) && defined(PMGRID)
@@ -377,7 +374,7 @@ void sim::run(void)
       int ids[Sp.NumPart];
       double masses[Sp.NumPart];
       double velocities[Sp.NumPart][3];
-      unsigned int types[Sp.NumPart];
+      int types[Sp.NumPart];
       for(int i = 0; i < Sp.NumPart; i++)
         {
           ids[i]    = Sp.P[i].ID.get();           // collect particle ids
@@ -392,8 +389,8 @@ void sim::run(void)
           types[i]         = (unsigned int)Sp.P[i].getType();
         }
 
-      // Data analysis API of galotfa
-      otf.Analysis(positions, velocities, masses, ids, types, Sp.NumPart, All.Time);
+      // API of galotfa
+      galotfa_without_pot_tracer(ids, types, masses, positions, velocities,  All.Time, Sp.NumPart);
 #endif
 
       All.NumCurrentTiStep++;
@@ -524,7 +521,7 @@ void sim::run(void)
   int ids[Sp.NumPart];
   double masses[Sp.NumPart];
   double velocities[Sp.NumPart][3];
-  unsigned int types[Sp.NumPart];
+  int types[Sp.NumPart];
   for(int i = 0; i < Sp.NumPart; i++)
     {
       ids[i]    = Sp.P[i].ID.get();           // collect particle ids
@@ -539,8 +536,8 @@ void sim::run(void)
       types[i]         = (unsigned int)Sp.P[i].getType();
     }
 
-  // Data analysis API of galotfa
-  otf.Analysis(positions, velocities, masses, ids, types, Sp.NumPart, All.Time);
+      // API of galotfa
+      galotfa_without_pot_tracer(ids, types, masses, positions, velocities,  All.Time, Sp.NumPart);
 #endif
   restart Restart{Communicator};
   Restart.write(this); /* write a restart file at final time - can be used to continue simulation beyond final time */

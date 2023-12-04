@@ -12,6 +12,8 @@
 #ifndef SIMPART_H
 #define SIMPART_H
 
+#include "gadgetconfig.h"
+
 #include <math.h>
 
 #include "../data/allvars.h"
@@ -94,7 +96,7 @@ class simparticles : public intposconvert, public setcomm
   struct bit_flags
   {
     unsigned char Nonlocal : 2, MinIDChanged : 2, Marked : 2;
-  } *Flags;
+  } * Flags;
 
   double LinkL;
 
@@ -136,7 +138,7 @@ class simparticles : public intposconvert, public setcomm
   struct nearest_r2_data
   {
     double dist[2];
-  } *R2Loc;
+  } * R2Loc;
 
 #endif
 #endif
