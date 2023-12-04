@@ -99,7 +99,7 @@ DOUBLEPRECISION=1 # if activated and set to 1, use double precision internally, 
 
 #---------------------------------------- Output/Input options
 
-INITIAL_CONDITIONS_CONTAIN_ENTROPY
+#INITIAL_CONDITIONS_CONTAIN_ENTROPY
 #OUTPUT_VELOCITY_GRADIENT                     # output velocity gradients
 #OUTPUT_PRESSURE                              # output gas pressure
 #OUTPUT_ENTROPY                               # output gas entropy
@@ -146,6 +146,7 @@ INITIAL_CONDITIONS_CONTAIN_ENTROPY
 #LIGHTCONE_PARTICLES                          # produces particle lightcones
 #LIGHTCONE_MASSMAPS                           # produces mass shells on the lightcone
 #LIGHTCONE_PARTICLES_GROUPS                   # computes groups for particles buffered on the lightcone
+#LIGHTCONE_PARTICLES_SKIP_SAVING              # prevents that particle data is saved along with the found groups on the lightcone
 #LIGHTCONE_OUTPUT_ACCELERATIONS               # stores accelerations for particles on lightcone
 #LIGHTCONE_IMAGE_COMP_HSML_VELDISP            # option for computing densities and smoothing length for lightcones in postprocessing
 #LIGHTCONE_MULTIPLE_ORIGINS                   # switch this on if you want to be able to define lightcone origins different from (0,0,0)
