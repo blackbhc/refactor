@@ -88,7 +88,7 @@ ifeq ($(type), header-only)
 	@cp -r $(BUILD_DIR)/include $(prefix)/
 else
 	@cp -r $(BUILD_DIR)/lib $(prefix)/
-	@mkdir $(prefix)/include
+	@mkdir -p $(prefix)/include
 	@cp -r $(BUILD_DIR)/src/galotfa.h $(prefix)/include/
 endif
 	@echo "Done!"
