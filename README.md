@@ -118,10 +118,11 @@ First, you need to check the following dependencies
 
 2. run `cd galotfa`
 
-3. run `make build mode=release type=header-only`.
+3. run `make build mode=release type=library`.
 
    - the `mode` option can be `release` or `debug`, default is `release` which has `-O3` optimization mode.
-     `debug` make the compiled library includes debug symbols for debugging which is only useful for developers.
+     `debug` make the compiled library includes debug symbols for debugging, which is only useful for developers.
+     Note that the debug mode has some platform dependent issues, and may not work on some platforms.
 
    - the `type` option can be `header-only` or `library` (default).
 
@@ -180,8 +181,9 @@ First, you need to check the following dependencies
 To get start with the built-in `Gadget4` fork, you can go through the following steps:
 
 1. Install `galotfa` as in previous section.
-2. Go into the `gadget4` directory, use as a normal `Gadget4` code, with additional configuration and
-   runtime parameters, which are described in the <a href="#fork_gadget4">Fork of `Gadget4`</a> section.
+2. Go into the `gadget4` directory, use as a normal `Gadget4` code. Note that the built-in gadget4 fork has
+   additional configuration and runtime parameters, which are described in the
+   <a href="#fork_gadget4">Fork of `Gadget4`</a> section.
 3. Copy the `galotfa.ini` from the `examples` directory into the working directory of your simulation,
    namely the directory where you run the simulation. For example, if you run `Gadget4` by command
    like `mpirun -np 32 ./Gadeget4 param.txt`, then the working directory is the directory has the executable
