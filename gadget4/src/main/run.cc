@@ -330,7 +330,7 @@ void sim::run( void )
                 for ( int i = 0; i < numPotTracer; ++i )
                 {
                     initPos[ partIDs[ i ] - firstIDofPotTracer ][ 0 ] =
-                        positions[ i ][ 0 ];  // use the related id as the index of the array
+                        coodinates[ i ][ 0 ];  // use the related id as the index of the array
                     initPos[ partIDs[ i ] - firstIDofPotTracer ][ 1 ] = positions[ i ][ 1 ];
                     initPos[ partIDs[ i ] - firstIDofPotTracer ][ 2 ] = positions[ i ][ 2 ];
                 }
