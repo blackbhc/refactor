@@ -1233,14 +1233,6 @@ lightcone particle data before they are written to disk. Requires the
 
 -------
 
-**LIGHTCONE_PARTICLES_SKIP_SAVING**
-
-In case `LIGHTCONE_PARTICLES_GROUPS` is used, this option can be used to
-avoid that actual particle data is saved along with the groups that are
-found. 
-
--------
-
 **LIGHTCONE_IMAGE_COMP_HSML_VELDISP**
 
 This special option is only relevant for lightcone image creation, and
@@ -1646,6 +1638,17 @@ i.e. for the one-sided tree, one may then be closer to a node's center
 than 1.5 times the node size, and for FMM, adjacent nodes may
 interact.
 
+
+-------
+
+Galotfa options                                  {#galotfa}
+===============
+
+**GALOTFA_ON**
+
+When enabled, this option turns on the galotfa analysis engine,
+i.e. the galactic on-the-fly analysis engine. Note that this requires 
+the `EVALPOTENTIAL` or `OUTPUT_POTENTIAL` option to be enabled as well.
 -------
 
 **ZERO_MASS_POT_TRACER**
