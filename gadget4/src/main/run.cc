@@ -440,14 +440,14 @@ void sim::run( void )
 
 #ifdef ZERO_MASS_POT_TRACER  // the potential tracer part
     // array of the particles' data in local process
-    double positions[ Sp.NumPart ][ 3 ];  // positions of tracers
-    double potentials[ Sp.NumPart ];      // potentials of the tracers
-    int    partIDs[ Sp.NumPart ];         // particle IDs of the tracers
-    int    idPotTracer[ Sp.NumPart ];     // id of tracers in the local array
-    int    numRecenter     = 0;           // number of recentering anchor particles in local process
-    int    numPotTracer    = 0;           // number of tracers in local process
-    int    numPotTracerTot = 0;           // number of tracers in global process
-    int    idRecenter[ Sp.NumPart ];      // id of recentering anchors in the local array
+    double coordinates[ Sp.NumPart ][ 3 ];  // coordinates of tracers
+    double potentials[ Sp.NumPart ];        // potentials of the tracers
+    int    partIDs[ Sp.NumPart ];           // particle IDs of the tracers
+    int    idPotTracer[ Sp.NumPart ];       // id of tracers in the local array
+    int    numRecenter     = 0;       // number of recentering anchor particles in local process
+    int    numPotTracer    = 0;       // number of tracers in local process
+    int    numPotTracerTot = 0;       // number of tracers in global process
+    int    idRecenter[ Sp.NumPart ];  // id of recentering anchors in the local array
     for ( int i = 0; i < Sp.NumPart; ++i )  // collect the data of the potential tracers
     {
         if ( Sp.P[ i ].getType() == All.PotTracerType )
@@ -455,11 +455,11 @@ void sim::run( void )
             if ( All.NumCurrentTiStep % All.PotOutStep
                  == 0 )  // collect potentials only at the specified output steps
             {
-                Sp.intpos_to_pos( Sp.P[ i ].IntPos, pos );  // collect positions
-                positions[ numPotTracer ][ 0 ] = pos[ 0 ];
-                positions[ numPotTracer ][ 1 ] = pos[ 1 ];
-                positions[ numPotTracer ][ 2 ] = pos[ 2 ];
-                potentials[ numPotTracer ]     = Sp.P[ i ].Potential;
+                Sp.intpos_to_pos( Sp.P[ i ].IntPos, pos );  // collect coordinates
+                coordinates[ numPotTracer ][ 0 ] = pos[ 0 ];
+                coordinates[ numPotTracer ][ 1 ] = pos[ 1 ];
+                coordinates[ numPotTracer ][ 2 ] = pos[ 2 ];
+                potentials[ numPotTracer ]       = Sp.P[ i ].Potential;
             }
             partIDs[ numPotTracer ] =
                 ( int )Sp.P[ i ].ID.get();      // collect particle IDs in local process
@@ -469,10 +469,10 @@ void sim::run( void )
             idRecenter[ numRecenter++ ] = i;  // get the number and id of the recentering anchors
     }
     if ( All.NumCurrentTiStep % All.PotOutStep == 0 )
-    // output the positions and potentials of the potential tracers at specified output steps
+    // output the coordinates and potentials of the potential tracers at specified output steps
     {
         collect_potential_tracers(
-            potentials, positions, partIDs, potGlobal, posGlobal, pIDsGlobal, numPotTracer,
+            potentials, coordinates, partIDs, potGlobal, posGlobal, pIDsGlobal, numPotTracer,
             numPotTracerTot, ThisTask,
             NTask );          // collect the data of the potential tracers in all processes
         if ( ThisTask == 0 )  // only the root rank writes the data to the file
@@ -497,9 +497,9 @@ void sim::run( void )
             for ( int i = 0; i < numPotTracer; ++i )
             {
                 initPos[ partIDs[ i ] - firstIDofPotTracer ][ 0 ] =
-                    positions[ i ][ 0 ];  // use the related id as the index of the array
-                initPos[ partIDs[ i ] - firstIDofPotTracer ][ 1 ] = positions[ i ][ 1 ];
-                initPos[ partIDs[ i ] - firstIDofPotTracer ][ 2 ] = positions[ i ][ 2 ];
+                    coordinates[ i ][ 0 ];  // use the related id as the index of the array
+                initPos[ partIDs[ i ] - firstIDofPotTracer ][ 1 ] = coordinates[ i ][ 1 ];
+                initPos[ partIDs[ i ] - firstIDofPotTracer ][ 2 ] = coordinates[ i ][ 2 ];
             }
             MPI_Allreduce( MPI_IN_PLACE, initPos, 3 * Sp.TotNumPart, MPI_DOUBLE, MPI_SUM,
                            Communicator );
