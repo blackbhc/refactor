@@ -552,7 +552,9 @@ before using any `galotfa` APIs.
 - [ ] (global) output the used parameters to a separate file: galotfa-used.ini
 - [ ] (global) specify different target particle types (and possible multiple analysis sets) in different analysis level.
 - [ ] (pre-process) support triaxial region shape.
-- [ ] (model) the bar length calculation.
+- [x] (model) the bar length calculation.
+- [ ] (model) model system for different component
+- [ ] (model) DM halo spin parameter
 - [ ] (particle) the guiding radius calculation.
 - [ ] (particle) the orbital frequency calculation.
 - [ ] (particle) the actions calculation.
