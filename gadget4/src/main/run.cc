@@ -330,9 +330,9 @@ void sim::run( void )
                 for ( int i = 0; i < numPotTracer; ++i )
                 {
                     initPos[ partIDs[ i ] - firstIDofPotTracer ][ 0 ] =
-                        coodinates[ i ][ 0 ];  // use the related id as the index of the array
-                    initPos[ partIDs[ i ] - firstIDofPotTracer ][ 1 ] = positions[ i ][ 1 ];
-                    initPos[ partIDs[ i ] - firstIDofPotTracer ][ 2 ] = positions[ i ][ 2 ];
+                        coordinates[ i ][ 0 ];  // use the related id as the index of the array
+                    initPos[ partIDs[ i ] - firstIDofPotTracer ][ 1 ] = coordinates[ i ][ 1 ];
+                    initPos[ partIDs[ i ] - firstIDofPotTracer ][ 2 ] = coordinates[ i ][ 2 ];
                 }
                 MPI_Allreduce( MPI_IN_PLACE, initPos, 3 * Sp.TotNumPart, MPI_DOUBLE, MPI_SUM,
                                Communicator );
@@ -1167,7 +1167,7 @@ void sim::create_snapshot_if_desired( void )
 
 #ifdef ZERO_MASS_POT_TRACER
 // My functions: Bin-Hui Chen
-void write_potential_tracers( char filename[], double potentials[], double coodinates[][ 3 ],
+void write_potential_tracers( char filename[], double potentials[], double coordinates[][ 3 ],
                               int ids[], double& time,
                               int& partNum )  // the function to write potential tracers to hdf5
                                               // file, only called by the root rank
@@ -1206,7 +1206,7 @@ void write_potential_tracers( char filename[], double potentials[], double coodi
     hid_t dataSpace_pot   = H5Dget_space( dataset_pot );
     hid_t dataSpace_id    = H5Dget_space( dataset_id );
     H5Dwrite( dataset_coord, H5T_NATIVE_DOUBLE, dataspace_id_2d, dataSpace_coord, H5P_DEFAULT,
-              coodinates );  // write data
+              coordinates );  // write data
     H5Dwrite( dataset_pot, H5T_NATIVE_DOUBLE, dataspace_id_1d, dataSpace_pot, H5P_DEFAULT,
               potentials );
     H5Dwrite( dataset_id, H5T_NATIVE_INT, dataspace_id_1d, dataSpace_id, H5P_DEFAULT, ids );
