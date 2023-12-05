@@ -228,10 +228,9 @@ insensitive.
 - Unexpected additional value for a key will be illegal, e.g. `<a key for boolean> = true` is OK, but
   `<a key for boolean> = true yes` is wrong as it will make the parser to treat it as a string "true yes".
 
-#### List of parameters for `galotfa`
+#### Runtime parameters for `galotfa`
 
-All the parameters are listed below, and their function is indicated by the name, or you can click the link
-to see their explanation.
+All parameters are listed in the following table, you can click their links to see their explanation.
 
 | Section    | Key Name                                                     | Value Type | Default       | Available Values                                            |
 | ---------- | ------------------------------------------------------------ | ---------- | ------------- | ----------------------------------------------------------- |
