@@ -1,4 +1,5 @@
-`galotfa`: <font size=4>**gal**</font>actic <font size=4>**o**</font>n-<font size=4>**t**</font>he-<font size=4>**f**</font>ly <font size=4>**a**</font>nalysis, is a library for on-the-fly analysis of disk galaxy simulations.
+`galotfa`: <font size=4>**gal**</font>actic <font size=4>**o**</font>n-<font size=4>**t**</font>he-<font size=4>**f**</font>ly <font size=4>**a**</font>nalysis,
+is a library of on-the-fly analysis for astronomical N-body simulations.
 
 ---
 
@@ -14,7 +15,9 @@
 
 ## Design scheme <a href="#contents"><font size=4>(contents)</font></a> <a id="scheme"></a>
 
-At particular synchronized time steps:
+The on-the-fly analysis is done at specified synchronized time steps. Its workflow is:
+
+!!!!! To be updated!
 
 <a id="workflow"></a>
 
@@ -43,52 +46,64 @@ Selct --> LogOC
 Model --> LogMd
 ```
 
-Every box is a functional module with independent implementation, which is class or a part of a class.
-The details of them are illustrated in <a href="#code">Code structure</a>. The connection lines between
-the boxes stands for the APIs between such modules. Except the above modules, `galotfa` also uses a standalone
-`INI` parameter file to control the behaviours of all modules and APIs in the preceding workflow.
+Every box is a separate module in the codes. The details of them are explained in the file
+`development-manual/development.md`. The runtime parameters of each module are specified in the
+`galotfa.ini` file, which is a INI format file. The parameters are explained in <a href="#usage">Usage</a>.
 
 ---
 
 ## Features of `galotfa` <a href="#contents"><font size=4>(contents)</font></a> <a id="feature"></a>
 
-1. Out-of-the-box: in general no need to modify the simulation code, just run some demos with simplest
-   steps. If you feel hard to use some part of `galotfa`, please let us know.
-2. User friendly program API and usage guidance: although we hope most functions of `galotfa` can be
-   used out-of-the-box, we also provide detailed guidance for users to use `galotfa` in their own customized
-   way.
-3. Extensible: easy to add new analysis functions or apply to new simulation code which follows the general
-   simulation convention. Besides, although this project is concentrated on disk galaxy simulations, it can
-   also be easily extended to other types of simulations, such as cluster simulations, cosmology simulations,
-   etc.
-4. Notice us if you need more wonderful features: you-complete-me flavor, you can make this project better.
-   We are also happy to merge your code into this project if you want.
-5. Low dependency on other libraries: only standard libraries or included in the project.
-6. Fast: use MPI and design to, a level of **~5%?** more CPU time during a run of simulation.
-7. by the hand: `galotfa` repo also provides some extended version of widely used simulation codes,
-   with `galotfa` built-in. You can also add `galotfa` in any simulation code by yourself or submit it.
-8. Open: we welcome new participants who are interested in improve this project.
+1. Out-of-the-box: in general there is no need to modify the simulation code or parameter files. Just run
+   simulation with demo ini files is enough. Feel free to raise your issue, if you feel hard to use any part
+   of `galotfa`.
+2. User friendly program API and usage guidance: most functions of `galotfa` can be used out-of-the-box,
+   and we also provide detailed informations for persons who are interested to change the codes.
+3. Extensible: easy to add new analysis functions in `galotfa`, and easy use `galotfa` in your own simulation
+   code (if such code follows the general simulation convention in the society).
+   - The compiled shared library of `galotfa` offers C-style APIs, so it can be in simulation codes written in
+     many languages.
+   - Although this project is concentrated on disk galaxy simulations, it can also be easily extended to other
+     types of simulations, such as cluster simulations, cosmology simulations, etc.
+4. You-Complete-Me flavor: if you need more wonderful features, you can make this project better.
+5. Least dependency on other libraries: only standard libraries or widely used libraries are used in this project,
+   so it's easy to compile and install in most systems.
+6. Fast: use `MPI` to parallelize the analysis, and use efficient algorithms to calculate the quantities.
+7. All output files are in `HDF5` format, which is a widely used format in astronomy.
 
 ---
 
 ## Fork of `Gadget4` <a href="#contents"><font size=4>(contents)</font></a> <a id="fork_gadget4"></a>
 
-There is a built-in fork of `Gadget4` in the `galotfa` repo, which is a modified version of `Gadget4` with
-some additional features:
+There is a built-in fork of `Gadget4` in the `galotfa` repo, which is a modified version of
+[Springel](https://wwwmpa.mpa-garching.mpg.de/gadget4/)'s famous codes with following additional features:
 
-- Implement the support of zero-mass tracers during gravity calculation, of which its position is
-  fixed so it can be used to measure the potential at a given position. This feature is controlled by
-  an additional config parameter `ZERO_MASS_POT_TRACER` in the configuration file of `Gadget4`.
-- Some runtime parameters associated with the potential tracers:
-  - `PotTracerType`: specify the particle type of potential tracer: Note that this should be consistent
-    with the given initial condition.
-  - `PotOutStep`: the output period (in unit of synchronized time steps) of potential tracer particles.
-  - `PotOutFile`: the file name of the output file of potential tracer particles.
-  - `RecenterPartType`: the particle type(s) used to calculate the center of coordinate, which is
-    used to correct the position of the potential tracer to be fixed w.r.t to the simulated system.
-  - `RecenterThreshold`: the threshold to determine whether the center of coordinate is converged or not,
-    in unit of the internal length of the simulation.
-- Config parameter: `GALOTFA_ON`, whether enable `galotfa` or not.
+1. Zero-mass potential tracers: can use a separate particle types to served as potential tracer, which
+   has 0 mass. During gravity calculation, their position is fixed to some anchor particles, so they can
+   be used to measure the potential at their positions.
+
+   - This feature is controlled by an additional config parameter `ZERO_MASS_POT_TRACER` in the configuration
+     file of `Gadget4`.
+   - Cost of such tracers: additional memory and time cost of gravity calculation, slightly change the
+     gravity tree's structure.
+   - The potential at the position of the potential tracers will be output to a separate file, which can be
+     used get the potential at time steps that have no snapshot output.
+
+2. Additional runtime parameters related to the potential tracers:
+
+- `PotTracerType`: specify the particle type of potential tracer. Note that this should be consistent
+  with the given initial condition, namely it should really be zero-mass particles in the initial condition.
+- `PotOutStep`: the output period in unit of synchronized time steps.
+- `PotOutFile`: output filename.
+- `RecenterPartType`: the particle type(s) used to anchor the positions of the tracers. In some cases, if
+  the whole galaxy is drifting and the tracers are fixed then their measured potential may be outside of the
+  galaxy. So you can use some particles to anchor the positions of the tracers, then tracers are rigidly attached
+  to the anchors' center-of-mass. For example, for disk galaxy, use disk particles to anchor the tracers is a
+  good choice.
+- `RecenterThreshold`: the threshold to determine whether the calculation of the anchors' center-of-mass is
+  convergent or not. The unit is the internal length during the simulation.
+
+3. The config parameter to enable `galotfa` or not: `GALOTFA_ON`.
 
 ---
 
@@ -96,87 +111,90 @@ some additional features:
 
 ### Dependencies
 
-First, you need to check the following dependencies
+First, you need to check the following dependencies before you install `galotfa`:
 
-- `make`: `galotfa` is organized by `make`, run `which make` to check the installation of `make` in your system.
-  If you don't have `make`, please install it first.
+1. `galotfa` needs the following non-standard libraries for compilation:
 
-- a `c++` compiler with `c++11` support, e.g. `g++`>4.8.5 or `clang++`>3.9.1 are recommended.
+- A `MPI` library: `openmpi`, `mpich`, `intel-mpi`, etc.
+- `gsl` library.
+- `hdf5` library.
 
-- dependent libraries:
+2. `make`: the compilation is organized by `make`.
 
-  - any `MPI` library.
-  - `gsl` library.
-  - `hdf5` library.
+   Run `which make` to check whether you have `make` or not. If you get a path, then you have `make`.
+   Otherwise, you don't have `make` and you need to install it first. You can search on the internet
+   to find how to install `make` on your system.
+
+3. A `c++` compiler with `c++11` support, e.g. `g++`>4.8.5 or `clang++`>3.9.1 are recommended.
+
+   You can run `g++ --version`, `clang++ --version` or `c++ --version` to check whether you have such compiler
+   or not. If you get a version number, then you have such compiler. Otherwise, you need to install
+   a suitable compiler first. You can search on the internet to find how to install `g++` on your system.
+
+4. At least one tool to download the `galotfa` repo: `git`, `wget` or `curl`.
 
 ### Download and install step by step
 
-1. clone the `galotfa` repo with `git`: run `git clone -b main https://github.com/blackbhc/galotfa --depth=1`
+1. Clone the `galotfa` repo: run `git clone -b main https://github.com/blackbhc/galotfa --depth=1`
 
-   If you don't have `git`, try `wget -O- https://github.com/blackbhc/galotfa/archive/main.tar.gz | tar xzv`.
+   If you don't have `git`, try run `wget -O- https://github.com/blackbhc/galotfa/archive/main.tar.gz | tar xzv`
    or `curl -O https://github.com/blackbhc/galotfa/archive/main.tar.gz && tar xzv mian.tar.gz`.
 
-2. run `cd galotfa`
+2. Run `cd galotfa`
 
-3. run `make build mode=release type=library`.
+3. run `mkdir -p <path/to/install>`:
 
-   - the `mode` option can be `release` or `debug`, default is `release` which has `-O3` optimization mode.
-     `debug` make the compiled library includes debug symbols for debugging, which is only useful for developers.
-     Note that the debug mode has some platform dependent issues, and may not work on some platforms.
+   Create the directory for the installation of `galotfa`, if it already exists, you can skip this step.
 
-   - the `type` option can be `header-only` or `library` (default).
-
-     - `header-only`: only copy the header files, no library files.
-     - `library`: build the shared library.
-
-   Note:
-
-   - (1) header-only is recommended for the first time installation.
-     Such option will define a `header-only` macro in the `galotfa` header files, which will make the
-     library can be used without linking to the library files.
-   - (2) if you encounter any error during the installation, please check the error message and run
-     `make clean` to clean the build files, then run `make build` again.
-   - The header only mode is only available for `C++` compiler, and the `C` compiler will not be able to
-     compile the `galotfa` header files. Therefore, to use `galotfa` in a simulation code written in `C`,
-     the `type` option should be `static` or `shared`.
-
-4. run `mkdir -p <path/to/install>`:
-
-   Create the directory for the installation of `galotfa`, if it already exists, skip this step.
-
-5. run `make install prefix=</path/to/install>`:
+4. run `make install mode=release type=library prefix=</path/to/install>`:
 
    Install the `galotfa` to the directory specified by `prefix`, which should be the same as
    the one you specified in the last step.
 
-6. Configure the environment variables of the dynamic library loader: `CPATH`, `LIBRARY_PATH` and `LD_LIBRARY_PATH`
+   - the `mode` option can be `release` or `debug`, default is `release` which has `-O3` optimization mode.
+     `debug` make the compiled library includes debug information, which is only useful for developers.
+     Note that the debug mode has some platform dependency issues, and may not work in some cases.
 
-   - (temporary) run `export CPATH=$CPATH:<prefix>/include`, `export LIBRARY_PATH=$LIBRARY_PATH:<prefix>/lib`,
-     `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<prefix>/lib` before you compile your simulation program every time.
+   - the `type` option can be `header-only` or `library` (default).
+
+     - `header-only`: only copy the header and source files, and don't compile a library file. Note that
+       `galotfa` in this mode can only be used in `c++` simulation codes.
+     - `library`: build the shared library, works for any simulation code supporting C-style APIs.
+
+   Note:
+
+   1. `header-only` is recommended for the first time installation. Such option will define a `header-only` macro
+      in the `galotfa` header files, which will make the library can be used without linking to the library files.
+   2. If you encounter any error during the installation, after you resolve the error, please run `make clean`
+      to clean the build files before you try to install again.
+
+5. Configure environment variables: `CPATH`, `LIBRARY_PATH` and `LD_LIBRARY_PATH`
+
+   - (temporary configuration) run `export CPATH=$CPATH:<prefix>/include`, `export LIBRARY_PATH=$LIBRARY_PATH:<prefix>/lib`,
+     `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<prefix>/lib` before you compile your simulation program.
      This only works for the current terminal session, if you open a new terminal, you need to run the above
      commands again. Or you can add the above three `export` commands into your shell configuration file, see
      below.
 
-   - (permanent) add the above three `export` commands into your shell configuration file:
+   - (permanent configuration) add the above three `export` commands into your shell configuration file:
+     e.g. `~/.bashrc` for `bash` or `~/.zshrc` for `zsh`. You can run `echo $SHELL` to check your shell type,
+     which will print something like `/bin/bash` on your screen. Then run `source ~/.bashrc`/`source ~/.zshrc`
+     to make the changes take effect. Then you can use `galotfa` without configure every time.
 
-     e.g. `~/.bashrc` for `bash` or
-     `~/.zshrc` for `zsh`. You can run `echo $SHELL` to check your shell type, which will print something
-     like `/bin/bash` to your terminal. Then run `source ~/.bashrc`/`source ~/.zshrc` to make the changes take effect.
-     Then you can use `galotfa` without configure every time.
+6. After this step, you can compile your simulation code with `galotfa` by adding `-lgalotfa` to the compiler
+   flags, e.g. `g++ ... -lgalotfa ...` or `mpicxx ... -lgalotfa ...`. In general, this flags are specified
+   in Makefile or other configuration files within the simulation codes.
 
-7. After this step, you can use compile your simulation code with `galotfa` by adding `-lgalotfa` to the compiler
-   flags, e.g. `g++ ... -lgalotfa ...` or `mpicxx ... -lgalotfa ...`.
+7. If you want to uninstall `galotfa`, run `make uninstall` in the `galotfa` repo directory.
 
-8. If you want to uninstall `galotfa`, run `make uninstall` in the `galotfa` repo directory.
-
-   If the install path contain `galotfa`, then such directory will be removed completely. Otherwise, only
+   If the install path end up with `galotfa`, then such directory will be removed completely. Otherwise, only
    the `galotfa` library files under such directory will be removed.
 
 ---
 
 ## Usage <a href="#contents"><font size=4>(contents)</font></a> <a id="usage"></a>
 
-### Get start with examples
+### Get start with built-in `Gadget4` fork
 
 To get start with the built-in `Gadget4` fork, you can go through the following steps:
 
@@ -191,14 +209,12 @@ To get start with the built-in `Gadget4` fork, you can go through the following 
 4. Modify the parameters in the `galotfa.ini` file according to your requirement.
 5. Run the simulation, and the output files will be generated in the `output_dir` specified in the `galotfa.ini` file.
 
-### Complete illustrations
-
-#### Units of quantities
+### Units of quantities
 
 Due to the mutability of the simulation's internal units, the units of analysis results are based on the
 simulation internal units, keep this in mind when you use the analysis results.
 
-#### INI parameter file
+### INI parameter file
 
 Note: for INI file, the section name is <font color="red">case sensitive</font>, but the key/value name is case
 insensitive.
