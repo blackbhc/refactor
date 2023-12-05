@@ -194,25 +194,25 @@ First, you need to check the following dependencies before you install `galotfa`
 
 ## Usage <a href="#contents"><font size=4>(contents)</font></a> <a id="usage"></a>
 
-### Get start with built-in `Gadget4` fork
+### Get start with the built-in `Gadget4` fork
 
 To get start with the built-in `Gadget4` fork, you can go through the following steps:
 
-1. Install `galotfa` as in previous section.
-2. Go into the `gadget4` directory, use as a normal `Gadget4` code. Note that the built-in gadget4 fork has
-   additional configuration and runtime parameters, which are described in the
+1. Install `galotfa` as usually, see in the previous section.
+2. Go into the `Gadget4` directory in `galotfa` repo, use as a normal `Gadget4` code. Note that the built-in
+   `Gadget4` fork has additional configuration and runtime parameters, which are described in the
    <a href="#fork_gadget4">Fork of `Gadget4`</a> section.
 3. Copy the `galotfa.ini` from the `examples` directory into the working directory of your simulation,
    namely the directory where you run the simulation. For example, if you run `Gadget4` by command
-   like `mpirun -np 32 ./Gadeget4 param.txt`, then the working directory is the directory has the executable
-   `Gadget4` and the parameter file `param.txt`.
-4. Modify the parameters in the `galotfa.ini` file according to your requirement.
-5. Run the simulation, and the output files will be generated in the `output_dir` specified in the `galotfa.ini` file.
+   like `mpirun -np 32 ./Gadeget4 param.txt`, then the working directory is just the current directory.
+4. Modify the parameters in the `galotfa.ini` file according to your requirement of the analysis.
+5. Run the simulation, and the output files will be generated in the `output_dir` specified in the
+   `galotfa.ini` file.
 
 ### Units of quantities
 
-Due to the mutability of the simulation's internal units, the units of analysis results are based on the
-simulation internal units, keep this in mind when you use the analysis results.
+Due to the mutability of the simulation's internal units, so `galotfa` just use the internal units of the
+simulation, keep this in mind when you use the analysis results.
 
 ### INI parameter file
 
