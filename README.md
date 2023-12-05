@@ -219,14 +219,14 @@ simulation, keep this in mind when you use the analysis results.
 Note: for INI file, the section name is <font color="red">case sensitive</font>, but the key/value name is case
 insensitive.
 
-- available boolean: case insensitive `true` and `false`, `on` and `off`, `enable` and `disable`, `yes` and `no`.
-- available value type: boolean, string(s), number(s). For numbers, there is no difference between integer and
-  float, but the value(s) will be converted to required type of the target parameter.
-- comment prefix: `#` and `;`.
-- supported value separator: white space, `,`, `+` and `:`. Note: the name of key can not contain these characters.
-- unexpected additional value for a key will be illegal, e.g. `<a key for boolean> = true yes` will make
-  the parser to detect the value of the key as `true yes`, which is in string type and may cause error in the
-  following parsing.
+- Available booleans: `true` and `false`, `on` and `off`, `enable` and `disable`, `yes` and `no`. This is case insensitive.
+- Available value type: boolean, string(s), number(s). For numbers, `galotfa` doesn't distinguish integer and
+  float, and just convert them to required types during analysis.
+- Comment prefix: `#` and `;`. Any text after these characters will be ignored.
+- Supported value separator: white space, `,`, `+` and `:`. Note that the name of key should not contain
+  these characters otherwise the parser will raise an error.
+- Unexpected additional value for a key will be illegal, e.g. `<a key for boolean> = true` is OK, but
+  `<a key for boolean> = true yes` is wrong as it will make the parser to treat it as a string "true yes".
 
 #### List of parameters for `galotfa`
 
