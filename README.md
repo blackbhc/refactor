@@ -232,102 +232,101 @@ insensitive.
 
 All parameters are listed in the following table, you can click their links to see their explanation.
 
-| Section    | Key Name                                                     | Value Type | Default       | Available Values                                            |
-| ---------- | ------------------------------------------------------------ | ---------- | ------------- | ----------------------------------------------------------- |
-| `Global`   |                                                              |            |               |                                                             |
-|            | <a href="#switch_on">`switch_on`</a>                         | Boolean    | `on`          |                                                             |
-|            | <a href="#output_dir">`output_dir`</a>                       | String     | `./otfoutput` | Any valid path.                                             |
-|            | <a href="#convergence_type">`convergence_type`</a>           | String     | `absolute`    | `absolute` or `relative`.                                   |
-|            | <a href="#convergence_threshold">`convergence_threshold`</a> | Float      | 0.001         | $(0, 1)$ if `convergence_type` = `relative`, otherwise $>0$ |
-|            | <a href="#max_iter">`max_iter`</a>                           | Integer    | 25            | $>0$                                                        |
-|            | <a href="#equal_threshold">`equal_threshold`</a>             | Float      | 1e-10         | $>0$, but not too large.                                    |
-|            | <a href="#sim_type">`sim_type`</a>                           | String     | `galaxy`      | Only support `galaxy` at present.                           |
-|            | <a href="#pot_tracer">`pot_tracer`</a>                       | Integer    |               |                                                             |
-| `Pre`      |                                                              |            |               |                                                             |
-|            | <a href="#recenter">`recenter`</a>                           | Boolean    | `on`          | `on` or `off`                                               |
-|            | <a href="#recenter_anchors">`recenter_anchors`</a>           | Integer(s) |               | Avaiable particle types of your simulation IC               |
-|            | <a href="#region_shape">`region_shape`</a>                   | String     | `cylinder`    | `sphere`, `cylinder` or `box`.                              |
-|            | <a href="#axis_ratio">`axis_ratio`</a>                       | Float      | 1.0           | $>0$                                                        |
-|            | <a href="#size">`region_size`</a>                            | Float      | 20.0          | $>0$                                                        |
-|            | <a href="#recenter_method">`recenter_method`</a>             | String     | `density`     | `com`, `density` or `potential`                             |
-| `Model`    |                                                              |            |               |                                                             |
-|            | <a href="#switch_on_m">`switch_on`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
-|            | <a href="#filename_m">`filename`</a>                         | String     | `model`       | Any valid filename prefix.                                  |
-|            | <a href="#period_m">`period`</a>                             | Integer    | 10            | $>0$                                                        |
-|            | <a href="#particle_types">`particle_types`</a>               | Integer(s) |               | Avaiable particle types of your simulation IC               |
-|            | <a href="#multiple">`multiple`</a>                           | Boolean    | `off`         | `on` or `off`                                               |
-|            | <a href="#classification">`classification`</a>               | Strings    | empty         | see in the <a href="#classification">text</a>               |
-|            | <a href="#region_shape_m">`region_shape`</a>                 | String     | `cylinder`    | `sphere`, `cylinder` or `box`.                              |
-|            | <a href="#axis_ratio_m">`axis_ratio`</a>                     | Float      | 1.0           | $>0$                                                        |
-|            | <a href="#size_m">`region_size`</a>                          | Float      | 20.0          | $>0$                                                        |
-|            | <a href="#align_bar">`align_bar`</a>                         | Boolean    | `on`          | `on` or `off`                                               |
-|            | <a href="#image">`image`</a>                                 | Boolean    | `off`         | `on` or `off`                                               |
-|            | <a href="#image_bins">`image_bins`</a>                       | Integer    | 100           | $>0$                                                        |
-|            | <a href="#colors">`colors`</a>                               | String(s)  |               | see in the <a href="#colors">text</a>                       |
-|            | <a href="#bar_major_axis">`bar_major_axis`</a>               | Boolean    | `off`         | `on` of `off`                                               |
-|            | <a href="#sbar">`sbar`</a>                                   | Boolean    | `off`         | `on` or `off`                                               |
-|            | <a href="#bar_threshold">`bar_threshold`</a>                 | Float      | 0.15          | $(0, 1)$                                                    |
-|            | <a href="#bar_radius">`bar_radius`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
-|            | <a href="#rmin">`rmin`</a>                                   | Float      | 0.0           | $>0$                                                        |
-|            | <a href="#rmax">`rmax`</a>                                   | Float      | Region size   | $>0$                                                        |
-|            | <a href="#rbins">`rbins`</a>                                 | Integer    | 20            | $>0$                                                        |
-|            | <a href="#percentage">`percentage`</a>                       | Float      | 70            | $(0, 100)$                                                  |
-|            | <a href="#sbuckle">`sbuckle`</a>                             | Boolean    | `off`         | `on` or `off`                                               |
-|            | <a href="#An">`An`</a>                                       | Integer(s) |               | > 0                                                         |
-|            | <a href="#inertia_tensor">`inertia_tensor`</a>               | Boolean    | `off`         | `on` or `off`                                               |
-|            | <a href="#dispersion_tensor">`dispersion_tensor`</a>         | Boolean    | `off`         | `on` or `off`                                               |
-| `Particle` |                                                              |            |               |                                                             |
-|            | <a href="#switch_on_p">`switch_on`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
-|            | <a href="#filename_p">`filename`</a>                         | String     | `particle`    | Any valid filename prefix.                                  |
-|            | <a href="#period_p">`period`</a>                             | Integer    | 10000         | $>0$                                                        |
-|            | <a href="#particle_types">`particle_types`</a>               | Integer(s) |               | Avaiable particle types of your simulation IC               |
-|            | <a href="#circularity">`circularity`</a>                     | Boolean    | `off`         | `on` or `off`                                               |
-|            | <a href="#circularity_3d">`circularity_3d`</a>               | Boolean    | `off`         | `on` or `off`                                               |
-|            | <a href="#rg">`rg`</a>                                       | Boolean    | `off`         | `on` or `off`                                               |
-|            | <a href="#freq">`freq`</a>                                   | Boolean    | `off`         | `on` or `off`                                               |
-| `Orbit`    |                                                              |            |               | `on` or `off`                                               |
-|            | <a href="#switch_on_o">`switch_on`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
-|            | <a href="#filename_o">`filename`</a>                         | String     | `orbit`       | Any valid filename prefix.                                  |
-|            | <a href="#period_o">`period`</a>                             | Integer    | 1             | $>0$                                                        |
-|            | <a href="#idfile">`idfile`</a>                               | String     |               | Any valid filename.                                         |
-| `Group`    |                                                              |            |               |                                                             |
-|            | <a href="#switch_on_g">`switch_on`</a>                       | Boolean    | `off`         | `on` or `off`                                               |
-|            | <a href="#filename_g">`filename`</a>                         | String     | `group`       | Any valid filename prefix.                                  |
-|            | <a href="#period_g">`period`</a>                             | Integer    | 10            | $>0$                                                        |
-|            | <a href="#group_types">`group_types`</a>                     | String(s)  |               | (future feature)                                            |
-|            | <a href="#ellipticity">`ellipticity`</a>                     | Boolean    | `off`         | `on` or `off`                                               |
-|            | <a href="#rmg">`rmg`</a>                                     | Boolean    | `off`         | `on` or `off`                                               |
-|            | <a href="#vmg">`vmg`</a>                                     | Boolean    | `off`         | `on` or `off`                                               |
-| `Post`     |                                                              |            |               |                                                             |
-|            | <a href="#switch_on_post">`switch_on`</a>                    | Boolean    | `off`         | `on` or `off`                                               |
-|            | <a href="#filename_post">`filename`</a>                      | String     | `post`        | Any valid filename prefix.                                  |
-|            | <a href="#pattern_speed">`pattern_speed`</a>                 | Boolean    | off           | `on` or `off`                                               |
+| Section    | Key Name                                                     | Value Type | Default       | Available Values                                          |
+| ---------- | ------------------------------------------------------------ | ---------- | ------------- | --------------------------------------------------------- |
+| `Global`   |                                                              |            |               |                                                           |
+|            | <a href="#switch_on">`switch_on`</a>                         | Boolean    | `on`          |                                                           |
+|            | <a href="#output_dir">`output_dir`</a>                       | String     | `./otfoutput` | Any valid path.                                           |
+|            | <a href="#convergence_type">`convergence_type`</a>           | String     | `absolute`    | `absolute` or `relative`.                                 |
+|            | <a href="#convergence_threshold">`convergence_threshold`</a> | Float      | 0.001         | $>0$, and further $<1$ if `convergence_type` = `relative` |
+|            | <a href="#max_iter">`max_iter`</a>                           | Integer    | 25            | $>0$                                                      |
+|            | <a href="#equal_threshold">`equal_threshold`</a>             | Float      | 1e-10         | $>0$, but should be not too large or small.               |
+|            | <a href="#sim_type">`sim_type`</a>                           | String     | `galaxy`      | Only `galaxy` at present.                                 |
+|            | <a href="#pot_tracer">`pot_tracer`</a>                       | Integer    |               |                                                           |
+| `Pre`      |                                                              |            |               |                                                           |
+|            | <a href="#recenter">`recenter`</a>                           | Boolean    | `on`          | `on` or `off`                                             |
+|            | <a href="#recenter_anchors">`recenter_anchors`</a>           | Integer(s) |               | Any avaiable particle types of the simulation IC          |
+|            | <a href="#region_shape">`region_shape`</a>                   | String     | `cylinder`    | `sphere`, `cylinder` or `box`.                            |
+|            | <a href="#axis_ratio">`axis_ratio`</a>                       | Float      | 1.0           | $>0$                                                      |
+|            | <a href="#size">`region_size`</a>                            | Float      | 20.0          | $>0$                                                      |
+|            | <a href="#recenter_method">`recenter_method`</a>             | String     | `density`     | `com`, `density` or `potential`                           |
+| `Model`    |                                                              |            |               |                                                           |
+|            | <a href="#switch_on_m">`switch_on`</a>                       | Boolean    | `off`         | `on` or `off`                                             |
+|            | <a href="#filename_m">`filename`</a>                         | String     | `model`       | Any valid filename.                                       |
+|            | <a href="#period_m">`period`</a>                             | Integer    | 10            | $>0$                                                      |
+|            | <a href="#particle_types">`particle_types`</a>               | Integer(s) |               | Any avaiable particle types of the simulation IC          |
+|            | <a href="#multiple">`multiple`</a>                           | Boolean    | `off`         | `on` or `off`                                             |
+|            | <a href="#classification">`classification`</a>               | Strings    | empty         | see in the <a href="#classification">text</a>             |
+|            | <a href="#region_shape_m">`region_shape`</a>                 | String     | `cylinder`    | `sphere`, `cylinder` or `box`.                            |
+|            | <a href="#axis_ratio_m">`axis_ratio`</a>                     | Float      | 1.0           | $>0$                                                      |
+|            | <a href="#size_m">`region_size`</a>                          | Float      | 20.0          | $>0$                                                      |
+|            | <a href="#align_bar">`align_bar`</a>                         | Boolean    | `on`          | `on` or `off`                                             |
+|            | <a href="#image">`image`</a>                                 | Boolean    | `off`         | `on` or `off`                                             |
+|            | <a href="#image_bins">`image_bins`</a>                       | Integer    | 100           | $>0$                                                      |
+|            | <a href="#colors">`colors`</a>                               | String(s)  |               | see in the <a href="#colors">text</a>                     |
+|            | <a href="#bar_major_axis">`bar_major_axis`</a>               | Boolean    | `off`         | `on` of `off`                                             |
+|            | <a href="#sbar">`sbar`</a>                                   | Boolean    | `off`         | `on` or `off`                                             |
+|            | <a href="#bar_threshold">`bar_threshold`</a>                 | Float      | 0.15          | $(0, 1)$                                                  |
+|            | <a href="#bar_radius">`bar_radius`</a>                       | Boolean    | `off`         | `on` or `off`                                             |
+|            | <a href="#rmin">`rmin`</a>                                   | Float      | 0.0           | $>0$                                                      |
+|            | <a href="#rmax">`rmax`</a>                                   | Float      | Region size   | $>0$                                                      |
+|            | <a href="#rbins">`rbins`</a>                                 | Integer    | 20            | $>0$                                                      |
+|            | <a href="#percentage">`percentage`</a>                       | Float      | 70            | $(0, 100)$                                                |
+|            | <a href="#sbuckle">`sbuckle`</a>                             | Boolean    | `off`         | `on` or `off`                                             |
+|            | <a href="#An">`An`</a>                                       | Integer(s) |               | > 0                                                       |
+|            | <a href="#inertia_tensor">`inertia_tensor`</a>               | Boolean    | `off`         | `on` or `off`                                             |
+|            | <a href="#dispersion_tensor">`dispersion_tensor`</a>         | Boolean    | `off`         | `on` or `off`                                             |
+| `Particle` |                                                              |            |               |                                                           |
+|            | <a href="#switch_on_p">`switch_on`</a>                       | Boolean    | `off`         | `on` or `off`                                             |
+|            | <a href="#filename_p">`filename`</a>                         | String     | `particle`    | Any valid filename.                                       |
+|            | <a href="#period_p">`period`</a>                             | Integer    | 10000         | $>0$                                                      |
+|            | <a href="#particle_types">`particle_types`</a>               | Integer(s) |               | Any avaiable particle types of the simulation IC          |
+|            | <a href="#circularity">`circularity`</a>                     | Boolean    | `off`         | `on` or `off`                                             |
+|            | <a href="#circularity_3d">`circularity_3d`</a>               | Boolean    | `off`         | `on` or `off`                                             |
+|            | <a href="#rg">`rg`</a>                                       | Boolean    | `off`         | `on` or `off`                                             |
+|            | <a href="#freq">`freq`</a>                                   | Boolean    | `off`         | `on` or `off`                                             |
+| `Orbit`    |                                                              |            |               | `on` or `off`                                             |
+|            | <a href="#switch_on_o">`switch_on`</a>                       | Boolean    | `off`         | `on` or `off`                                             |
+|            | <a href="#filename_o">`filename`</a>                         | String     | `orbit`       | Any valid filename prefix.                                |
+|            | <a href="#period_o">`period`</a>                             | Integer    | 1             | $>0$                                                      |
+|            | <a href="#idfile">`idfile`</a>                               | String     |               | Any valid filename.                                       |
+| `Group`    |                                                              |            |               |                                                           |
+|            | <a href="#switch_on_g">`switch_on`</a>                       | Boolean    | `off`         | `on` or `off`                                             |
+|            | <a href="#filename_g">`filename`</a>                         | String     | `group`       | Any valid filename prefix.                                |
+|            | <a href="#period_g">`period`</a>                             | Integer    | 10            | $>0$                                                      |
+|            | <a href="#group_types">`group_types`</a>                     | String(s)  |               | (future feature)                                          |
+|            | <a href="#ellipticity">`ellipticity`</a>                     | Boolean    | `off`         | `on` or `off`                                             |
+|            | <a href="#rmg">`rmg`</a>                                     | Boolean    | `off`         | `on` or `off`                                             |
+|            | <a href="#vmg">`vmg`</a>                                     | Boolean    | `off`         | `on` or `off`                                             |
+| `Post`     |                                                              |            |               |                                                           |
+|            | <a href="#switch_on_post">`switch_on`</a>                    | Boolean    | `off`         | `on` or `off`                                             |
+|            | <a href="#filename_post">`filename`</a>                      | String     | `post`        | Any valid filename.                                       |
+|            | <a href="#pattern_speed">`pattern_speed`</a>                 | Boolean    | off           | `on` or `off`                                             |
 
 #### Explanation of parameters
 
 ##### Global
 
-This section specify some parameters that control the behaviour of `galotfa` on the machine.
+This section specify the global parameters of `galotfa`.
 
-- <a id="switch_on"></a>`switch_on`: whether to enable the demo mode or not. If `on`, `galotfa` will only run
-  for a few steps and output some demo files to the `output_dir`. This option is only for test purpose or
-  may be useful for some special cases.
-- <a id="output_dir"></a>`output_dir`: the path to store the output files, create it if not exist.
-- <a id="convergence_type"></a>`convergence_type`: the type of convergence criterion for the on-the-fly analysis.
-- <a id="convergence_threshold"></a>`convergence_threshold`: the threshold for numerical convergence during the
-  on-the-fly analysis.
-  - `convergence_type` = `absolute`: the convergence criterion is $\Delta$ $Q<\epsilon$ for some quantity $Q$,
+- <a id="switch_on"></a>`switch_on`: whether switch on on-the-fly analysis. If `on`, `galotfa` will analyze the
+  data at specified time steps and output analysis results to the `output_dir`.
+- <a id="output_dir"></a>`output_dir`: the path to output the analysis results.
+- <a id="convergence_type"></a>`convergence_type`: the type of numerical convergence criterion, can be
+  `absolute` or `relative`.
+- <a id="convergence_threshold"></a>`convergence_threshold`: the threshold for numerical convergence check.
+  - If `convergence_type` = `absolute`: the convergence criterion is $\Delta Q_i<\epsilon$ for some quantity $Q$,
     where $\epsilon$ is the `convergence_threshold`.
-  - `convergence_type` = `relative`: the convergence criterion is $\Delta Q / Q < \epsilon$ for some quantity $Q$,
+  - If `convergence_type` = `relative`: the convergence criterion is $\Delta Q_{i+1} / Q_{i} < \epsilon$ for some quantity $Q$,
     where $\epsilon$ is the `convergence_threshold`.
-- <a id="max_iter"></a>`max_iter`: the maximum number of iterations during analysis.
-- <a id="equal_threshold"></a>`equal_threshold`: the threshold for equality of two floating point numbers, e.g.
-  if the threshold=0.001, then two float numbers that $|a-b|<0.001$ are considered equal. Recommended value is
-  $1e-6$ to $1e-40$, and should not less than the lowest precision of the floating point number in your system.
-- <a id="sim_type"></a>`sim_type`: the type of simulation, e.g. `galaxy`, `cluster`, `cosmology` and `cosmology_zoom_in`.
+- <a id="max_iter"></a>`max_iter`: the maximum number of iterations.
+- <a id="equal_threshold"></a>`equal_threshold`: the threshold for equality of two floating point numbers. For
+  example, if `equal_threshold`=0.001, then two float numbers $a,b$ s.t. $|a-b|<0.001$ are considered equal. Recommended
+  value is from $10^{-6}$ to $10^{-20}$.
+- <a id="sim_type"></a>`sim_type`: the type of simulation, can be one of `galaxy`, `cluster`, `cosmology` and `cosmology_zoom_in`.
   At present, only `galaxy` is supported.
-- <a id="pot_tracer"></a>`pot_tracer`: the particle type id of potential tracer particles, which will be used to
-  calculate the potential of the target particles. (future feature)
+- <a id="pot_tracer"></a>`pot_tracer`: the particle type of the zero-mass potential tracers, which will be used to
+  calculate the potential related quantities. (future feature)
 
 ##### Pre
 
@@ -562,8 +561,8 @@ before using any `galotfa` APIs.
 
 ## Future features
 
-- [ ] (other) add built-in fork of common simulation codes with `galotfa` built-in.
-- [ ] (other) add potential tracer support into the common simulation codes.
+- [x] (other) add built-in fork of common simulation codes with `galotfa` built-in.
+- [x] (other) add potential tracer support into the built-in simulation codes.
 - [ ] (global) output the used parameters to a separate file: galotfa-used.ini
 - [ ] (global) specify different target particle types (and possible multiple analysis sets) in different analysis level.
 - [ ] (pre-process) support triaxial region shape.
