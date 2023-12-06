@@ -264,9 +264,9 @@ All parameters are listed in the following table, you can click their links to s
 |            | <a href="#image">`image`</a>                                 | Boolean    | `off`         | `on` or `off`                                             |
 |            | <a href="#image_bins">`image_bins`</a>                       | Integer    | 100           | $>0$                                                      |
 |            | <a href="#colors">`colors`</a>                               | String(s)  |               | see in the <a href="#colors">text</a>                     |
-|            | <a href="#bar_major_axis">`bar_major_axis`</a>               | Boolean    | `off`         | `on` of `off`                                             |
 |            | <a href="#sbar">`sbar`</a>                                   | Boolean    | `off`         | `on` or `off`                                             |
 |            | <a href="#bar_threshold">`bar_threshold`</a>                 | Float      | 0.15          | $(0, 1)$                                                  |
+|            | <a href="#bar_major_axis">`bar_major_axis`</a>               | Boolean    | `off`         | `on` of `off`                                             |
 |            | <a href="#bar_radius">`bar_radius`</a>                       | Boolean    | `off`         | `on` or `off`                                             |
 |            | <a href="#rmin">`rmin`</a>                                   | Float      | 0.0           | $>0$                                                      |
 |            | <a href="#rmax">`rmax`</a>                                   | Float      | Region size   | $>0$                                                      |
@@ -307,7 +307,7 @@ All parameters are listed in the following table, you can click their links to s
 
 ##### Global
 
-- <a id="switch_on"></a>`switch_on`: whether switch on on-the-fly analysis. If `on`, `galotfa` will analyze the
+- <a id="switch_on"></a>`switch_on`: whether to switch on on-the-fly analysis. If `on`, `galotfa` will analyze the
   data at specified time steps and output analysis results to the `output_dir`.
 - <a id="output_dir"></a>`output_dir`: the path to output the analysis results.
 - <a id="convergence_type"></a>`convergence_type`: the type of numerical convergence criterion, can be
@@ -367,30 +367,32 @@ All parameters are listed in the following table, you can click their links to s
 
 ##### Model
 
-- <a id="switch_on_m"></a>`switch_on`: whether to enable the model level analysis or not.
-- <a id="filename_m"></a>`filename`: the filename of the output file of the model level analysis.
+- <a id="switch_on_m"></a>`switch_on`: whether to switch on the model level analysis.
+- <a id="filename_m"></a>`filename`: the filename of the model level analysis results.
 - <a id="period_m"></a>`period`: the period of model level analysis, in unit of synchronized time steps in
-  simulation.
-- <a id="particle_types"></a>`particle_types`: the type(s) of target particles types to do the on-the-fly
-  analysis, must be given at least one type, otherwise the program will raise an error.
-- <a id="multiple"></a>`multiple`: whether to treat the more than one target particles as different set,
-  which can be specified by the next parameter `classification`, or treat them as a whole. Default is
-  `multiple` = `on`, that all target particles will be analyzed as a whole.
-- <a id="classification"></a>`classification`: specify how to classify target particles to different
-  analysis sets.
-  - Must be given if `multiple` = `on`, otherwise the program will raise an error. If `multiple` = `off`,
-    this parameter will be ignored.
-  - The given value should be strings of target types in each subset, where the strings are separated by common
-    delimiter (white space, `,`, `+` and `:`), and in each string, the integer of
-    the target particle types in such subset should be separated by `&`.
-    - If `"1&2" "3" "4&5&6"` is given, then there will be 3 sets, the first subset contains target particles
-      of type 1 and 2, the second subset contains target particles of type 3, and the third subset contains
-      target particles of type 4, 5 and 6.
-    - There should has no space between, before or after the integers in each pair of quotation marks, otherwise
-      the program will raise an error: `"1 & 2" "3" "4 & 5 & 6"` is illegal.
-  - Cross sets are allowed, e.g. `1-2 2-3` is possible, which means the first subset contains the target
-    particles of type 1 and 2, and the second subset contains target particles of type 2 and 3.
-  - Values should in the range of `particle_types`, otherwise the program will raise an error.
+  the simulation.
+- <a id="particle_types"></a>`particle_types`: the type(s) of target particles to do the model level
+  analysis. Must be given at least one type if the model level analysis is switched on.
+
+The following 5 parameters will be deprecated in the future.
+
+- <a id="multiple"></a>`multiple`: whether to enable multiple analysis subsets, namely analyze different
+  target particles separately. If `on`, the target particles will be divided into different subsets, which are
+  specified by the next parameter `classification`. Default is `multiple` = `off`, which means all target particles
+  will be analyzed as a whole.
+- <a id="classification"></a>`classification`: specify how to classify target particles as different
+  analysis subsets. Must be given if `multiple` = `on`. The value should be strings of target types in
+  each subset, for example "1&2" "3" "4&5&6" means there are 3 subsets, the first subset contains target
+  particles of type 1 and 2, the second subset contains target particles of type 3, and the third subset
+  contains target particles of type 4, 5 and 6.
+  - Each string should be enclosed by quotation marks.
+  - There could be ordinary delimiters between each string, such as white space, comma, plus sign and colon.
+    For example, `"1&2" "3" "4&5&6"` and `"1&2","3","4&5&6"` are both OK.
+  - However, there should has no space between, before or after the integers in each pair of quotation marks,
+    otherwise the program will raise an error: `"1 & 2" "3" "4 & 5 & 6"` is illegal.
+  - Different sets can share the same particle types, e.g. `"1&2" "2&3"` is legal, which means the first subset
+    contains the target particles of type 1 and 2, and the second subset contains target particles of type 2 and 3.
+  - The type ids should in the range of `particle_types`, otherwise the program will raise an error.
 - <a id="region_shape_m"></a>`region_shape`: similar to the `region_shape` in the `Pre` section, but this one is
   used to calculate the model quantifications of target particles, can get multiple values.
   - `region_shape` = `sphere`: the region is a sphere or spheroid if `axis_ratio` $\neq$ 1, the axis of the spheroid
@@ -406,157 +408,156 @@ All parameters are listed in the following table, you can click their links to s
     `axis_ratio` $\times$ `region_size`.
   - `region_shape` = `box`: the region is a cube with side length $L=$ `region_size`, and stretched along the
     $z$-axis with $L_z=$ `axis_ratio` $\times$ `region_size`.
-- <a id="align_bar"></a>`align_bar`: whether rotate the coordinates to align the $x$-axis to the bar major axis
-  after recentering target particles. This is only done when the bar is detected (see in `bar_threshold`).
-  It's may be useful to align the bar major axis to the $x$-axis for some analysis or visualization. Note
-  that if this option is activated then the `bar_major_axis` and `sbar` will be automatically activated in
-  the `Model` section, and the `recenter` in `Pre` section should be switched on otherwise the program will
-  raise an error.
+- <a id="align_bar"></a>`align_bar`: whether to rotate the coordinates to align the $x$-axis with the bar major axis.
+  This is only done when the bar is detected, namely bar strength $>$ `bar_threshold`. Note that:
+  - If this option is activated then the `bar_major_axis` and `sbar` will be automatically activated.
+  - The `recenter` parameter in `Pre` section should be switched on otherwise the program will raise an error.
+    Of course the program can automatically turn on the `recenter` parameter if it is off, but we don't do this
+    to make the user aware of what they are doing.
 
-<font color="red">**Note:**</font> all the following bar related quantities are calculated in the x-y plane,
-namely they doesn't consider the case that the bar is inclined to the x-y plane. The possible correction
-is available with the inertia tensor.
+<font color="red">**Note:**</font> all the following bar related quantities assume that the bar is in the
+$x-y$ plane. If bar is inclined w.r.t the x-y plane, these quantities may be inaccurate. The possible
+correction is available with the inertia tensor, but not implemented at present.
 
-- <a id="image"></a>`image`: whether to output the image matrices of target particles.
-  - The particles will be divided into bins in each axis (according to the `region_shape`) and do some statistics
-    in each bin, such as the mean value of some quantity, the number of particles in each bin, etc. The bin number
-    is specified by the `image_bins` parameter (see below).
-  - For each region type, there will be 3 image matrices by different combination of the 3 axes, e.g. for a
-    `region_shape` = `box`, there will be 3 image matrices for the $x-y$ plane, $x-z$ plane and $y-z$ plane.
-  - The quantities of the image are specified by the `colors` parameter in the view of color coded (see below).
-    (The name `image` may be changed in the future, as its meaning is not so clear.)
-- <a id="image_bins"></a>`image_bins`: how many bins of the image matrices in each dimension, for the axis that
-  may be stretched, the number of bins in such axis is also determined by the `axis_ratio` parameter. Note that
-  this number should not be too large, otherwise the chunk size of image matrix may overflow the limit value
-  (4GB in HDF5 library).
-- <a id="colors"></a>`colors`:
-  At least one color must be given, if the `image` is enabled, otherwise the program will raise an error.
+- <a id="image"></a>`image`: whether to output the image matrices of the target particles. If activated,
+  the particles will be binned into 2D matrices in the $x-y$ plane, $x-z$ plane and $y-z$ plane.
+  - The bin number is specified by the `image_bins` parameter (see below).
+  - The statistical quantities in each pixel are specified by the `colors` parameter (see below).
+- <a id="image_bins"></a>`image_bins`: how many bins of the image matrices in each dimension. For the axis that
+  may be stretched, the number of bins in such axis is `axis_ratio` $\times$ `image_bins`.
+  Note that this number should not be too large, otherwise the chunk size of image matrix may overflow the
+  limit chunk size of HDF5 library, which is 4GB. In general, a number in $[50, 200]$ is recommended.
+- <a id="colors"></a>`colors`: If the `image` is enabled, at least one value must be given.
   - `number_density`: the number of particles in each bin.
   - `surface_density`: the surface density of the particles in each bin. The unit is $[M]/[L]^2$, $[M]$ and
-    $[L]$ are the internal unit of mass and length in the simulation, the same below.
-  - `mean_velocity`: the mean velocity of the particles in each bin, depends on the region shape, one
-    component for <font color="red">**each axis**</font>.
-  - `velocity_dispersion`: the velocity dispersion of the particles in each bin, one component for
-    <font color="red">**each axis**</font>.
-- <a id="bar_major_axis"></a>`bar_major_axis`: whether calculate the bar major axis in target particles,
-  if detected a bar, defined as the phase angle of the $m$=2 Fourier component of the surface density after
-  projection into the equatorial plane, $\arg(A_2)$.
-- <a id="sbar"></a>`sbar`: whether calculate the bar strength parameter, where $S_{\rm{bar}}$ is defined
+    $[L]$ are the internal units of mass and length in the simulation.
+  - `mean_velocity`: the mean velocity of the particles in each bin, depending on the region shape and one
+    component for <font color="red">**each axis**</font> w.r.t the region shape.
+  - `velocity_dispersion`: similar to `mean_velocity`, but for velocity dispersion.
+- <a id="sbar"></a>`sbar`: whether to calculate the bar strength parameter $S_{\rm{bar}}$, which is defined
   as $A_2/A_0$.
-- <a id="bar_threshold"></a>`bar_threshold`: the threshold to detect a bar, namely if $S_{\rm bar}>$ this
-  value, the program will consider that a bar is detected, where $S_{\rm bar}$ is the bar strength parameter.
-  - In general, a range in $[0.1, 0.2]$ is recommended, but it depends on the simulation.
-- <a id="bar_radius"></a>`bar_radius`: whether calculate the radius of the bar in target particles,
-  if detected a bar, this is calculated with many methods. Which are the first three methods in
-  [Ghosh & Di Matteo 2023](https://ui.adsabs.harvard.edu/abs/2023arXiv230810948G/abstract).
-  See more details in the development-manual/computation.md, all the three different methods will be calculated.
-- <a id="rmin"></a>`rmin`: the minimum radius during calculating the bar radius, the $R_{\rm bar,2}$ is sensitive
-  to this parameter, due to the inner most region is generally spherical, so the argument angle of $m=2$ Fourier
-  component is noisy in such region. If not given, the minimum radius will be 0.
-- <a id="rmax"></a>`rmax`: the maximum radius during calculating the bar radius, if not given, the maximum
-  radius will be the maximum radius of target particles, namely the analysis region size.
-- <a id="rbins"></a>`rbins`: the number of bins during calculating the bar radius.
+- <a id="bar_threshold"></a>`bar_threshold`: the threshold to determine whether there is a bar, namely if
+  $S_{\rm bar}>$ `bar_threshold`, the program will consider there is a bar.
+  - In general, a range in $[0.1, 0.2]$ is recommended, but it depends on the actual situation.
+- <a id="bar_major_axis"></a>`bar_major_axis`: whether to calculate the bar major axis in target particles,
+  which is defined as $\arg{(A2)}$, the argument angle of the $m$=2 Fourier component of the projected surface
+  density in the $x-y$ plane. This is only done when the bar is detected, namely bar strength $>$
+  `bar_threshold`.
+- <a id="bar_radius"></a>`bar_radius`: whether to calculate the radius or half length of the bar, this is
+  calculated with the first three methods in [Ghosh & Di Matteo 2023](https://ui.adsabs.harvard.edu/abs/2023arXiv230810948G/abstract).
+  They are called $R_{\rm bar,1}$, $R_{\rm bar,2}$ and $R_{\rm bar,3}$, respectively. See more details
+  in the development-manual/computation.md, all the three different methods will be calculated if this
+  option is turned on.
+- <a id="rmin"></a>`rmin`: the minimum radius of data points during calculating the bar radius, only
+  $R_{\rm bar,2}$ is sensitive to this parameter, due to the inner most region is generally spherical,
+  so the argument angle of $m=2$ Fourier component is noisy in such region. Default is 0, effective
+  only when `bar_radius` = `on`.
+- <a id="rmax"></a>`rmax`: the maximum radius of data points during calculating the bar radius. If not given,
+  the maximum radius will be set as `region_size`, which means all particles in the analysis region will be
+  included. This parameter is only effective when `bar_radius` = `on`.
+- <a id="rbins"></a>`rbins`: the number of bins during calculating the bar radius. Default is 20, effective
+  only when `bar_radius` = `on`.
 - <a id="deg"></a>`deg`: the degree threshold to determine the location of the bar ends, only effective
-  when `bar_radius` = `on`. This is the free parameter of $R_{\rm bar,1}$ in [Ghosh & Di Matteo 2023](https://ui.adsabs.harvard.edu/abs/2023arXiv230810948G/abstract). In general, $3^\circ\sim5^\circ$ is recommended, but it depends on the simulation.
-- <a id="percentage"></a>`percentage`: the percentage of bar ends to be considered as the bar ends, only
-  effective when `bar_radius` = `on`. This is the free parameter of $R_{\rm bar,3}$ in [Ghosh & Di Matteo 2023](https://ui.adsabs.harvard.edu/abs/2023arXiv230810948G/abstract).
-  In general, $70\%\sim80\%$ is recommended, but it depends on the simulation.
-- <a id="sbuckle"></a>`sbuckle`: whether calculate the buckling strength parameter, where $S_{\rm{buckle}}$
+  when `bar_radius` = `on`. This is the free parameter of $R_{\rm bar,1}$ in [Ghosh & Di Matteo 2023](https://ui.adsabs.harvard.edu/abs/2023arXiv230810948G/abstract).
+  In general, $3^\circ\sim5^\circ$ is recommended, but it depends on the actual situation. The unit is degree,
+  only effective when `bar_radius` = `on`.
+- <a id="percentage"></a>`percentage`: the percentage of drop to be considered as the bar ends, the free parameter of $R_{\rm bar,3}$ in
+  [Ghosh & Di Matteo 2023](https://ui.adsabs.harvard.edu/abs/2023arXiv230810948G/abstract).
+  In general, $70\%\sim80\%$ is recommended, but it depends on the actual situation. Effective only when
+  `bar_radius` = `on`.
+- <a id="sbuckle"></a>`sbuckle`: whether to calculate the buckling strength parameter $S_{\rm{buckle}}$,  
   is defined as $\sum m_i z_i \exp(-2i \phi_i) / \sum m_i$.
-- <a id="An"></a>`An`: whether calculate the $A_n$ parameters, where $A_n$ is the $n$-th Fourier component of the
-  surface density after projection into the equatorial plane. Note that actually only 0 - 6 are supported,
-  as higher order Fourier components are not so effective. So if you really want to calculate $A_n$ with $n>6$,
+- <a id="An"></a>`An`: whether to calculate the $A_n$ parameters, which is the $n$-th Fourier component of the
+  projected surface density in the $x-y$ plane. Note that actually only 0 - 6 are supported, as higher order
+  components are not so important and may be noisy. So if you really want to calculate $A_n$ with $n>6$,
   you need to change the code by yourself.
-- <a id="inerita_tensor"></a>`inertia_tensor`: whether calculate the inertia tensor of target particles.
-- <a id="dispersion_tensor"></a>`dispersion_tensor`: the velocity dispersion tensor of the particles in
-  each bin, the three axes are dependent on the region shape. Its spatial resolution is the same as the
-  `image_bins`.
+- <a id="inerita_tensor"></a>`inertia_tensor`: whether to calculate the inertia tensor of target particles.
+- <a id="dispersion_tensor"></a>`dispersion_tensor`: whether to calculate the velocity dispersion tensor of
+  target particles in each bin.
+  - The principle axes of the tensor are dependent on the region shape: for example, if the region shape is
+    `sphere`, the three principle axes are $\hat{r}$, $\hat{\theta}$ and $\hat{\phi}$.
+  - Its spatial resolution is the same as the `image_bins`: so if `image_bins` = 100, there will be
+    $100\times100\times100$ bins.
 
 ##### Particle
 
 - <a id="switch_on_p"></a>`switch_on`: whether to enable the particle level analysis or not.
-- <a id="filename_p"></a>`filename`: the filename of the output file of the particle level analysis.
+- <a id="filename_p"></a>`filename`: the filename of the particle level analysis results.
 - <a id="period_p"></a>`period`: the period of particle level analysis, in unit of synchronized time steps in
-  simulation.
+  the simulation.
   <font color=red>**Note:**</font> the particle level analysis will output all information of target particles
-  into a single file at each analysis time step, the size of such output file is comparable to the snapshot file,
-  so the period should not be not be set too small, otherwise the output files will consume too much disk space.
-  e.g. `period` = 5000 is a good choice for a 1e5 time steps simulation, 1e5 is a magnitude for a 10Gyr simulation
-  in Gadget4 with default units.
-  will be added automatically so you only need to specify the prefix of the filename.
-- <a id="particle_types"></a>`particle_types`: the type(s) of particle to do the particle level analysis,
-  must be given at least one type if `switch_on` is `True` for particle level analysis, otherwise the program
-  will raise an error.
-- <a id="circularity"></a>`circularity`: whether calculate the circularity of target particles.
+  into a single file at each analysis time step. The size of such output file is comparable or even larger than
+  a snapshot file, so the period should not be not be set too small, otherwise the output files will consume
+  too much disk space. Take as an example, `period` = 5000 is a good choice for a 1e5 time steps simulation.
+- <a id="particle_types"></a>`particle_types`: the type(s) of particle to do the particle level analysis.
+  Must be given at least one type if the particle level analysis is enabled.
+- <a id="circularity"></a>`circularity`: whether to calculate the circularity of target particles.
 - <a id="circularity_3d"></a>`circularity_3d`: whether calculate the 3D circularity of target particles.
-- <a id="rg"></a>`rg`: whether calculate the guiding radius of target particles. (future feature)
-- <a id="freq"></a>`freq`: whether calculate the orbital frequency of target particles. (future feature)
+- <a id="rg"></a>`rg`: whether to calculate the guiding radii of target particles. (future feature)
+- <a id="freq"></a>`freq`: whether to calculate the orbital frequency of target particles. (future feature)
 
 ##### Orbit
 
 - <a id="switch_on_o"></a>`switch_on`: whether to enable the orbit curve log.
-- <a id="filename_o"></a>`filename`: the filename of the output file of the orbit curve log.
-- <a id="period_o"></a>`period`: the period of orbit curve log, in unit of synchronized time steps in simulation.
-  If there is no too much particles to trace, the period can be set to a small value, e.g. 1, which means log the
-  position of target particles at every synchronized time step.
-- <a id="idfile"></a>`idfile`: the path to an ASCII file of particles id of the target particle to trace, must
+- <a id="filename_o"></a>`filename`: the filename of orbit curves.
+- <a id="period_o"></a>`period`: the period of orbit curve log, in unit of synchronized time steps in the
+  simulation. If there is only a few particles to be logged, the period can be set to a small value.
+- <a id="idfile"></a>`idfile`: the particles ids' file to specify which particles to be logged. Must
   be given if the orbit curve log is enabled, otherwise the program will raise an error.
-  - The particle id in this file can be separated by any of the following characters: white space, new line,
+  - The particle id in this file can be separated by any one of the following delimiters: white space, new line,
     `,`, `-`, `+`, `:` and `&`.
-  - Particle ID that is not exist in the simulation will be ignored, with some warning message.
+  - Particle IDs that is not exist in the simulation will be ignored.
+  - In the future, if this parameter is not given, the program will randomly select some particles to log.
 
 #### Group (future feature)
 
-- <a id="switch_on_g"></a>`switch_on`: whether to enable the group level analysis or not.
-- <a id="filename_g"></a>`filename`: the filename of the output file of the group level analysis.
+- <a id="switch_on_g"></a>`switch_on`: whether to enable the group level analysis.
+- <a id="filename_g"></a>`filename`: the filename the group level analysis results.
 - <a id="period_g"></a>`period`: the period of group level analysis, in unit of synchronized time steps in
-  simulation.
-- <a id="group_types"></a>`group_types`: the type(s) of group particles to do the on-the-fly analysis, must be
-  given at least one type if the group level analysis is enabled, otherwise the program will raise an error.
-  - `age`: divide the particles into different groups by their age.
-  - `metallicity`: divide the particles into different groups by their metallicity.
-- <a id="ellipticity"></a>`ellipticity`: whether calculate the ellipticity of target particles.
-- <a id="rmg"></a>`rmg`: whether calculate the radial metallicity gradient of target particles.
-- <a id="vmg"></a>`vmg`: whether calculate the vertical metallicity gradient of target particles.
+  the simulation.
+- <a id="group_types"></a>`group_types`: the type(s) of group classification to do the group level analysis.
+  Must be given at least one type if the group level analysis is enabled.
+  - `age`: divide the particles into different age groups.
+  - `metallicity`: divide the particles into different metallicity groups.
+- <a id="ellipticity"></a>`ellipticity`: whether to calculate the ellipticity of target particles.
+- <a id="rmg"></a>`rmg`: whether to calculate the radial metallicity gradient of target particles.
+- <a id="vmg"></a>`vmg`: whether to calculate the vertical metallicity gradient of target particles.
 
 #### Post
 
 - <a id="switch_on_post"></a>`switch_on`: whether to enable the post analysis or not.
-- <a id="filename_post"></a>`filename`: the filename of the output file of the post analysis.
-- <a id="pattern_speed"></a>`pattern_speed`: calculate the pattern speed of the bar. If this option is enabled,
-  the `bar_major_axis` option in the `Model` section will be automatically enabled.
-- <a id="SFH"></a>`SFH`: calculate the star formation history of target particles. (future feature)
+- <a id="filename_post"></a>`filename`: the filename of the post analysis results.
+- <a id="pattern_speed"></a>`pattern_speed`: whether to calculate the pattern speed of the bar. If this
+  option is enabled, the `bar_major_axis` option in the `Model` section will be automatically enabled.
+- <a id="SFH"></a>`SFH`: whether to calculate the star formation history of target particles.
 
-#### Output files
+#### Output files (To be enriched)
 
-Due to there may be a case of a restart simulation, `galotfa` will not overwrite any existing file,
-but create a new file with a `-n` suffix that start from 1, where `n` is the smallest integer that make the new file
-name not exist. In this way, the suffix can be served as a restart index.
+Due to there may be a case of a restart simulation such as in `Gadget4`, `galotfa` will not overwrite any
+existing file, but create a new file with a `-n` suffix, where `n` is an integer and starts from 1.
 
-#### Use `galotfa` in general simulation codes
+#### Use `galotfa` in other simulation codes
 
 `galotfa` is based on `MPI`, and all `galotfa` APIs are designed to be used in `MPI` mode. So you need to
 call `MPI_Init` before using any `galotfa` APIs.
-
-<font color=red>**Note:**</font> `galotfa` is designed to be used in `MPI` mode, so you need to call `MPI_Init`
-before using any `galotfa` APIs.
 
 ---
 
 ## Future features
 
-- [x] (other) add built-in fork of common simulation codes with `galotfa` built-in.
 - [x] (other) add potential tracer support into the built-in simulation codes.
+- [x] (other) add built-in fork of `Gadget4` with `galotfa` built-in.
 - [ ] (global) output the used parameters to a separate file: galotfa-used.ini
 - [ ] (global) specify different target particle types (and possible multiple analysis sets) in different analysis level.
 - [ ] (pre-process) support triaxial region shape.
 - [x] (model) the bar length calculation.
-- [ ] (model) model system for different component
+- [x] (model) model level analysis for different components.
 - [ ] (model) DM halo spin parameter
 - [ ] (particle) the guiding radius calculation.
 - [ ] (particle) the orbital frequency calculation.
 - [ ] (particle) the actions calculation.
 - [ ] group based analysis.
 - [ ] orbit curves: raw, recentered, aligned, corotating, etc.
+- [ ] orbit curves: randomly selected particles.
 - [ ] (post) pattern speed
 - [ ] (post) star formation history
