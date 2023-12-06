@@ -303,11 +303,9 @@ All parameters are listed in the following table, you can click their links to s
 |            | <a href="#filename_post">`filename`</a>                      | String     | `post`        | Any valid filename.                                       |
 |            | <a href="#pattern_speed">`pattern_speed`</a>                 | Boolean    | off           | `on` or `off`                                             |
 
-#### Explanation of parameters
+#### Explanation of parameters in each section
 
 ##### Global
-
-This section specify the global parameters of `galotfa`.
 
 - <a id="switch_on"></a>`switch_on`: whether switch on on-the-fly analysis. If `on`, `galotfa` will analyze the
   data at specified time steps and output analysis results to the `output_dir`.
@@ -330,19 +328,15 @@ This section specify the global parameters of `galotfa`.
 
 ##### Pre
 
-This section is about the pre-processing of the simulation data before some concrete analysis, such as
-calculate the center of the target particles, calculate the bar major axis (if exist) and align the bar
-major axis to the $x$-axis.
-
-- <a id="recenter"></a>`recenter`: whether to recenter the target particles to the center the target
-  particle(s) or not, note the recenter is only for the on-the-fly analysis, and will not change the simulation
-  data. The parameter will significantly affect the result of the on-the-fly analysis that is sensitive to the
-  origin of coordinates, such as the bar major axis, the pattern speed, etc. Therefore, it's recommended to always
-  turn on this option, unless you know what you are doing.
+- <a id="recenter"></a>`recenter`: whether to align the origin of coordinates to the center of the target particle(s)
+  or not during calculation. Note that this alignment is only for data analysis and doesn't change the simulation
+  data. This alignment will significantly affect results which are sensitive to the origin of coordinates, such as
+  the bar major axis. Therefore, it's recommended to always turn on this option, unless you know what you are doing.
 - <a id="recenter_anchors"></a>`recenter_anchors`: the particle type id(s) which are used to calculate the
   center of the system, if `recenter` = `on` then this parameter must be given at least one type, otherwise
   the program will raise an error. For example, the particle type of disk particles is 2, then you can set
   `recenter_anchors` = `2` to use the disk particles to calculate the center of the system.
+  !!!! Remove this!
 - <a id="region_shape"></a>`region_shape`: only meaningful when `recenter` = `on`, the shape of the region
   to calculate the center of the target particles, which will affect how the `region_size` is interpreted (see below).
   The particles that are located at the boundary of the region will also be included.
@@ -370,8 +364,6 @@ major axis to the $x$-axis.
   - `recenter_method` = `potential`: future feature.
 
 ##### Model
-
-The model level on-the-fly analysis of the target particles. The most common case at present is a disk galaxy.
 
 - <a id="switch_on_m"></a>`switch_on`: whether to enable the model level analysis or not.
 - <a id="filename_m"></a>`filename`: the filename of the output file of the model level analysis.
@@ -500,9 +492,6 @@ is available with the inertia tensor.
 
 ##### Orbit
 
-This part is about a trivial target: log the orbital curves of the target particles. For example, trace the orbit
-of stars that contribute to the bar, or the spiral arms, etc.
-
 - <a id="switch_on_o"></a>`switch_on`: whether to enable the orbit curve log.
 - <a id="filename_o"></a>`filename`: the filename of the output file of the orbit curve log.
 - <a id="period_o"></a>`period`: the period of orbit curve log, in unit of synchronized time steps in simulation.
@@ -515,11 +504,6 @@ of stars that contribute to the bar, or the spiral arms, etc.
   - Particle ID that is not exist in the simulation will be ignored, with some warning message.
 
 #### Group (future feature)
-
-This level is designed to do the on-the-fly analysis of particle groups/sets. For example, the different
-stellar populations in a galaxy: binned according their ages, metallicity, etc. Or different type of galaxies
-in cosmology simulations: central and satellite galaxies in a cluster, or elliptical and spiral galaxies based
-on their morphology.
 
 - <a id="switch_on_g"></a>`switch_on`: whether to enable the group level analysis or not.
 - <a id="filename_g"></a>`filename`: the filename of the output file of the group level analysis.
@@ -534,8 +518,6 @@ on their morphology.
 - <a id="vmg"></a>`vmg`: whether calculate the vertical metallicity gradient of the target particles.
 
 #### Post
-
-This part is designed to do some by-the-hand post analysis, such as calculate the bar pattern speed of the bar.
 
 - <a id="switch_on_post"></a>`switch_on`: whether to enable the post analysis or not.
 - <a id="filename_post"></a>`filename`: the filename of the output file of the post analysis.
