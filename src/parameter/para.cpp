@@ -250,10 +250,10 @@ int para::check( void )
                           "Recenter system before anlysis is enabled, but the  recenter_anchor is "
                           "not given." );
 
-            IF_THEN_WARN( this->pre_region_shape != "sphere" && this->pre_region_shape != "cylinder"
+            IF_THEN_WARN( this->pre_region_shape != "spheroid" && this->pre_region_shape != "cylinder"
                               && this->pre_region_shape != "box",
                           "The region shape for pre-process is not supported, given: %s."
-                          "\nSupported value: sphere, cylinder or box.",
+                          "\nSupported value: spheroid, cylinder or box.",
                           this->pre_region_shape.c_str() );
 
             IF_THEN_WARN(
@@ -319,10 +319,10 @@ int para::check( void )
                           "Try to analysis multiple sets, but the target sets' particle types "
                           "are not include in \"particle_types\"." );
 
-        IF_THEN_WARN( this->md_region_shape != "sphere" && this->md_region_shape != "cylinder"
+        IF_THEN_WARN( this->md_region_shape != "spheroid" && this->md_region_shape != "cylinder"
                           && this->md_region_shape != "box",
                       "The region shape for model analysis is not supported, given: %s."
-                      "\nSupported value: sphere, cylinder or box.",
+                      "\nSupported value: spheroid, cylinder or box.",
                       this->md_region_shape.c_str() );
 
         IF_THEN_WARN(

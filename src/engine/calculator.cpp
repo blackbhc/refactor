@@ -18,9 +18,9 @@ calculator::calculator( galotfa::para* parameter )
     {
         this->recenter_method = most_dense_pixel;
     }
-    if ( this->para->pre_region_shape == "sphere" )
+    if ( this->para->pre_region_shape == "spheroid" )
     {
-        this->recenter_region_shape = sphere;
+        this->recenter_region_shape = spheroid;
     }
     else if ( this->para->pre_region_shape == "cylinder" )
     {
@@ -559,7 +559,7 @@ int calculator::call_md_module md_args const
                                         third_size, base_binnum, base_binnum, third_binnum,
                                         this->ptrs_of_results->dispersion_tensor[ i ] );
             }
-            else if ( this->para->md_region_shape == "sphere" )
+            else if ( this->para->md_region_shape == "spheroid" )
             {
                 double* v_r     = new double[ part_num_md[ i ] ];
                 double* v_phi   = new double[ part_num_md[ i ] ];
@@ -663,7 +663,7 @@ bool calculator::is_target_of_pre( int& type, double& coordx, double& coordy, do
 
     switch ( this->recenter_region_shape )
     {
-    case sphere:
+    case spheroid:
         if ( !ana::in_spheroid( offset, this->para->pre_region_size, this->para->pre_axis_ratio ) )
             return false;
         break;
@@ -694,7 +694,7 @@ bool calculator::is_target_of_md( int& type, double& coordx, double& coordy, dou
 
     switch ( this->model_region_shape )
     {
-    case sphere:
+    case spheroid:
         if ( !ana::in_spheroid( offset, this->para->md_region_size, this->para->md_axis_ratio ) )
             return false;
         break;

@@ -64,7 +64,7 @@ private:
     mutable double system_center[ 3 ];     // the container of the system center
     double         convergence_threshold;  // the convergence threshold
     enum method { center_of_mass, most_dense_pixel, most_bound_particle };  // the recenter method
-    enum region_shape { sphere, cylinder, box };  // the recenter region shape
+    enum region_shape { spheroid, cylinder, box };  // the recenter region shape
     method                recenter_method;        // the recenter method
     region_shape          recenter_region_shape;  // the recenter region shape
     region_shape          model_region_shape;

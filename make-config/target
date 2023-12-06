@@ -40,7 +40,7 @@ $(BUILD_DIR)/include:
 
 header: $(BUILD_DIR)/include
 	@echo "Copying header files ..."
-	@cp -r $(PROJECT_ROOT)/src $(PROJECT_ROOT)/build/include/
+	@cp -r $(PROJECT_ROOT)/src/* $(PROJECT_ROOT)/build/include/
 	@sed -i "1i #define header_only 1" $(BUILD_DIR)/include/galotfa.h
 
 
