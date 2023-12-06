@@ -332,36 +332,38 @@ All parameters are listed in the following table, you can click their links to s
   or not during calculation. Note that this alignment is only for data analysis and doesn't change the simulation
   data. This alignment will significantly affect the quality of analysis results which are sensitive to the origin
   of coordinates, such as the bar major axis. Therefore, it should always be turn on, unless you know what you are doing.
+  The program will iterate until the center is convergent or reach the iteration limit (see `convergence_type`,
+  `convergence_threshold` and `max_iter` in the <a href="#global">Global</a> section).
 - <a id="recenter_anchors"></a>`recenter_anchors`: the particle type id(s) which are used to calculate the
   center of the system, if `recenter` = `on` then this parameter must be given at least one type, otherwise
   the program will raise an error. For example, the particle type of disk particles is 2, then you can set
   `recenter_anchors` = `2` to use the disk particles to calculate the center of the system.
   !!!! Remove this!
-- <a id="region_shape"></a>`region_shape`: only meaningful when `recenter` = `on`, the shape of the region
-  to calculate the center of the target particles, which will affect how the `region_size` is interpreted (see below).
-  The particles that are located at the boundary of the region will also be included.
-  - `region_shape` = `sphere`: the region is a sphere or spheroid if `axis_ratio` $\neq$ 1, the axis of the spheroid is the
+- <a id="region_shape"></a>`region_shape`: the program only includes the particles within a central region to do the
+  system center calculation, and the shape of the region is specified by this parameter. Only effective when
+  `recenter` = `on`. This parameter works together with `axis_ratio` and `region_size`. Available values:
+  - `spheroid`: the region is a spheroid, or a sphere if `axis_ratio` $=$ 1, the axis of symmetry of the spheroid is
     parallel to the $z$-axis.
-  - `region_shape` = `cylinder`: the region is a cylinder with symmetry axis parallel to the $z$-axis.
-  - `region_shape` = `box`: the region is a box with sides parallel to the $x$, $y$ and $z$ axis.
-- <a id="axis_ratio"></a>`axis_ratio`: only meaningful when `recenter` = `on`, the axis_ratio of the region's
-  characteristic lengths, which will affect how the `region_size` is interpreted.
-- <a id="size"></a>`region_size`: only meaningful when `recenter` = `on`, the size of the region to calculate
-  the center of the target particles (), which is interpreted differently according to the `region_shape`:
-  - `region_shape` = `sphere`: the region is a sphere with $R=$ `region_size` if `axis_ratio` = 1. If `axis_ratio` is not 1,
-    the sphere will be stretched along the $z$-axis with $R_z=$ `axis_ratio` $\times$ `region_size`.
-  - `region_shape` = `cylinder`: the region is a cylinder with $R=$ `region_size`, and half height $H=$
-    `axis_ratio` $\times$ `region_size`.
-  - `region_shape` = `box`: the region is a cube with side length $L=$ `region_size`, and stretched along the
-    $z$-axis with height $L_z=$ `axis_ratio` $\times$ `region_size`.
-- <a id="recenter_method"></a>`recenter_method`: the method to calculate the center of the target particles,
-  with iteration if necessary (see `convergence_type` and `convergence_threshold`).
-  - `recenter_method` = `com`: the center is defined as the center of mass of the target particles.
-  - `recenter_method` = `density`: the center is defined as the pixel of the highest surface density of the target
-    particle(s), the size of the pixel is determined by `image_size` in the `Model` section. Note that if
-    the `region_method` = `density`, then the `image` option in the `Model` section will be automatically
-    turned on and `surface_density` will be automatically added to the `colors` parameter in the `Model` section.
-  - `recenter_method` = `potential`: future feature.
+  - `cylinder`: the region is a cylinder with symmetry axis parallel to the $z$-axis.
+  - `box`: the region is a box with sides parallel to the $x$, $y$ and $z$ axes.
+- <a id="axis_ratio"></a>`axis_ratio`: specifies the axis ratio of the region, which will affect how the
+  `region_size` takes effect. Only effective when `recenter` = `on`,
+- <a id="size"></a>`region_size`: specifies the size of the region used to align the system center.
+  Only effective when `recenter` = `on`, and has different meaning based on the value of `region_shape`:
+  - `region_shape` = `sphere`: radius in the mid-plane = `region_size`, half length of the third axis = `axis_ratio`
+    $\times$ `region_size`.
+  - `region_shape` = `cylinder`: radius = `region_size`, half height = `axis_ratio` $\times$ `region_size`.
+  - `region_shape` = `box`: $x$ and $y$ side lengths = `region_size`, $z$ side length = `axis_ratio` $\times$ `region_size`.
+- <a id="recenter_method"></a>`recenter_method`: the method used to calculate the center of target particles.
+  - `recenter_method` = `com`: the center is defined as the center of mass of target particles.
+  - `recenter_method` = `density`: the center is defined as the center of the pixel with highest surface density,
+    in the faced-on and edge-on matrix of the target particles. The size and number of pixels are determined by
+    `region_size` and the `image_bins` parameter in the `Model` section. Note that if the `region_method` = `density`,
+    then the `image` option in the `Model` section will be automatically turned on and `surface_density` will be
+    automatically added into the `colors` parameter in the `Model` section.
+  - `recenter_method` = `potential`: defined the center as the position of the most bound particle in the target
+    particles, namely the particle with the lowest potential (energy). Note that this is a future feature, and
+    not available at present.
 
 ##### Model
 
@@ -374,29 +376,29 @@ All parameters are listed in the following table, you can click their links to s
 - <a id="multiple"></a>`multiple`: whether to treat the more than one target particles as different set,
   which can be specified by the next parameter `classification`, or treat them as a whole. Default is
   `multiple` = `on`, that all target particles will be analyzed as a whole.
-- <a id="classification"></a>`classification`: specify how to classify the target particles to different
+- <a id="classification"></a>`classification`: specify how to classify target particles to different
   analysis sets.
   - Must be given if `multiple` = `on`, otherwise the program will raise an error. If `multiple` = `off`,
     this parameter will be ignored.
   - The given value should be strings of target types in each subset, where the strings are separated by common
     delimiter (white space, `,`, `+` and `:`), and in each string, the integer of
     the target particle types in such subset should be separated by `&`.
-    - If `"1&2" "3" "4&5&6"` is given, then there will be 3 sets, the first subset contains the target particles
-      of type 1 and 2, the second subset contains the target particles of type 3, and the third subset contains
-      the target particles of type 4, 5 and 6.
+    - If `"1&2" "3" "4&5&6"` is given, then there will be 3 sets, the first subset contains target particles
+      of type 1 and 2, the second subset contains target particles of type 3, and the third subset contains
+      target particles of type 4, 5 and 6.
     - There should has no space between, before or after the integers in each pair of quotation marks, otherwise
       the program will raise an error: `"1 & 2" "3" "4 & 5 & 6"` is illegal.
   - Cross sets are allowed, e.g. `1-2 2-3` is possible, which means the first subset contains the target
-    particles of type 1 and 2, and the second subset contains the target particles of type 2 and 3.
+    particles of type 1 and 2, and the second subset contains target particles of type 2 and 3.
   - Values should in the range of `particle_types`, otherwise the program will raise an error.
 - <a id="region_shape_m"></a>`region_shape`: similar to the `region_shape` in the `Pre` section, but this one is
-  used to calculate the model quantifications of the target particles, can get multiple values.
+  used to calculate the model quantifications of target particles, can get multiple values.
   - `region_shape` = `sphere`: the region is a sphere or spheroid if `axis_ratio` $\neq$ 1, the axis of the spheroid
     is the parallel to the $z$-axis.
   - `region_shape` = `cylinder`: the region is a cylinder with symmetry axis parallel to the $z$-axis.
   - `region_shape` = `box`: the region is a box with sides parallel to the $x$, $y$ and $z$ axis.
 - <a id="axis_ratio_m"></a>`axis_ratio`: similar to the `axis_ratio` in the `Pre` section, but this one is used to
-  calculate the model quantifications of the target particles.
+  calculate the model quantifications of target particles.
 - <a id="size_m"></a>`region_size`: similar to the `region_size` in the `Pre` section, but this one is used to
   - `region_shape` = `sphere`: the region is a sphere with $R=$ `region_size` if `axis_ratio` = 1. If `axis_ratio`
     $\neq$ 1, the sphere will be stretched along the $z$-axis with $R_z=$ `axis_ratio` $\times$ `region_size`.
@@ -405,7 +407,7 @@ All parameters are listed in the following table, you can click their links to s
   - `region_shape` = `box`: the region is a cube with side length $L=$ `region_size`, and stretched along the
     $z$-axis with $L_z=$ `axis_ratio` $\times$ `region_size`.
 - <a id="align_bar"></a>`align_bar`: whether rotate the coordinates to align the $x$-axis to the bar major axis
-  after recentering the target particles. This is only done when the bar is detected (see in `bar_threshold`).
+  after recentering target particles. This is only done when the bar is detected (see in `bar_threshold`).
   It's may be useful to align the bar major axis to the $x$-axis for some analysis or visualization. Note
   that if this option is activated then the `bar_major_axis` and `sbar` will be automatically activated in
   the `Model` section, and the `recenter` in `Pre` section should be switched on otherwise the program will
@@ -415,7 +417,7 @@ All parameters are listed in the following table, you can click their links to s
 namely they doesn't consider the case that the bar is inclined to the x-y plane. The possible correction
 is available with the inertia tensor.
 
-- <a id="image"></a>`image`: whether to output the image matrices of the target particles.
+- <a id="image"></a>`image`: whether to output the image matrices of target particles.
   - The particles will be divided into bins in each axis (according to the `region_shape`) and do some statistics
     in each bin, such as the mean value of some quantity, the number of particles in each bin, etc. The bin number
     is specified by the `image_bins` parameter (see below).
@@ -436,7 +438,7 @@ is available with the inertia tensor.
     component for <font color="red">**each axis**</font>.
   - `velocity_dispersion`: the velocity dispersion of the particles in each bin, one component for
     <font color="red">**each axis**</font>.
-- <a id="bar_major_axis"></a>`bar_major_axis`: whether calculate the bar major axis in the target particles,
+- <a id="bar_major_axis"></a>`bar_major_axis`: whether calculate the bar major axis in target particles,
   if detected a bar, defined as the phase angle of the $m$=2 Fourier component of the surface density after
   projection into the equatorial plane, $\arg(A_2)$.
 - <a id="sbar"></a>`sbar`: whether calculate the bar strength parameter, where $S_{\rm{bar}}$ is defined
@@ -444,7 +446,7 @@ is available with the inertia tensor.
 - <a id="bar_threshold"></a>`bar_threshold`: the threshold to detect a bar, namely if $S_{\rm bar}>$ this
   value, the program will consider that a bar is detected, where $S_{\rm bar}$ is the bar strength parameter.
   - In general, a range in $[0.1, 0.2]$ is recommended, but it depends on the simulation.
-- <a id="bar_radius"></a>`bar_radius`: whether calculate the radius of the bar in the target particles,
+- <a id="bar_radius"></a>`bar_radius`: whether calculate the radius of the bar in target particles,
   if detected a bar, this is calculated with many methods. Which are the first three methods in
   [Ghosh & Di Matteo 2023](https://ui.adsabs.harvard.edu/abs/2023arXiv230810948G/abstract).
   See more details in the development-manual/computation.md, all the three different methods will be calculated.
@@ -452,20 +454,20 @@ is available with the inertia tensor.
   to this parameter, due to the inner most region is generally spherical, so the argument angle of $m=2$ Fourier
   component is noisy in such region. If not given, the minimum radius will be 0.
 - <a id="rmax"></a>`rmax`: the maximum radius during calculating the bar radius, if not given, the maximum
-  radius will be the maximum radius of the target particles, namely the analysis region size.
+  radius will be the maximum radius of target particles, namely the analysis region size.
 - <a id="rbins"></a>`rbins`: the number of bins during calculating the bar radius.
-- <a id="deg"></a>`deg`: the degree threshold to determine the location of the bar ends, only meaningful
+- <a id="deg"></a>`deg`: the degree threshold to determine the location of the bar ends, only effective
   when `bar_radius` = `on`. This is the free parameter of $R_{\rm bar,1}$ in [Ghosh & Di Matteo 2023](https://ui.adsabs.harvard.edu/abs/2023arXiv230810948G/abstract). In general, $3^\circ\sim5^\circ$ is recommended, but it depends on the simulation.
 - <a id="percentage"></a>`percentage`: the percentage of bar ends to be considered as the bar ends, only
-  meaningful when `bar_radius` = `on`. This is the free parameter of $R_{\rm bar,3}$ in [Ghosh & Di Matteo 2023](https://ui.adsabs.harvard.edu/abs/2023arXiv230810948G/abstract).
+  effective when `bar_radius` = `on`. This is the free parameter of $R_{\rm bar,3}$ in [Ghosh & Di Matteo 2023](https://ui.adsabs.harvard.edu/abs/2023arXiv230810948G/abstract).
   In general, $70\%\sim80\%$ is recommended, but it depends on the simulation.
 - <a id="sbuckle"></a>`sbuckle`: whether calculate the buckling strength parameter, where $S_{\rm{buckle}}$
   is defined as $\sum m_i z_i \exp(-2i \phi_i) / \sum m_i$.
 - <a id="An"></a>`An`: whether calculate the $A_n$ parameters, where $A_n$ is the $n$-th Fourier component of the
   surface density after projection into the equatorial plane. Note that actually only 0 - 6 are supported,
-  as higher order Fourier components are not so meaningful. So if you really want to calculate $A_n$ with $n>6$,
+  as higher order Fourier components are not so effective. So if you really want to calculate $A_n$ with $n>6$,
   you need to change the code by yourself.
-- <a id="inerita_tensor"></a>`inertia_tensor`: whether calculate the inertia tensor of the target particles.
+- <a id="inerita_tensor"></a>`inertia_tensor`: whether calculate the inertia tensor of target particles.
 - <a id="dispersion_tensor"></a>`dispersion_tensor`: the velocity dispersion tensor of the particles in
   each bin, the three axes are dependent on the region shape. Its spatial resolution is the same as the
   `image_bins`.
@@ -476,7 +478,7 @@ is available with the inertia tensor.
 - <a id="filename_p"></a>`filename`: the filename of the output file of the particle level analysis.
 - <a id="period_p"></a>`period`: the period of particle level analysis, in unit of synchronized time steps in
   simulation.
-  <font color=red>**Note:**</font> the particle level analysis will output all information of the target particles
+  <font color=red>**Note:**</font> the particle level analysis will output all information of target particles
   into a single file at each analysis time step, the size of such output file is comparable to the snapshot file,
   so the period should not be not be set too small, otherwise the output files will consume too much disk space.
   e.g. `period` = 5000 is a good choice for a 1e5 time steps simulation, 1e5 is a magnitude for a 10Gyr simulation
@@ -485,10 +487,10 @@ is available with the inertia tensor.
 - <a id="particle_types"></a>`particle_types`: the type(s) of particle to do the particle level analysis,
   must be given at least one type if `switch_on` is `True` for particle level analysis, otherwise the program
   will raise an error.
-- <a id="circularity"></a>`circularity`: whether calculate the circularity of the target particles.
-- <a id="circularity_3d"></a>`circularity_3d`: whether calculate the 3D circularity of the target particles.
-- <a id="rg"></a>`rg`: whether calculate the guiding radius of the target particles. (future feature)
-- <a id="freq"></a>`freq`: whether calculate the orbital frequency of the target particles. (future feature)
+- <a id="circularity"></a>`circularity`: whether calculate the circularity of target particles.
+- <a id="circularity_3d"></a>`circularity_3d`: whether calculate the 3D circularity of target particles.
+- <a id="rg"></a>`rg`: whether calculate the guiding radius of target particles. (future feature)
+- <a id="freq"></a>`freq`: whether calculate the orbital frequency of target particles. (future feature)
 
 ##### Orbit
 
@@ -496,7 +498,7 @@ is available with the inertia tensor.
 - <a id="filename_o"></a>`filename`: the filename of the output file of the orbit curve log.
 - <a id="period_o"></a>`period`: the period of orbit curve log, in unit of synchronized time steps in simulation.
   If there is no too much particles to trace, the period can be set to a small value, e.g. 1, which means log the
-  position of the target particles at every synchronized time step.
+  position of target particles at every synchronized time step.
 - <a id="idfile"></a>`idfile`: the path to an ASCII file of particles id of the target particle to trace, must
   be given if the orbit curve log is enabled, otherwise the program will raise an error.
   - The particle id in this file can be separated by any of the following characters: white space, new line,
@@ -513,9 +515,9 @@ is available with the inertia tensor.
   given at least one type if the group level analysis is enabled, otherwise the program will raise an error.
   - `age`: divide the particles into different groups by their age.
   - `metallicity`: divide the particles into different groups by their metallicity.
-- <a id="ellipticity"></a>`ellipticity`: whether calculate the ellipticity of the target particles.
-- <a id="rmg"></a>`rmg`: whether calculate the radial metallicity gradient of the target particles.
-- <a id="vmg"></a>`vmg`: whether calculate the vertical metallicity gradient of the target particles.
+- <a id="ellipticity"></a>`ellipticity`: whether calculate the ellipticity of target particles.
+- <a id="rmg"></a>`rmg`: whether calculate the radial metallicity gradient of target particles.
+- <a id="vmg"></a>`vmg`: whether calculate the vertical metallicity gradient of target particles.
 
 #### Post
 
@@ -523,7 +525,7 @@ is available with the inertia tensor.
 - <a id="filename_post"></a>`filename`: the filename of the output file of the post analysis.
 - <a id="pattern_speed"></a>`pattern_speed`: calculate the pattern speed of the bar. If this option is enabled,
   the `bar_major_axis` option in the `Model` section will be automatically enabled.
-- <a id="SFH"></a>`SFH`: calculate the star formation history of the target particles. (future feature)
+- <a id="SFH"></a>`SFH`: calculate the star formation history of target particles. (future feature)
 
 #### Output files
 
