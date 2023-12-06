@@ -330,8 +330,8 @@ All parameters are listed in the following table, you can click their links to s
 
 - <a id="recenter"></a>`recenter`: whether to align the origin of coordinates to the center of the target particle(s)
   or not during calculation. Note that this alignment is only for data analysis and doesn't change the simulation
-  data. This alignment will significantly affect results which are sensitive to the origin of coordinates, such as
-  the bar major axis. Therefore, it's recommended to always turn on this option, unless you know what you are doing.
+  data. This alignment will significantly affect the quality of analysis results which are sensitive to the origin
+  of coordinates, such as the bar major axis. Therefore, it should always be turn on, unless you know what you are doing.
 - <a id="recenter_anchors"></a>`recenter_anchors`: the particle type id(s) which are used to calculate the
   center of the system, if `recenter` = `on` then this parameter must be given at least one type, otherwise
   the program will raise an error. For example, the particle type of disk particles is 2, then you can set
