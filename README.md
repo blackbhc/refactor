@@ -440,7 +440,7 @@ correction is available with the inertia tensor, but not implemented at present.
   $S_{\rm bar}>$ `bar_threshold`, the program will consider there is a bar.
   - In general, a range in $[0.1, 0.2]$ is recommended, but it depends on the actual situation.
 - <a id="bar_major_axis"></a>`bar_major_axis`: whether to calculate the bar major axis in target particles,
-  which is defined as $\arg{(A2)}$, the argument angle of the $m$=2 Fourier component of the projected surface
+  which is defined as $\frac{1}{2}\arg{(A2)}$, the argument angle of the $m$=2 Fourier component of the projected surface
   density in the $x-y$ plane. This is only done when the bar is detected, namely bar strength $>$
   `bar_threshold`.
 - <a id="bar_radius"></a>`bar_radius`: whether to calculate the radius or half length of the bar, this is
